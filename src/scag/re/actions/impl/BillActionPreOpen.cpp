@@ -14,7 +14,7 @@ namespace actions {
 using namespace bill;
 
 BillActionPreOpen::BillActionPreOpen( bool transit ) :
-BillAction(transit), categoryId_(0), mediaTypeId_(0),
+BillAction(transit), categoryId_(0), mediaTypeId_(0), operatorId_(0),
 externalId_(*this,"externalId",false,true),
 walletType_(*this,"walletType",false,true),
 keywords_(*this,"keywords",false,true)
@@ -26,8 +26,9 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
 {
     int cat = categoryId_;
     int mt = mediaTypeId_;
+    int op = operatorId_;
 
-    smsc_log_debug( logger,"Run Action '%s', catid=%d mediaid=%d...", opname(), cat, mt );
+    smsc_log_debug(logger,"Run Action '%s', catid=%d mediaid=%d operator-id=%d...", opname(), cat, mt, op);
 
     if ( ! isTransit() ) {
 
@@ -74,7 +75,9 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
         mt = isContentType_ ? int(property->getInt()) :
         bm.getInfrastructure().GetMediaTypeID( billingInfoStruct.mediaType );
 
-    } else if ( !isContentType_ ) {
+    }
+    else if ( !isContentType_ )
+    {
         billingInfoStruct.mediaType = mediaTypeFieldName_;
     }
 
@@ -94,7 +97,9 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
 
         cat = isCategory_ ? int(property->getInt()) :
         bm.getInfrastructure().GetCategoryID( billingInfoStruct.category );
-    } else if( !isCategory_ ) {
+    }
+    else if( !isCategory_ )
+    {
         billingInfoStruct.category = categoryFieldName_;
     }
 
@@ -104,7 +109,8 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
         setBillingStatus( context, "empty category", false );
         setTariffStatus( context, 0 );
         return 0;
-    } else if ( !mt ) {
+    }
+    else if ( !mt ) {
         smsc_log_warn(logger,"Action '%s' cannot process. Media-type '%s' is empty or not found",
                       opname(), billingInfoStruct.mediaType.c_str() );
         setBillingStatus( context, "empty media-type", false );
@@ -114,12 +120,21 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
 
 
     TariffRec * tariffRec = 0;
-    try {
-        tariffRec = context.getTariffRec(cat, mt);
-        if (!tariffRec) throw SCAGException("TariffRec is not valid, cat=%d, mt=%u", cat, mt );
+    try
+    {
+        tariffRec = context.getTariffRec(cat, mt, op);
+        if (!tariffRec)
+        {
+          smsc_log_debug(logger, "TariffRec is not valid, cat=%d, mt=%u operator=%d", cat, mt, op);
+          throw SCAGException("TariffRec is not valid, cat=%d, mt=%u operator=%d", cat, mt, op);
+        }
+        else
+          smsc_log_debug(logger, "TariffRec is OK, cat=%d, mt=%u operator=%d", cat, mt, op);
+
         bpd->tariffRec = *tariffRec;
         tariffRec = &(bpd->tariffRec);
-    } catch (SCAGException& e)
+    }
+    catch (SCAGException& e)
     {
         smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", opname(), e.what());
         setBillingStatus( context, e.what(), false );
@@ -127,8 +142,16 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
         return 0;
     }
 
-    smsc_log_debug(logger,"tariff record is found, type=%d: cat=%d mt=%d",
-                   tariffRec->billType, cat,mt);
+    smsc_log_debug(logger,"%d tariff record (%d,%d,%d) found: svc=%s currency=%s catid=%d mediaid=%d billType=%d price=%s",
+       opname(), cat, mt, op,
+       tariffRec->ServiceNumber.c_str(),
+       tariffRec->Currency.c_str(),
+       tariffRec->CategoryId,
+       tariffRec->MediaTypeId,
+       tariffRec->billType,
+       tariffRec->getPrice().c_str() );
+//    smsc_log_debug(logger,"tariff record is found, type=%d: cat=%d mt=%d operator-id=%d",
+//                   tariffRec->billType, cat, mt, op);
 
     if (tariffRec->billType == bill::infrastruct::NONE)
     {
@@ -198,7 +221,9 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
             billingInfoStruct.externalId = externalId_.getValue(context);
         }
 
-    } else {
+    }
+    else
+    {
         // not ewallet
         if ( isTransit() ) {
             throw SCAGException("Action '%s': transit is not allowed for non-ewallet",opname());
@@ -295,7 +320,20 @@ void BillActionPreOpen::init( const SectionParams& params,
         if (!mediaTypeId_) throw SCAGException("Action '%s': content-type should be integer or variable",
                                                opname() );
     }
+// operator-id
+    operatorIdFieldType_ = CheckParameter( params,
+                                          propertyObject,
+                                          opname(), "operator-id",
+                                          false, true,
+                                          operatorIdFieldName_,
+                                          isOperatorId_ );
 
+    if ( operatorIdFieldType_ == ftUnknown)
+    {
+        // numerical constant
+      operatorId_ = isOperatorId_ ? atoi(operatorIdFieldName_.c_str()) : 0;
+    }
+//
     // --- special input parameters for ewallet
 
     abonentType_ = CheckParameter( params, 

@@ -192,8 +192,8 @@ public:
     /// fill billing infostructure with data
     void getBillingInfoStruct( bill::BillingInfoStruct& billingInfoStruct );
 
-    bill::infrastruct::TariffRec * getTariffRec( uint32_t category,
-                                                 uint32_t mediaType );
+    bill::infrastruct::TariffRec * getTariffRec( uint32_t category, uint32_t mediaType,
+        uint32_t operId=0 );
 
 private:
     Property* getInfrastructConstant( const char* pname );

@@ -29,6 +29,8 @@ private:
     int         contId_;
     BaseField*  catField_;
     BaseField*  contField_;
+    IntField    operator_;
+    int         operatorId_;
 
     // --- output
     StringField resultServiceNumber_;

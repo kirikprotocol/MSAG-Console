@@ -11,6 +11,8 @@ category_(*this,"category",false,true),
 categoryStr_(*this,"category-str",false,true),
 contentType_(*this,"content-type",false,true),
 contentTypeStr_(*this,"content-type-str",false,true),
+operator_(*this,"operator-id",false,true),
+operatorId_(0),
 catId_(0),
 contId_(0),
 catField_(0),
@@ -41,9 +43,9 @@ void BillActionTariff::init( const SectionParams& params,
     }
 
     if ( catField_->getType() == ftUnknown ) {
-        catId_ = ( catField_ == &category_ ) ?
-            category_.getIntValue() : bill::BillingManager::Instance()
-                .getInfrastructure().GetCategoryID(categoryStr_.getStringValue());
+        catId_ = ( catField_ == &category_ )
+            ? (int)category_.getIntValue()
+            : bill::BillingManager::Instance().getInfrastructure().GetCategoryID(categoryStr_.getStringValue());
         if ( ! catId_ ) {
             throw SCAGException("Action %s: category should be int or variable", opname());
         }
@@ -61,13 +63,19 @@ void BillActionTariff::init( const SectionParams& params,
 
     if ( contField_->getType() == ftUnknown ) {
         contId_ = contField_ == &contentType_ ?
-            contentType_.getIntValue() : bill::BillingManager::Instance()
+            (int)contentType_.getIntValue() : bill::BillingManager::Instance()
                 .getInfrastructure().GetMediaTypeID(contentTypeStr_.getStringValue());
         if ( ! contId_ ) {
             throw SCAGException("Action %s: content-type should be int or variable", opname());
         }
     }
 
+// optional operator_id
+    if ( operator_.init(params,propertyObject) )
+      operatorId_ = (int)operator_.getIntValue();
+    else
+      operatorId_ = 0;
+//
     resultServiceNumber_.init(params,propertyObject);
     resultCurrency_.init(params,propertyObject);
     resultMediaType_.init(params,propertyObject);
@@ -75,7 +83,7 @@ void BillActionTariff::init( const SectionParams& params,
     resultBillType_.init(params,propertyObject);
     resultPrice_.init(params,propertyObject);
 
-    smsc_log_debug(logger,"Action %s init...",opname());
+    smsc_log_debug(logger,"Action %s init. Optional operator-id=%d", opname(), operatorId_);
 }
 
 
@@ -84,17 +92,20 @@ bool BillActionTariff::run( ActionContext& context )
     bill::BillingManager& bm = bill::BillingManager::Instance();
     int cat = catId_;
     int mt = contId_;
+    int op = operatorId_;
     if ( contField_->getType() != ftUnknown ) {
         if ( contField_ == &contentType_ ) {
-            mt = contentType_.getValue( context );
-        } else {
+            mt = (int)contentType_.getValue( context );
+        }
+        else {
             mt = bm.getInfrastructure().GetMediaTypeID( contentTypeStr_.getValue(context));
         }
     }
     if ( catField_->getType() != ftUnknown ) {
         if ( catField_ == &category_ ) {
-            cat = category_.getValue( context );
-        } else {
+            cat = (int)category_.getValue( context );
+        }
+        else {
             cat = bm.getInfrastructure().GetCategoryID( categoryStr_.getValue(context) );
         }
     }
@@ -105,26 +116,31 @@ bool BillActionTariff::run( ActionContext& context )
         return true;
     }
 
+    smsc_log_debug(logger,"%d tariff record (%d,%d,%d) search...", opname(), cat, mt, op);
     bill::TariffRec* tariffRec = 0;
-    try {
-        tariffRec = context.getTariffRec(cat,mt);
+    try
+    {
+        tariffRec = context.getTariffRec(cat, mt, op);
         if ( ! tariffRec ) {
-            throw SCAGException("wrong tariff rec, cat=%d mt=%d", cat, mt);
+          smsc_log_debug(logger, "wrong tariff rec, cat=%d mt=%d operator-id=%d", cat, mt, op);
+          throw SCAGException("wrong tariff rec, cat=%d mt=%d operator-id=%d", cat, mt, op);
         }
-    } catch ( std::exception& e ) {
+    }
+    catch ( std::exception& e )
+    {
         smsc_log_warn(logger,"Action %s: exc %s", opname(), e.what() );
         setBillingStatus(context, e.what(), false );
         return true;
     }
 
-    smsc_log_debug(logger,"tariff record (%d,%d) found: svc=%s currency=%s catid=%d mediaid=%d billType=%d price=%s",
-                   cat, mt,
-                   tariffRec->ServiceNumber.c_str(),
-                   tariffRec->Currency.c_str(),
-                   tariffRec->CategoryId,
-                   tariffRec->MediaTypeId,
-                   tariffRec->billType,
-                   tariffRec->getPrice().c_str() );
+    smsc_log_debug(logger,"%d tariff record (%d,%d,%d) found: svc=%s currency=%s catid=%d mediaid=%d billType=%d price=%s",
+       opname(), cat, mt, op,
+       tariffRec->ServiceNumber.c_str(),
+       tariffRec->Currency.c_str(),
+       tariffRec->CategoryId,
+       tariffRec->MediaTypeId,
+       tariffRec->billType,
+       tariffRec->getPrice().c_str() );
 
     if ( resultServiceNumber_.isFound() ) {
         Property* p = resultServiceNumber_.getProperty(context);

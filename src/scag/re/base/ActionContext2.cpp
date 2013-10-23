@@ -339,13 +339,14 @@ void ActionContext::getBillingInfoStruct( bill::BillingInfoStruct& bis )
 
 
 bill::infrastruct::TariffRec* ActionContext::getTariffRec( uint32_t category,
-                                                           uint32_t medyaType)
+                                                           uint32_t medyaType, uint32_t operId)
 {
     CHECKMAGTC;
+    uint32_t localOperId = uint32_t(operId ? operId : commandProperty_->operatorId);
     if ( tariffRec_.get() ) {
         if ( tariffRec_->CategoryId != category ||
              tariffRec_->MediaTypeId != medyaType ||
-             tariffOperId_ != uint32_t(commandProperty_->operatorId) ) {
+             tariffOperId_ != localOperId ) {
             tariffRec_.reset(0);
         }
     }
@@ -353,13 +354,11 @@ bill::infrastruct::TariffRec* ActionContext::getTariffRec( uint32_t category,
     {
         bill::infrastruct::Infrastructure& istr = 
             bill::BillingManager::Instance().getInfrastructure();
-        tariffRec_.reset( istr.GetTariff(commandProperty_->operatorId,
-                                         category,
-                                         medyaType) );
-        tariffOperId_ = commandProperty_->operatorId;
+        tariffRec_.reset( istr.GetTariff(localOperId, category, medyaType) );
+        tariffOperId_ = localOperId;
         if (!tariffRec_.get())
             throw SCAGException( "BillEvent: Cannot find tariffRec for OID=%d, cat=%d, mtype=%d ",
-                                 commandProperty_->operatorId, category, medyaType);
+                localOperId, category, medyaType);
     }
     return tariffRec_.get();
 }

@@ -51,7 +51,12 @@ private:
     std::string     mediaTypeFieldName_;
     FieldType       mediaTypeFieldType_;
     int             mediaTypeId_;
-    
+
+    bool            isOperatorId_;
+    std::string     operatorIdFieldName_;
+    FieldType       operatorIdFieldType_;
+    int             operatorId_;
+
     bool            hasAbonent_;
     std::string     abonentName_;
     FieldType       abonentType_;
