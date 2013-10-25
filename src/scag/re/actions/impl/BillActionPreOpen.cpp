@@ -118,8 +118,17 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
         return 0;
     }
 
+// optional operator-id, int, constant or variable
+    if (isOperatorId_)
+    {
+      Property * property = context.getProperty(operatorIdFieldName_);
+      op = property ? int(property->getInt()) : operatorId_;
+    }
+    else
+      op = 0;
 
-    TariffRec * tariffRec = 0;
+   smsc_log_debug(logger,"%d tariff record (%d,%d,%d) search...", opname(), cat, mt, op);
+   TariffRec * tariffRec = 0;
     try
     {
         tariffRec = context.getTariffRec(cat, mt, op);
@@ -136,7 +145,7 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
     }
     catch (SCAGException& e)
     {
-        smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", opname(), e.what());
+        smsc_log_warn(logger,"Action '%s' cannot process. Details: %s", opname(), e.what());
         setBillingStatus( context, e.what(), false );
         setTariffStatus( context, 0 );
         return 0;

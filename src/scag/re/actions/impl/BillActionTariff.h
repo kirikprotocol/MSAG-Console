@@ -25,12 +25,11 @@ private:
     StringField categoryStr_;
     IntField    contentType_;
     StringField contentTypeStr_;
+    IntField    operatorId_;
     int         catId_;
     int         contId_;
     BaseField*  catField_;
     BaseField*  contField_;
-    IntField    operator_;
-    int         operatorId_;
 
     // --- output
     StringField resultServiceNumber_;

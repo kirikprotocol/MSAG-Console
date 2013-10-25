@@ -11,8 +11,7 @@ category_(*this,"category",false,true),
 categoryStr_(*this,"category-str",false,true),
 contentType_(*this,"content-type",false,true),
 contentTypeStr_(*this,"content-type-str",false,true),
-operator_(*this,"operator-id",false,true),
-operatorId_(0),
+operatorId_(*this,"operator-id",false,true),
 catId_(0),
 contId_(0),
 catField_(0),
@@ -62,7 +61,7 @@ void BillActionTariff::init( const SectionParams& params,
     }
 
     if ( contField_->getType() == ftUnknown ) {
-        contId_ = contField_ == &contentType_ ?
+        contId_ = (contField_ == &contentType_) ?
             (int)contentType_.getIntValue() : bill::BillingManager::Instance()
                 .getInfrastructure().GetMediaTypeID(contentTypeStr_.getStringValue());
         if ( ! contId_ ) {
@@ -70,20 +69,15 @@ void BillActionTariff::init( const SectionParams& params,
         }
     }
 
-// optional operator_id
-    if ( operator_.init(params,propertyObject) )
-      operatorId_ = (int)operator_.getIntValue();
-    else
-      operatorId_ = 0;
-//
+// optional operator_id, int, constant or variable
+    operatorId_.init(params,propertyObject);
+
     resultServiceNumber_.init(params,propertyObject);
     resultCurrency_.init(params,propertyObject);
     resultMediaType_.init(params,propertyObject);
     resultCategory_.init(params,propertyObject);
     resultBillType_.init(params,propertyObject);
     resultPrice_.init(params,propertyObject);
-
-    smsc_log_debug(logger,"Action %s init. Optional operator-id=%d", opname(), operatorId_);
 }
 
 
@@ -92,7 +86,9 @@ bool BillActionTariff::run( ActionContext& context )
     bill::BillingManager& bm = bill::BillingManager::Instance();
     int cat = catId_;
     int mt = contId_;
-    int op = operatorId_;
+    int op = (int)operatorId_.getValue( context );
+    smsc_log_debug(logger,"Action %s run. Optional operator-id=%d", opname(), op);
+
     if ( contField_->getType() != ftUnknown ) {
         if ( contField_ == &contentType_ ) {
             mt = (int)contentType_.getValue( context );
