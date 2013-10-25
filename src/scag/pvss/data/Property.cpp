@@ -84,7 +84,25 @@ const char* propertyTypeToString( PropertyType pt )
 
 } // namespace perstypes
 
+enum TIME_INC_TYPE
+{	Y=0,MN,D,H,M,S	};
 
+inline time_t time_increment(TIME_INC_TYPE tit ,time_t tm_for_increment ,int num)
+{
+	struct tm* timeinfo(0);
+	timeinfo=localtime(&tm_for_increment);
+	switch(tit)
+	{
+	case Y:		timeinfo->tm_year+=num;		break;
+	case MN:	timeinfo->tm_mon+=num;		break;
+	case D:		timeinfo->tm_mday+=num;		break;
+	case H:		timeinfo->tm_hour+=num;		break;
+	case M:		timeinfo->tm_min+=num;		break;
+	case S:		timeinfo->tm_sec+=num;		break;
+	default:	timeinfo->tm_sec+=num;      break;
+	}
+	return mktime(timeinfo);
+}
 const std::string Property::emptyString_("empty");
 
 smsc::logger::Logger* Property::log_ = 0;
@@ -154,11 +172,17 @@ void Property::setValue(const Property &cp)
 void Property::copy(const Property& cp)
 {
     if ( &cp == this ) return;
+    if (!log_) initLog();
     setValue(cp);
     setPropertyName(cp.name.c_str());
     time_policy = cp.time_policy;
-    final_date = cp.final_date;
     life_time = cp.life_time;
+    final_date = (time_policy == W_ACCESS || time_policy == ACCESS || time_policy == R_ACCESS) ? time(NULL) + life_time : cp.final_date;
+    //for log
+    /*char strBuf[STRBUF_SIZE];
+    struct tm res;
+    strftime(strBuf, STRBUF_SIZE, "%Y/%m/%d %H:%M:%S", gmtime_r(&final_date,&res));
+    smsc_log_debug(log_,"copy time_policy:%u final_date:%s life_time:%u property ptr:0x%p",time_policy, strBuf, life_time, this);*/
 }
 
 const std::string& Property::toString() const
@@ -354,8 +378,8 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
 
 Property::Property(const Property& cp)
 {
+	//smsc_log_debug(log_,"property copy consructor: 0x%p %s",this,toString().c_str());
     copy(cp);
-    // smsc_log_debug(log_,"ctor %p %s",this,toString().c_str());
 }
 
 Property& Property::operator=(const Property& cp)
@@ -376,6 +400,7 @@ void Property::ReadAccess()
 {
     if (time_policy == R_ACCESS || time_policy == ACCESS) {
         invalidateCache();
+        time_t tmp_final_date=final_date;
         final_date = time(NULL) + life_time;
     }
 }
@@ -384,13 +409,14 @@ void Property::WriteAccess()
 {
     if (time_policy == W_ACCESS || time_policy == ACCESS) {
         invalidateCache();
+        time_t tmp_final_date=final_date;
         final_date = time(NULL) + life_time;
     }
 }
 
 bool Property::isExpired() const
 {
-    return time_policy != INFINIT && final_date <= time(NULL);
+	return time_policy != INFINIT && final_date <= time(NULL);
 }
 bool Property::isExpired(time_t cur_time) const
 {
@@ -428,7 +454,7 @@ void Property::Serialize( util::storage::SerialBuffer& buf, bool toFSDB, util::i
 {
     buf.WriteInt8((uint8_t)type);
     buf.WriteInt8((uint8_t)time_policy);
-    buf.WriteInt32((uint32_t)final_date);
+    buf.WriteInt32((uint32_t)final_date);//TO DO in 2032 year
     buf.WriteInt32(life_time);
     if(toFSDB) {
         int i_name;
@@ -453,7 +479,7 @@ void Property::Deserialize(util::storage::SerialBuffer& buf, bool fromFSDB, util
     invalidateCache();
     type = (PropertyType)buf.ReadInt8();
     time_policy = (TimePolicy)buf.ReadInt8();
-    final_date = (time_t)buf.ReadInt32();
+    final_date = (time_t)buf.ReadInt32();//TO DO in 2032 year
     life_time = buf.ReadInt32();
     if (fromFSDB) {
         int i_name = buf.ReadInt32();
