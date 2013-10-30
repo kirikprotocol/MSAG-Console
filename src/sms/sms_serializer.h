@@ -165,7 +165,8 @@ namespace BufOps{
 
 }
 
-inline void Serialize(const SMS& sms,BufOps::SmsBuffer& dst)
+
+inline void Serialize(const SMS& sms,BufOps::SmsBuffer& dst) //==ucs2
 {
   using namespace BufOps;
 

@@ -49,7 +49,8 @@ inline void Address2PduAddress(const Address& addr,PduAddress& src)
 }
 
 
-inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
+
+inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0) //==ucs2
 {
   using namespace smsc::smeman;
   if ( sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) )
@@ -212,7 +213,8 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
   }
 }
 
-inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
+
+inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0) //==ucs2
 {
   using namespace smsc::smeman;
   __require__ ( pdu != NULL );

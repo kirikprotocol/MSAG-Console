@@ -599,7 +599,7 @@ public:
     StoreFileData* storeFile;
     smsc::core::synchronization::Condition cnd;
 
-    void SaveSms(const SMS& argSms)
+    void SaveSms(const SMS& argSms) //==ucs2
     {
       Clear();
       BufOps::SmsBuffer buf(0);

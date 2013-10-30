@@ -39,7 +39,7 @@ int Body::getRequiredBufferSize() const
 };
 
 
-void Body::encode(uint8_t* buffer,int& length) const
+void Body::encode(uint8_t* buffer,int& length) const //==ucs2
 {
   __require__( buffer != 0 );
   __require__( length >= 0 );
