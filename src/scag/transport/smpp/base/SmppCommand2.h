@@ -547,6 +547,9 @@ public:
     static std::auto_ptr<SmppCommand> makeDataSmResp(const char* messageId, uint32_t dialogId, uint32_t status);
     static std::auto_ptr<SmppCommand> makeSubmitMultiResp(const char* messageId, uint32_t dialogId, uint32_t status);
     static std::auto_ptr<SmppCommand> makeDeliverySmResp(const char* messageId, uint32_t dialogId, uint32_t status);
+//
+    static std::auto_ptr<SmppCommand> mkErrResp(int cmdId,int dlgId,int errCode);
+//
     static std::auto_ptr<SmppCommand> makeGenericNack(uint32_t dialogId,uint32_t status);
     static std::auto_ptr<SmppCommand> makeUnbind(int dialogId,int mode=0);
     static std::auto_ptr<SmppCommand> makeUnbindResp(uint32_t dialogId,uint32_t status,void* data);

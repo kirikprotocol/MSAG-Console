@@ -1080,7 +1080,7 @@ public:
             queue.Push(cmd.release());
             queueMon.notify();
         } else {
-            std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::THROTTLED);
+            std::auto_ptr<SmppCommand> resp = SmppCommand::mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::THROTTLED);
             ch.putCommand(resp);
         }
     }
@@ -1119,7 +1119,7 @@ public:
         smsc_log_debug(log_,"a new command is taken, incrementing -> %u",cmdInProcCounter_);
         return true;
     }
-
+/*
 private:
     std::auto_ptr<SmppCommand> mkErrResp( int cmdId, int dlgId, int errCode )
     {
@@ -1130,7 +1130,7 @@ private:
         default: throw smsc::util::Exception("Unsupported commandId:%d",cmdId);
         }
     }
-
+*/
 private:
     bool running;
     smsc::core::synchronization::EventMonitor queueMon;

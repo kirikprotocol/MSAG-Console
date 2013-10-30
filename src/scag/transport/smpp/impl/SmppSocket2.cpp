@@ -207,14 +207,26 @@ void SmppSocket::processInput()
     case SmppCommandSet::DATA_SM:
     case SmppCommandSet::DATA_SM_RESP:
     {
-      try{
-          std::auto_ptr<SmppCommand> cmd(new SmppCommand(pdu));
-          cmdQueue->putCommand(*this,cmd);
-          break;
-      }catch(std::exception& e)
+      try
       {
-        smsc_log_warn(log_, "putCommand %p %s sock=%p exception:%s",
-                      this,getPeer(),sock,e.what());
+        try
+        {
+          std::auto_ptr<SmppCommand> cmd(new SmppCommand(pdu));  //==ucs2
+          cmdQueue->putCommand(*this,cmd);
+        }
+        catch (runtime_error& e)
+        {   //send resp with errorcode
+          putCommand(SmppCommand::mkErrResp(pdu->get_commandId(), pdu->get_sequenceNumber(), smsc::system::Status::INVMSGLEN));
+        }
+        break;
+      }
+      catch(std::exception& e)
+      {
+        smsc_log_warn(log_, "putCommand %p %s sock=%p exception:%s", this, getPeer(), sock, e.what());
+      }
+      catch(...)
+      {
+        smsc_log_warn(log_, "putCommand %p %s sock=%p exception: unknown", this, getPeer(), sock);
       }
     }//break; fallthru
     default:
@@ -223,7 +235,6 @@ void SmppSocket::processInput()
     };
   }
 }
-
 
 void SmppSocket::sendData()
 {

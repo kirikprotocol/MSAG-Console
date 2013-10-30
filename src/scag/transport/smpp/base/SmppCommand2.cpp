@@ -5,6 +5,7 @@
 #include "SmppEntity2.h"
 #include "scag/util/encodings/Encodings.h"
 #include "scag/util/io/HexDump.h"
+#include "util/Exception.hpp"
 
 namespace scag2 {
 namespace transport {
@@ -166,6 +167,16 @@ std::auto_ptr<SmppCommand> SmppCommand::makeDeliverySmResp(const char* messageId
     return makeCommandSmResp( DELIVERY_RESP, messageId, dialogId, status, false );
 }
 
+std::auto_ptr<SmppCommand> SmppCommand::mkErrResp(int cmdId, int dlgId, int errCode)
+{
+  switch(cmdId)
+  {
+    case SUBMIT:    return SmppCommand::makeSubmitSmResp("", dlgId, errCode);
+    case DELIVERY:  return SmppCommand::makeDeliverySmResp("", dlgId, errCode);
+    case DATASM:    return SmppCommand::makeDataSmResp("", dlgId, errCode);
+    default:        throw smsc::util::Exception("Unsupported commandId:%d", cmdId);
+  }
+}
 
 std::auto_ptr<SmppCommand> SmppCommand::makeGenericNack(uint32_t dialogId,uint32_t status)
 {
@@ -649,7 +660,7 @@ void SmppCommand::print( util::Print& p ) const
 }
 
 
-SmppCommand::SmppCommand( SmppHeader* pdu) :
+SmppCommand::SmppCommand( SmppHeader* pdu) :  //==ucs2
 SCAGCommand(), _SmppCommand()
 {
     getlogger();
@@ -825,7 +836,7 @@ SCAGCommand(), _SmppCommand()
         {
             dta_ = new SmsCommand;
             shared_ = &get_smsCommand();
-            makeSMSBody( get_sms(), pdu);
+            makeSMSBody( get_sms(), pdu); //==ucs2
             goto end_construct;
         }
         sms_resp:
@@ -873,20 +884,28 @@ SCAGCommand(), _SmppCommand()
         end_construct:
         set_dialogId( pdu->get_sequenceNumber() );
         postfix();
-
-    } catch ( std::exception& e ) {
-
+    }
+    catch ( runtime_error& e )
+    {
         smsc_log_warn(log_,"exc in SmppCommand (pdu follows): %s", e.what());
         scag_plog_warn(plog,log_);
         pdu->dump(&plog,2);
         dispose();
-
-    } catch ( ... ) {
+        throw;
+    }
+    catch ( std::exception& e )
+    {
+        smsc_log_warn(log_,"exc in SmppCommand (pdu follows): %s", e.what());
+        scag_plog_warn(plog,log_);
+        pdu->dump(&plog,2);
+        dispose();
+    }
+    catch ( ... )
+    {
         smsc_log_warn(log_,"unknown exc in SmppCommand (pdu follows):");
         scag_plog_warn(plog,log_);
         pdu->dump(&plog,2);
         dispose();
-
     }
     return;
 }

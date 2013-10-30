@@ -1121,19 +1121,6 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
     }
 }
 
-
-static std::auto_ptr<SmppCommand> mkErrResp(int cmdId,int dlgId,int errCode)
-{
-  switch(cmdId)
-  {
-  case SUBMIT: return SmppCommand::makeSubmitSmResp("",dlgId,errCode);
-  case DELIVERY: return SmppCommand::makeDeliverySmResp("",dlgId,errCode);
-  case DATASM: return SmppCommand::makeDataSmResp("",dlgId,errCode);
-  default: throw Exception("Unsupported commandId:%d",cmdId);
-  }
-}
-
-
 void SmppManagerImpl::putCommand( SmppChannel& ct, std::auto_ptr<SmppCommand> cmd )
 {
     SmppEntity* entPtr=0;
@@ -1156,7 +1143,7 @@ void SmppManagerImpl::putCommand( SmppChannel& ct, std::auto_ptr<SmppCommand> cm
     if(!running)
     {
         smsc_log_warn(limitsLog,"Denied %s from '%s' due to shutting down", i == DELIVERY ? "DELIVERY" : (i == SUBMIT ? "SUBMIT" : "DATASM"), entPtr->info.systemId.c_str());
-        std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::SYSERR);
+        std::auto_ptr<SmppCommand> resp = SmppCommand::mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::SYSERR);
         ct.putCommand( resp );
         return;
     }
@@ -1183,7 +1170,7 @@ void SmppManagerImpl::putCommand( SmppChannel& ct, std::auto_ptr<SmppCommand> cm
         if(!allow)
         {
             smsc_log_info(limitsLog,"Denied by license limitation:%d/%d",cntValue,licLimit);
-            std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::THROTTLED);
+            std::auto_ptr<SmppCommand> resp = SmppCommand::mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::THROTTLED);
             ct.putCommand(resp);
             return;
         }
@@ -1197,16 +1184,16 @@ void SmppManagerImpl::putCommand( SmppChannel& ct, std::auto_ptr<SmppCommand> cm
         !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
     {
         smsc_log_warn(limitsLog,"Denied submit from '%s' by sendLimit:%d/%d",entPtr->info.systemId.c_str(),cnt,entPtr->info.sendLimit);
-        std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
+        std::auto_ptr<SmppCommand> resp = SmppCommand::mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
         ct.putCommand(resp);
     } else if ( queue.Count()>=queueLimit && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) {
         smsc_log_warn(limitsLog,"Denied submit from '%s' by queueLimit:%d/%d",entPtr->info.systemId.c_str(),queue.Count(),queueLimit);
-        std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
+        std::auto_ptr<SmppCommand> resp = SmppCommand::mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
         ct.putCommand(resp);
     } else {
         if(entPtr->info.inQueueLimit>0 && entPtr->getQueueCount() >= entPtr->info.inQueueLimit) {
             smsc_log_warn(limitsLog,"Denied submit from '%s' by inQueueLimit:%d/%d",entPtr->info.systemId.c_str(),entPtr->getQueueCount(),entPtr->info.inQueueLimit);
-            std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
+            std::auto_ptr<SmppCommand> resp = SmppCommand::mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
             ct.putCommand(resp);
         } else {
             queue.Push( cmd.release() );
