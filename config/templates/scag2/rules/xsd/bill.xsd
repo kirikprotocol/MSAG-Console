@@ -125,6 +125,7 @@
                     <attribute name="action" type="bill:BillActions" use="required" />
                     <attribute name="status" type="scag:Var" use="optional"/>
                     <attribute name="msg" type="scag:Var" use="optional"/>
+                    <attribute name="error_code" type="scag:Value" use="optional"/>
                 </complexType>
             </element>
 
@@ -143,6 +144,7 @@
                     <attribute name="walletType" type="scag:Value" use="optional"/>
                     <attribute name="externalId" type="scag:Value" use="optional"/>
                     <attribute name="transId" type="scag:Value" use="optional"/>
+                    <attribute name="error_code" type="scag:Value" use="optional"/>
                </complexType>
             </element>
         
