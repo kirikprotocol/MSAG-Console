@@ -938,6 +938,13 @@ IntHash<AccessType> SmppCommandAdapter::initFieldsAccess( EventHandlerType eh )
         hs.Insert(SLICING_REF_NUM       ,atRead);
         hs.Insert(SLICING_TOTAL_SEGMENTS,atRead);
         hs.Insert(SLICING_SEGMENT_SEQNUM,atRead);
+
+        // --- additional whoisd-specific fields
+        hs.Insert(OPTIONAL_CHARGING, atReadWrite);
+        hs.Insert(OPTIONAL_MESSAGE_TRANSPORT_TYPE, atReadWrite);
+        hs.Insert(OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE, atReadWrite);
+        hs.Insert(OPTIONAL_MESSAGE_CONTENT_TYPE, atReadWrite);
+        hs.Insert(OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE, atReadWrite);
         break;
 
     default:
@@ -1086,6 +1093,20 @@ Hash<int> SmppCommandAdapter::initFieldNames( EventHandlerType eh )
     default : break;
     }
 
+    // --- additional whoisd-specific fields
+    switch (eh) {
+    case EH_SUBMIT_SM:
+    case EH_DELIVER_SM:
+    case EH_DATA_SM:
+      hs["whoisd_charging"]                          = OPTIONAL_CHARGING;
+      hs["whoisd_message_transport_type"]            = OPTIONAL_MESSAGE_TRANSPORT_TYPE;
+      hs["whoisd_expected_message_transport_type"]   = OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE;
+      hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
+      hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
+    default:
+        break;
+    }
+
     // --- additional fields
     switch (eh) {
 
@@ -1113,12 +1134,6 @@ Hash<int> SmppCommandAdapter::initFieldNames( EventHandlerType eh )
 
         // hs["alert_on_msg_delivery"]
         // hs["its_reply_type"]
-    
-        hs["whoisd_charging"]                          = OPTIONAL_CHARGING;
-        hs["whoisd_message_transport_type"]            = OPTIONAL_MESSAGE_TRANSPORT_TYPE;
-        hs["whoisd_expected_message_transport_type"]   = OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE;
-        hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
-        hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
         break;
 
     case EH_DELIVER_SM:

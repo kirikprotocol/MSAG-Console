@@ -20,6 +20,7 @@ using re::actions::CommandAccessor;
 
 class SmppCommandAdapter : public CommandAccessor
 {
+public:
     enum AdditionTag
     {
             SMALLEST_ADDITIONAL_TAG = 100,

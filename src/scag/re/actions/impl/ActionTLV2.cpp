@@ -1,6 +1,7 @@
 #include "ActionTLV2.h"
 #include "scag/re/base/CommandAdapter2.h"
 // #include "scag/re/base/CommandBridge.h"
+#include "scag/re/base/SmppAdapter2.h"
 
 #include "util/Uint64Converter.h"
 #include "util/BinDump.hpp"
@@ -26,7 +27,11 @@ Hash<int> ActionTLV::typesHash = ActionTLV::InitTypes();
 Hash<int> ActionTLV::InitNames()
 {
     Hash<int> hs;
-    hs["name1"] = 11; // ??
+    hs["whoisd_charging"]                          = scag2::re::smpp::SmppCommandAdapter::OPTIONAL_CHARGING;
+    hs["whoisd_message_transport_type"]            = scag2::re::smpp::SmppCommandAdapter::OPTIONAL_MESSAGE_TRANSPORT_TYPE;
+    hs["whoisd_expected_message_transport_type"]   = scag2::re::smpp::SmppCommandAdapter::OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE;
+    hs["whoisd_message_content_type"]              = scag2::re::smpp::SmppCommandAdapter::OPTIONAL_MESSAGE_CONTENT_TYPE;
+    hs["whoisd_expected_message_content_type"]     = scag2::re::smpp::SmppCommandAdapter::OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
     return hs;
 }
 Hash<int> ActionTLV::InitTypes()
