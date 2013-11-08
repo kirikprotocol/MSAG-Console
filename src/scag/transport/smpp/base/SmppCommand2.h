@@ -751,6 +751,8 @@ private:
         }
     }
 
+    void dcCorrection(SMS* sms);
+
 public:
 
 protected:

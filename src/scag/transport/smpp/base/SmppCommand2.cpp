@@ -803,6 +803,7 @@ SCAGCommand(), _SmppCommand()
                 SubmitMultiSm* sm = new SubmitMultiSm;
                 dta_ = sm;
                 makeSMSBody( &(sm->msg), pdu);
+                dcCorrection(&(sm->msg));
                 unsigned u = 0;
                 unsigned uu = pduX->message.numberOfDests;
                 for ( ; u < uu; ++u )
@@ -837,6 +838,7 @@ SCAGCommand(), _SmppCommand()
             dta_ = new SmsCommand;
             shared_ = &get_smsCommand();
             makeSMSBody( get_sms(), pdu); //==ucs2
+            dcCorrection(get_sms());
             goto end_construct;
         }
         sms_resp:
@@ -910,6 +912,23 @@ SCAGCommand(), _SmppCommand()
     return;
 }
 
+//bug 11443, sms:data_coding change 0->3 if sme flag exists.
+void SmppCommand::dcCorrection(SMS* sms)
+{
+  if ( !sms ) return;
+  const SmppEntity* sme = getEntity();
+  if ( sme && sme->info.defaultLatin1 )
+  {
+    if( sms->hasIntProperty(Tag::SMPP_DATA_CODING) )
+    {
+      if( smsc::smpp::DataCoding::SMSC7BIT == sms->getIntProperty(Tag::SMPP_DATA_CODING) )
+      {
+        sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, smsc::smpp::DataCoding::LATIN1);
+        smsc_log_debug(log_, "cmd %d sms %d dc 0->3, sme %s flag", this->cmdid_, sms->dialogId, sme->info.systemId.c_str());
+      }
+    }
+  }
+}
 
 SmppHeader* SmppCommand::makePdu()
 {

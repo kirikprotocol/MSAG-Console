@@ -62,7 +62,8 @@ tag_uid,
 tag_bindSystemId,
 tag_bindPassword,
 tag_addressRange,
-tag_systemType
+tag_systemType,
+tag_defaultLatin1
 };
 
 struct Param{
@@ -94,7 +95,8 @@ TAGDEF(systemType),
 TAGDEF(inQueueLimit),
 TAGDEF(outQueueLimit),
 TAGDEF(metaGroup),
-TAGDEF(persistance)
+TAGDEF(persistance),
+TAGDEF(defaultLatin1)
 };
 
 struct ParamsHash:public smsc::core::buffers::Hash<ParamTag>{
@@ -222,6 +224,9 @@ static void FillEntity(SmppEntityInfo& entity,DOMNode* record)
         break;
       case tag_uid:
         entity.uid=GetIntValue(attrs);
+        break;
+      case tag_defaultLatin1:
+        entity.defaultLatin1=GetIntValue(attrs);
         break;
       case tag_addressRange:
         FillStringValue(attrs,entity.addressRange);

@@ -28,6 +28,7 @@ struct SmppEntityInfo
     FixedLengthString<32> altHost;
     int  altPort;
     uint8_t uid;
+    uint8_t defaultLatin1; //11443 : flag to change dc 0->3
     int sendLimit;
     int inQueueLimit;
     int outQueueLimit;
@@ -46,6 +47,7 @@ struct SmppEntityInfo
         outQueueLimit=0;
         enabled=false;
         snmpTracking=true;
+        defaultLatin1=0;
     }
 };
 
