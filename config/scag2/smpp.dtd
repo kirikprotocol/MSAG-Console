@@ -9,7 +9,7 @@
 <!ATTLIST param 
 name (systemId|password|timeout|mode|enabled|transit|saa|host|port|althost|altport|uid|
       bindSystemId|bindPassword|providerId|addressRange|systemType|snmpTracking|
-      inQueueLimit|outQueueLimit|maxSmsPerSec|policy|metaGroup|persistence) #REQUIRED
+      inQueueLimit|outQueueLimit|maxSmsPerSec|policy|metaGroup|persistence|defaultLatin1) #REQUIRED
 value CDATA #REQUIRED>
 
 
