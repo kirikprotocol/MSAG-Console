@@ -614,11 +614,13 @@ public:
     SmppEntity* getEntity() const {
         CHECKMAGTC;
         return src_ent_; }
-    void setEntity(SmppEntity* newent){
+    void setEntity(SmppEntity* newent);
+/*
+    {
         CHECKMAGTC;
         src_ent_ = newent;
     }
-
+*/
     SmppEntity* getDstEntity() const {
         CHECKMAGTC;
         return dst_ent_; 
@@ -750,8 +752,6 @@ private:
             if ( !log_ ) log_ = smsc::logger::Logger::getInstance("smpp.cmd");
         }
     }
-
-    void dcCorrection(SMS* sms);
 
 public:
 

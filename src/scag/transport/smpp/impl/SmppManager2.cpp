@@ -222,11 +222,11 @@ static void FillEntity(SmppEntityInfo& entity,DOMNode* record)
       case tag_snmpTracking:
         entity.snmpTracking = GetBoolValue(attrs);
         break;
+      case tag_defaultLatin1:
+        entity.defaultLatin1=GetBoolValue(attrs);
+        break;
       case tag_uid:
         entity.uid=GetIntValue(attrs);
-        break;
-      case tag_defaultLatin1:
-        entity.defaultLatin1=GetIntValue(attrs);
         break;
       case tag_addressRange:
         FillStringValue(attrs,entity.addressRange);
