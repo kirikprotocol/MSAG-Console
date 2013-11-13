@@ -85,6 +85,7 @@ public class jEdit extends Applet
 
   public static URL baseUrl = null;
   public static URL servletUrl = null;
+  public static String ping_host;
   public static int ping_port;
   public static int ping_timeout;
   public static String username = null;
@@ -138,11 +139,13 @@ public class jEdit extends Applet
       System.out.println("jEdit 131 servletUrl: "+servletUrl);
     } catch (MalformedURLException e) { e.printStackTrace();
     }
+    ping_host = getParameter("ping_host");
     ping_port = Integer.parseInt(getParameter("ping_port"));
     ping_timeout = Integer.parseInt(getParameter("ping_timeout"));
-    System.out.println("jEdit version= 2011.11.06 12:02");
+    System.out.println("jEdit version= 2013.11.13 13:00");
     System.out.println("baseUrl= " + baseUrl.toString());
     System.out.println("servletUrl= " + servletUrl.toString());
+    System.out.println("ping_host= " + ping_host);
     System.out.println("ping_port= " + ping_port);
     System.out.println("ping_timeout= " + ping_timeout);
     initSystemProperties();
@@ -389,7 +392,7 @@ public class jEdit extends Applet
     //lc = new LiveConnect(baseUrl.getHost(),ping_port);
     //lcTimer = new Timer(ping_timeout,lc);
 
-    lctt = new LiveConnectTimerTask(baseUrl.getHost(),ping_port);
+    lctt = new LiveConnectTimerTask(ping_host,ping_port);
     lcTimer = new java.util.Timer(true);
     lcTimer.schedule(lctt, 0, ping_timeout);  
 

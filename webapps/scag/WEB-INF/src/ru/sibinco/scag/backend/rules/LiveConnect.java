@@ -7,18 +7,14 @@ import java.net.Socket;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
  * User: dym
  * Date: 15.12.2006
  * Time: 12:56:40
- * To change this template use File | Settings | File Templates.
  */
 public class LiveConnect extends Thread {
+  private String ping_host;
   private int ping_port;
   private int timeout;
   private ServerSocket serverSock;
@@ -27,11 +23,11 @@ public class LiveConnect extends Thread {
   private Object shutSemaphore = new Object();
 
   public LiveConnect(RuleManager ruleManager, Config config) throws Exception{
-      ping_port = (int)config.getInt("rule editor.ping_port");
-      timeout = (int)config.getInt("rule editor.ping_timeout");
-      serverSock = new ServerSocket(ping_port);
-      watcher = new Watcher(ruleManager,timeout);
-
+    ping_host = config.getString("rule editor.ping_host");
+    ping_port = (int)config.getInt("rule editor.ping_port");
+    timeout = (int)config.getInt("rule editor.ping_timeout");
+    serverSock = new ServerSocket(ping_port);
+    watcher = new Watcher(ruleManager,timeout);
   }
 
   public void run() {
@@ -86,6 +82,10 @@ public class LiveConnect extends Thread {
 
   public int getPingPort() {
     return ping_port;
+  }
+
+  public String getPingHost() {
+    return ping_host;
   }
 
 }

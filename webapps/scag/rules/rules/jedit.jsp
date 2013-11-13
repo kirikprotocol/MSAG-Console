@@ -91,6 +91,7 @@
        <param name="homedir" value="applet">
        <param name="username" value="rules">
        <param name="servletUrl" value="${pageContext.request.contextPath}/applet/myServlet">
+       <param name="ping_host" value="<%=((SCAGAppContext)request.getAttribute("appContext")).getLiveConnect().getPingHost()%>">
        <param name="ping_port" value="<%=((SCAGAppContext)request.getAttribute("appContext")).getLiveConnect().getPingPort()%>">
        <param name="ping_timeout" value="<%=((SCAGAppContext)request.getAttribute("appContext")).getLiveConnect().getTimeout()%>">
        <param name="action" value="<%=request.getParameter("action")%>">

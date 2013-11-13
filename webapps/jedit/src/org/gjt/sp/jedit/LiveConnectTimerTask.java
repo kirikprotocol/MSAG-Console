@@ -31,9 +31,9 @@ public class LiveConnectTimerTask extends TimerTask {
     public void run() {
         Socket socket = null;
         try {
-            //System.out.println("LiveConnectTimerTask Create socket ... host="+host+" port="+port);
+            System.out.println("LiveConnectTimerTask Try to create socket ... host="+host+" port="+port);
             socket = new Socket(host,port);
-            //System.out.println("LiveConnectTimerTask Socket was created.");
+            System.out.println("LiveConnectTimerTask Socket has successfully created.");
             PrintWriter writer = new PrintWriter(socket.getOutputStream());
             if (ruleIds.size() >0) {
                 synchronized(ruleIds) {
