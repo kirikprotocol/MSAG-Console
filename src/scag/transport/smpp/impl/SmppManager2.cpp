@@ -54,6 +54,7 @@ tag_metaGroup,
 tag_persistance,
 tag_inQueueLimit,
 tag_outQueueLimit,
+tag_defaultLatin1,
 tag_host=tag_outQueueLimit|tag_smscParams,
 tag_port,
 tag_althost,
@@ -62,8 +63,7 @@ tag_uid,
 tag_bindSystemId,
 tag_bindPassword,
 tag_addressRange,
-tag_systemType,
-tag_defaultLatin1
+tag_systemType
 };
 
 struct Param{
