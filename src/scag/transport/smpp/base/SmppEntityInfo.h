@@ -42,6 +42,7 @@ struct SmppEntityInfo
         bindType=btNone;
         port=0;
         altPort=0;
+        uid=0;
         sendLimit=0;
         inQueueLimit=0;
         outQueueLimit=0;
