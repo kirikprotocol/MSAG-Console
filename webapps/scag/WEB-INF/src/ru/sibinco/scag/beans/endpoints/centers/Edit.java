@@ -123,6 +123,7 @@ public class Edit extends EditBean
         this.altPort = center.getAltPort();
         this.enabled = center.isEnabled();
         this.snmpTracking = center.isSnmpTracking();
+        this.defaultLatin1 = center.isDefaultLatin1();
         this.providerId = -1;//center.getProvider().getId();
         this.uid = center.getUid();
         this.bindSystemId = center.getBindSystemId();
