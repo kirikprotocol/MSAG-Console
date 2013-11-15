@@ -41,6 +41,7 @@ public class Edit extends EditBean {
     protected int timeout = 0;
     protected boolean enabled;
     protected boolean snmpTracking;
+    protected boolean defaultLatin1;
     protected byte mode = Svc.MODE_TRX;
     protected long providerId = -1;
     protected long transportId = 1;
@@ -109,6 +110,7 @@ public class Edit extends EditBean {
         this.timeout = svc.getTimeout();
         this.enabled = svc.isEnabled();
         this.snmpTracking = svc.isSnmpTracking();
+        this.defaultLatin1 = svc.isDefaultLatin1();
         this.maxSmsPerSec = svc.getMaxSmsPerSec();
         this.inQueueLimit = svc.getInQueueLimit();
         this.outQueueLimit = svc.getOutQueueLimit();
@@ -140,11 +142,11 @@ public class Edit extends EditBean {
             logger.debug( "services/Edit save() 136");
             oldSvc = (Svc) svcs.get(getEditId());
             svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
-                          inQueueLimit, outQueueLimit, maxSmsPerSec, oldSvc.getMetaGroup(), snmpTracking);
+                          inQueueLimit, outQueueLimit, maxSmsPerSec, oldSvc.getMetaGroup(), snmpTracking, defaultLatin1);
         }else{
             logger.debug( "services/Edit save() 141, snmpTracking=" + snmpTracking );
             svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
-                          inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmpTracking);
+                          inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmpTracking, defaultLatin1);
         }
         logger.debug( "services/Edit save() 145");
         svcs.remove(getEditId());
@@ -313,5 +315,14 @@ public class Edit extends EditBean {
     public int getMaxSmsPerSec() {
         return maxSmsPerSec;
     }
+
+    public boolean isDefaultLatin1() {
+        return defaultLatin1;
+    }
+
+    public void setDefaultLatin1(boolean defaultLatin1) {
+        this.defaultLatin1 = defaultLatin1;
+    }
+
 }
 

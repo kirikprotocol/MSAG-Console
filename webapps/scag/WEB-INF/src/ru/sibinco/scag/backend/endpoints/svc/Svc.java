@@ -42,6 +42,7 @@ public class Svc {
     private int timeout = 0;
     private boolean enabled = true;
     private boolean snmpTracking;
+    private boolean defaultLatin1;
     private byte mode = MODE_TRX;
     private Provider provider;
     private String transport = "SMPP";
@@ -128,7 +129,7 @@ public class Svc {
         public Svc(final String id, final String password, final int timeout,
                final boolean enabled, final byte mode, final Provider provider,
                final int inQueueLimit, final int outQueueLimit, final int maxSmsPerSec,
-               final String metaGroup, final boolean snmpTracking)
+               final String metaGroup, final boolean snmpTracking, final boolean defaultLatin1)
                throws NullPointerException
     {
         if (null == id)
@@ -138,6 +139,7 @@ public class Svc {
         this.timeout = timeout;
         this.enabled = enabled;
         this.snmpTracking = snmpTracking;
+        this.defaultLatin1 = defaultLatin1;
         this.mode = mode;
         this.provider = provider;
         this.inQueueLimit = inQueueLimit;
@@ -164,6 +166,8 @@ public class Svc {
                     enabled = Boolean.valueOf(value).booleanValue();
                 } else if ("snmpTracking".equals(name)) {
                     snmpTracking = Boolean.valueOf(value).booleanValue();
+                } else if ("defaultLatin1".equals(name)) {
+                    defaultLatin1 = Boolean.valueOf(value);
                 } else if ("mode".equals(name)) {
                     mode = getMode(value);
                 } else if ("providerId".equals(name)) {
@@ -217,6 +221,7 @@ public class Svc {
         out.println("    <param name=\"mode\"\t\tvalue=\"" + getModeStr() + "\"/>");
         out.println("    <param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
         out.println("    <param name=\"snmpTracking\"\tvalue=\"" + snmpTracking + "\"/>");
+        out.println("    <param name=\"defaultLatin1\"\tvalue=\"" + defaultLatin1 + "\"/>");
 //        out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
         out.println("    <param name=\"" + IN_QUEUE_LIMIT +  "\"\tvalue=\"" + intToString(getInQueueLimit()) + "\"/>");
         out.println("    <param name=\"" + OUT_QUEUE_LIMIT + "\"\tvalue=\"" + intToString(getOutQueueLimit()) + "\"/>");
@@ -408,7 +413,13 @@ public class Svc {
         this.metaGroup = metaEndpoint;
     }
 
+    public boolean isDefaultLatin1() {
+        return defaultLatin1;
+    }
 
+    public void setDefaultLatin1(boolean defaultLatin1) {
+        this.defaultLatin1 = defaultLatin1;
+    }
 }
 
 
