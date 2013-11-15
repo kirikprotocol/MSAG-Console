@@ -45,6 +45,7 @@ public class Edit extends EditBean
     private int altPort = 0;
     private boolean enabled;
     private boolean snmpTracking;
+    private boolean defaultLatin1;
     private String bindSystemId;
     private String bindPassword;
     private String systemType;
@@ -163,11 +164,11 @@ public class Edit extends EditBean
             oldCenter = (Center) centers.get(getEditId());
             center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
                     enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
-                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, oldCenter.getMetaGroup(), snmpTracking);
+                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, oldCenter.getMetaGroup(), snmpTracking, defaultLatin1);
         }else{
             center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
                     enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
-                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmpTracking);
+                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, "", snmpTracking, defaultLatin1);
         }
         centers.remove(getEditId());
         centers.put(id, center);
@@ -390,4 +391,13 @@ public class Edit extends EditBean
     public int getMaxSmsPerSec() {
         return maxSmsPerSec;
     }
+
+    public boolean isDefaultLatin1() {
+        return defaultLatin1;
+    }
+
+    public void setDefaultLatin1(boolean defaultLatin1) {
+        this.defaultLatin1 = defaultLatin1;
+    }
+
 }

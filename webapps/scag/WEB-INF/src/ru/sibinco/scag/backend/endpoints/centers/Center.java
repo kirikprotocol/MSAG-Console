@@ -45,6 +45,7 @@ public class Center {
     private int altPort;
     private boolean enabled = true;
     private boolean snmpTracking;
+    private boolean defaultLatin1;
     private Provider provider;
     private int uid = -1;
     private String bindSystemId;
@@ -166,7 +167,7 @@ public class Center {
                   int altPort, boolean enabled, final Provider provider,
                   final int uid, final String bindSystemId, final String bindPassword, final String systemType,
                   final String addressRange, final int inQueueLimit, final int outQueueLimit,
-                  final int maxSmsPerSec, final String metaGroup, final boolean snmpTracking)
+                  final int maxSmsPerSec, final String metaGroup, final boolean snmpTracking, final boolean defaultLatin1)
                   throws NullPointerException {
         if (null == id || bindSystemId == null)
             throw new NullPointerException("SMSC ID or bind Password or bind SystemId  is null");
@@ -179,6 +180,7 @@ public class Center {
         this.altPort = altPort;
         this.enabled = enabled;
         this.snmpTracking = snmpTracking;
+        this.defaultLatin1 = defaultLatin1;
         this.provider = provider;
         this.uid = uid;
         this.bindSystemId = bindSystemId;
@@ -206,6 +208,8 @@ public class Center {
                     enabled = Boolean.valueOf(value).booleanValue();
                 } else if ("snmpTracking".equals(name)) {
                     snmpTracking = Boolean.valueOf(value).booleanValue();
+                } else if ("defaultLatin1".equals(name)) {
+                    defaultLatin1 = Boolean.valueOf(value);
                 } else if ("mode".equals(name)) {
                     mode = getMode(value);
                 } else if ("host".equals(name)) {
@@ -258,6 +262,7 @@ public class Center {
         this.altPort = center.getAltPort();
         this.enabled = center.isEnabled();
         this.snmpTracking = center.isSnmpTracking();
+        this.defaultLatin1 = center.isDefaultLatin1();
         this.provider = center.getProvider();
         this.uid = center.getUid();
         this.addressRange = center.getAddressRange();
@@ -294,6 +299,7 @@ public class Center {
         out.println("    <param name=\"altport\"\tvalue=\"" + altPort + "\"/>");
         out.println("    <param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
         out.println("    <param name=\"snmpTracking\"\tvalue=\"" + snmpTracking + "\"/>");
+        out.println("    <param name=\"defaultLatin1\"\tvalue=\"" + defaultLatin1 + "\"/>");
         out.println("    <param name=\"uid\"\tvalue=\"" + uid + "\"/>");
         out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
         out.println("    <param name=\"addressRange\"\tvalue=\"" + addressRange.trim() + "\"/>");
@@ -550,6 +556,14 @@ public class Center {
 
     public void setMetaGroup(String metaGroup) {
         this.metaGroup = metaGroup;
+    }
+
+    public boolean isDefaultLatin1() {
+        return defaultLatin1;
+    }
+
+    public void setDefaultLatin1(boolean defaultLatin1) {
+        this.defaultLatin1 = defaultLatin1;
     }
 
 }
