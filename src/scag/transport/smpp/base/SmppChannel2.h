@@ -15,21 +15,21 @@ class SmppChannel {
     friend class eyeline::informer::EmbedRefPtr< SmppChannel >;
 
 protected:
-    SmppChannel() : log_(smsc::logger::Logger::getInstance("smpp.sock")), ref_(0) {}
+    SmppChannel() : log_(smsc::logger::Logger::getInstance("smpp.sock")), ref_(0), uid(0) {}
 
 public:
     virtual ~SmppChannel() {}
-  virtual SmppBindType getBindType()const=0;
-  virtual const char* getSystemId()const=0;
+    virtual SmppBindType getBindType()const=0;
+    virtual const char* getSystemId()const=0;
 
     virtual void putCommand(std::auto_ptr<SmppCommand> cmd)=0;
-  virtual void disconnect()=0;
-  void setUid(int argUid){uid=argUid;}
-  int  getUid(){return uid;}
-  const char* getPeer() const { return peername_.c_str(); }
+    virtual void disconnect()=0;
+    void setUid(int argUid){uid=argUid;}
+    int  getUid(){return uid;}
+    const char* getPeer() const { return peername_.c_str(); }
 
-  /// note: unsynced
-  inline unsigned refCount() const { return ref_; }
+    /// note: unsynced
+    inline unsigned refCount() const { return ref_; }
 
 protected:
     void ref() {

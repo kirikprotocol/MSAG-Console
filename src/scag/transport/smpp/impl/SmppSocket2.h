@@ -151,14 +151,22 @@ struct SmppSocket : SmppChannel
           if (!connected) return;
           connected=false;
       }
-      smsc_log_info(log_,"SmppSocket %p %s sock=%p disconnect()",this,getPeer(),sock);
+      smsc_log_info(log_, "SmppSocket %p %s sock=%p disconnect() bt=%d", this, getPeer(), sock, bindType);
       sock->Close();
       // peername_ = "";
       // memset(&peeraddr_,0,sizeof(peeraddr_));
+/* bug 13401 (MSAG doesn't disconnect from SMSC)
+ * possible reason is logical error (receive corrupted data with PDU id=5 after BIND_RESP)
+ * so need to unregister channel unconditionally, the target is to clear smsc SmppEntity:bt)
+ * to allow further connection
       if (bindType!=btNone) {
           chReg->unregisterChannel(this);
           bindType = btNone;
       }
+*/
+      chReg->unregisterChannel(this);
+      bindType = btNone;
+
       if (sm) {
           sm->unregisterSocket(this);
       }
@@ -241,23 +249,27 @@ protected:
     }
 
 
-  virtual ~SmppSocket()
-  {
-      MutexGuard mg(mtx);
-    smsc_log_debug(log_, "SmppSocket @%p destroying: %x", this, sock);
-    delete [] wrBuffer;
-    wrBufUsed = 0;
-    delete [] rdBuffer;
-    rdBufUsed = 0;
-    if (sock) { delete sock; sock = 0; }
-    // dropPeer();
-    if ( outQueue.Count() > 0 ) {
-        smsc_log_warn(log_, "destructor: there are %u commands to send", outQueue.Count() );
-        SmppCommand* cmd;
-        while ( outQueue.Pop(cmd) )
-            delete cmd;
+    void onDestroy() {
+        MutexGuard mg(mtx);
+        delete [] wrBuffer;
+        wrBufUsed = 0;
+        delete [] rdBuffer;
+        rdBufUsed = 0;
+        if (sock) { delete sock; sock = 0; }
+        // dropPeer();
+        if ( outQueue.Count() > 0 ) {
+            smsc_log_warn(log_, "destructor: there are %u commands to send", outQueue.Count() );
+            SmppCommand* cmd;
+            while ( outQueue.Pop(cmd) )
+                delete cmd;
+        }
     }
-  }
+
+    virtual ~SmppSocket()
+    {
+        smsc_log_debug(log_, "SmppSocket @%p destroying: %x", this, sock);
+        onDestroy();
+    }
 
 
     SmppSocket(const SmppSocket&);

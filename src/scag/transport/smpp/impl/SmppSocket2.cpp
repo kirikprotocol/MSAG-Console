@@ -126,8 +126,7 @@ void SmppSocket::processInput()
   if ( bindType == btNone ) {
       // we cannot be unbound here!
       smsc_log_warn(log_, "Unbound state: wrong command %x/%x from %p %s sock=%p, closing connection",
-                    pdu->get_sequenceNumber(), pdu->get_commandId(),
-                    this, getPeer(), sock );
+                    pdu->get_sequenceNumber(), pdu->get_commandId(), this, getPeer(), sock );
       disconnect();
       return;
   }

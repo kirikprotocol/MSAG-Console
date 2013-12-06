@@ -15,6 +15,13 @@ struct SmscSocket:SmppSocket{
     sock=new Socket();
     sock->setData(0,this);
   }
+
+  virtual ~SmscSocket()
+  {
+    smsc_log_debug(log_, "SmscSocket @%p destroying: %x", this, sock);
+//    if (chReg) chReg->unregisterChannel(this);
+  }
+
   bool connect(const std::string& bindHost)
   {
     if(sock->Init(host.c_str(),port,0)==-1)
@@ -39,6 +46,18 @@ struct SmscSocket:SmppSocket{
 
   bool processPdu(PduGuard& pdu)
   {
+    if (pdu->get_commandId() != smsc::smpp::SmppCommandSet::BIND_TRANCIEVER_RESP)
+      return false;
+
+    if (pdu->get_commandStatus()) {
+      smsc_log_warn(log_, "SMSC bind failed: RESP status=%u", unsigned(pdu->get_commandStatus()));
+    } else if (chReg->registerSmscChannel(this) != rarOk) {
+      smsc_log_warn(log_, "Registration of smsc channel failed???");
+    } else {
+      bindType = btTransceiver;
+    }
+    return true;
+/*
     switch(pdu->get_commandId())
     {
       case smsc::smpp::SmppCommandSet::BIND_TRANCIEVER_RESP:
@@ -54,6 +73,7 @@ struct SmscSocket:SmppSocket{
       default: return false;
     }
     return true;
+*/
   }
 
 protected:

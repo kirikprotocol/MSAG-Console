@@ -333,7 +333,8 @@ SmppManagerImpl::SmppManagerImpl( snmp::TrapRecordQueue* snmpqueue ) :
 ConfigListener(SMPPMAN_CFG), sm(this,this),
 // licenseCounter(counter::Manager::getInstance().createCounter(::smppCounterName,
 testRouter_(0),
-snmpqueue_(snmpqueue)
+snmpqueue_(snmpqueue),
+queueLimit(1000)
 {
   log=smsc::logger::Logger::getInstance("smpp.man");
   limitsLog=smsc::logger::Logger::getInstance("smpp.lmt");
@@ -1072,6 +1073,7 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
 
 void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
 {
+//    smsc_log_debug(log, "SmppManagerImpl::unregisterChannel %p %s", ch, ch->getSystemId());
     const char* text = 0;
     bool isSME = false;
     bool snmpTracking = true;
@@ -1080,8 +1082,7 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
         sync::MutexGuard mg(regMtx);
         SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
         if (!ptr) {
-            smsc_log_info(log,"Failed to unregister %p sysId='%s' - Not found",
-                          ch,ch->getSystemId());
+            smsc_log_info(log,"Failed to unregister %p sysId='%s' - Not found",ch,ch->getSystemId());
             break; // no snmp
         }
         SmppEntity& ent=**ptr;
@@ -1093,25 +1094,6 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
         } else {
             smsc_log_warn(log,"attempt to unregister channel with invalid bind type %p sysId='%s'",ch,ch->getSystemId());
         }
-        /*
-        isDeleted = (ent.info.enabled == false);
-        MutexGuard mg2(ent.mtx);
-        isSME = ( ent.info.type == etService );
-        if(ent.bt==btRecvAndTrans) {
-            if(ch->getBindType()==btReceiver) {
-                ent.bt=btTransmitter;
-            } else if(ch->getBindType()==btTransmitter) {
-                ent.bt=btReceiver;
-            } else {
-                smsc_log_warn(log,"Attempt to unregister channel with invalid bind type for sysId='%s'",ch->getSystemId());
-            }
-        } else {
-            ent.bt=btNone;
-        }
-        ent.connected = false;
-        if (ent.info.type == etService) ent.info.host = "";
-        text = "disconnected";
-         */
     } while ( false );
 
     if ( text && snmpqueue_ && snmpTracking ) {
@@ -1458,11 +1440,10 @@ unsigned SmppManagerImpl::getUnsigned( const char* name, unsigned defval ) const
         return unsigned(val);
     } catch ( std::exception& e ) {
         smsc_log_warn( log, "exception on config param %s (%s), using %u", name, e.what(), defval );
-        return defval;
     } catch (...) {
         smsc_log_warn( log, "unknown exception on config param %s, using %u", name, defval );
-        return defval;
     }
+    return defval;
 }
 
 }//smpp

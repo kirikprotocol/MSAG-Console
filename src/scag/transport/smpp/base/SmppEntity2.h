@@ -525,13 +525,21 @@ public:
 	/// unbind the channel.
 	/// return true if successful
 	bool unbindChannel(SmppChannel* ch) {
+	    const SmppBindType chbt = ch->getBindType();
+//	    smsc_log_debug(log_, "SmppEntity::unbindChannel %p %s bt=%d/%d", ch, ch->getSystemId(), bt, chbt);
 		MutexGuard mg(mtx);
 		if (bt == btRecvAndTrans) {
-			const SmppBindType chbt = ch->getBindType();
 			if (chbt == btReceiver) {
 				bt = btTransmitter;
-			} else if (chbt == btTransmitter) {
-				bt = btReceiver;
+            } else if (chbt == btTransmitter) {
+                bt = btReceiver;
+/* bug 13401 (MSAG doesn't disconnect from SMSC)
+ * add possibility of unbindChannel with BindType=btNone
+ * the target is to clear SmppEntity:bt) to allow further connection
+ * avoid of "already connected"
+ */
+            } else if (chbt == btNone) {
+                bt = btNone;
 			} else {
 				return false;
 			}
