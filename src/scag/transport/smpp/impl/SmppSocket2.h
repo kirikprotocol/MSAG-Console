@@ -157,19 +157,18 @@ struct SmppSocket : SmppChannel
       // memset(&peeraddr_,0,sizeof(peeraddr_));
 /* bug 13401 (MSAG doesn't disconnect from SMSC)
  * possible reason is logical error (receive corrupted data with PDU id=5 after BIND_RESP)
- * so need to unregister channel unconditionally, the target is to clear smsc SmppEntity:bt)
+ * so need to unregister channel _unconditionally_, not only if (bindType!=btNone)
+ * the target is to clear smsc SmppEntity:bt)
  * to allow further connection
       if (bindType!=btNone) {
           chReg->unregisterChannel(this);
           bindType = btNone;
       }
 */
-      chReg->unregisterChannel(this);
+      if (chReg) { chReg->unregisterChannel(this); }
       bindType = btNone;
 
-      if (sm) {
-          sm->unregisterSocket(this);
-      }
+      if (sm) { sm->unregisterSocket(this); }
       fillPeerData();
   }
 
