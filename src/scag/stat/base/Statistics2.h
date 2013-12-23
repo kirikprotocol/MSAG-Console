@@ -263,9 +263,12 @@ using scag::util::SerializeBuffer;
 
     struct SmppStatEvent
     {
-      char srcId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
-      char dstId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
-      char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
+//      char srcId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
+//      char dstId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
+//      char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
+      smsc::sms::SmeSystemIdBuf srcId;
+      smsc::sms::SmeSystemIdBuf dstId;
+      smsc::sms::RouteId routeId;
       int  routeProviderId;
       bool srcType, dstType;
 

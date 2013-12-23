@@ -510,7 +510,7 @@ namespace smsc { namespace store
         OCIDate         rTime, nextTime,validTime;
         sb2             indNextTime, indDstSmeId,indDda,indValidTime;
         uint32_t        lastResult,attempts;
-        SmeSystemIdType dstSmeId;
+        SmeSystemIdBuf  dstSmeId;
         FullAddressValue dda;
     public:
 

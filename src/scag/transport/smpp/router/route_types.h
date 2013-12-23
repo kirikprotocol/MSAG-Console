@@ -41,7 +41,8 @@ struct RouteInfo
     hideMessage = false;
   }
 
-  FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
+//  FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
+  smsc::sms::RouteIdType routeId;
 
   bool enabled;
   // bool archived;
@@ -52,6 +53,7 @@ struct RouteInfo
 
   FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> smeSystemId;
   FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> srcSmeSystemId;
+
 
   FixedLengthString<MAX_SUBJECTID_LENGTH> srcSubj;
   FixedLengthString<MAX_SUBJECTID_LENGTH> dstSubj;

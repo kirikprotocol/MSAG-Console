@@ -14,8 +14,10 @@ namespace smsc {
 namespace smeman {
 
 //typedef const char* SmeSystemId;
-typedef smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> SmeSystemId;
-typedef smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> SmePassword;
+//typedef smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> SmeSystemId;
+//typedef smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> SmePassword;
+typedef smsc::sms::SmeSystemIdType SmeSystemId;
+typedef smsc::sms::SmePasswordType SmePassword;
 typedef int32_t SmeIndex;
 typedef int SmeNType;
 

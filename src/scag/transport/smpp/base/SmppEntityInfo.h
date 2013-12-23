@@ -13,14 +13,19 @@ using smsc::core::buffers::FixedLengthString;
 
 struct SmppEntityInfo 
 {
+//    FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1>  systemId;
+//    FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> password;
+//    FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1>  bindSystemId;
+//    FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> bindPassword;
+//    FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> metaGroupId;
     SmppEntityType type;
-    FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1>  systemId;
-    FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> password;
-    FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1>  bindSystemId;
-    FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> bindPassword;
+    smsc::sms::SmeSystemIdType systemId;
+    smsc::sms::SmePasswordType password;
+    smsc::sms::SmeSystemIdType bindSystemId;
+    smsc::sms::SmePasswordType bindPassword;
     FixedLengthString<42> addressRange;
     FixedLengthString<13> systemType;
-    FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> metaGroupId;
+    smsc::sms::SmeSystemIdType metaGroupId;
     int timeOut;
     SmppBindType bindType;
     FixedLengthString<32> host;
@@ -67,7 +72,8 @@ struct MetaEntityInfo
         policy=bpRoundRobin;
         persistanceEnabled=true;
     }
-    FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> systemId;
+//    FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> systemId;
+    smsc::sms::SmeSystemIdType systemId;
     MetaEntityType type;
     BalancingPolicy policy;
     bool persistanceEnabled;

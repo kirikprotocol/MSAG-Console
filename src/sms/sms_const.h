@@ -7,6 +7,8 @@
 #include <inttypes.h>
 #endif
 
+#include "core/buffers/FixedLengthString.hpp"
+
 namespace smsc{
 namespace sms{
 
@@ -51,9 +53,14 @@ const int MAX_FULL_ADDRESS_VALUE_LENGTH = 30;
 typedef uint64_t    SMSId;
 typedef char        AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
 typedef char        FullAddressValue[MAX_FULL_ADDRESS_VALUE_LENGTH+1];
-typedef char        SmeSystemIdType[MAX_SMESYSID_TYPE_LENGTH+1];
+typedef char        SmeSystemIdBuf[MAX_SMESYSID_TYPE_LENGTH+1];
+//typedef char        SmeSystemIdType[MAX_SMESYSID_TYPE_LENGTH+1];
 typedef char        EService[MAX_ESERVICE_TYPE_LENGTH+1];
 typedef char        RouteId[MAX_ROUTE_ID_TYPE_LENGTH+1];
+
+typedef core::buffers::FixedLengthString<MAX_SMESYSID_TYPE_LENGTH+1> SmeSystemIdType;
+typedef core::buffers::FixedLengthString<MAX_SMEPASSWD_TYPE_LENGTH+1> SmePasswordType;
+typedef core::buffers::FixedLengthString<MAX_ROUTE_ID_TYPE_LENGTH> RouteIdType;
 
 const uint8_t SMSC_BYTE_ENROUTE_STATE       = (uint8_t)0;
 const uint8_t SMSC_BYTE_DELIVERED_STATE     = (uint8_t)1;

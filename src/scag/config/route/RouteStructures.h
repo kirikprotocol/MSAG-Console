@@ -23,6 +23,7 @@ class Subject {
 private:
   std::string id;
   MaskVector masks;
+  MaskVector subjRefs;
 public:
   Subject()
     : id(), masks()
@@ -30,17 +31,28 @@ public:
   Subject(const Mask & mask)
     : id(mask), masks(1, mask)
   {}
+/*
   Subject(const std::string &subjId, const MaskVector & subjMasks)
     : id(subjId), masks(subjMasks)
   {}
   Subject(const Subject & subj)
     : id(subj.id), masks(subj.masks)
   {}
+*/
+  Subject(const std::string &subjId, const MaskVector & subjMasks,const MaskVector& argSubjRefs)
+    : id(subjId), masks(subjMasks),subjRefs(argSubjRefs)
+  {}
+  Subject(const Subject & subj)
+    : id(subj.id), masks(subj.masks),subjRefs(subj.subjRefs)
+  {}
 
   const std::string &getIdString() const {return id;}
   const char * const getId()       const {return id.c_str();}
 
+  MaskVector& getMasks()                 {return masks;}
   const MaskVector & getMasks()    const {return masks;}
+
+  MaskVector& getSubjRefs()              {return subjRefs;}
 };
 
 //typedef std::vector<Subject> SubjectVector;

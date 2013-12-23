@@ -729,7 +729,8 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
     SmppEntity *dst = NULL;
     ActiveSession session;
     router::RouteInfo ri;
-    FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
+//    FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
+    smsc::sms::RouteIdType routeId;
     re::RuleStatus st;
     st.status = re::STATUS_REDIRECT; // to start the loop
 

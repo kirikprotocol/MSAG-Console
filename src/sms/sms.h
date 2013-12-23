@@ -1045,8 +1045,8 @@ struct SMS
   int32_t     serviceId;      // Additional fields
   int32_t     priority;       // Additional fields
 
-  SmeSystemIdType srcSmeId;
-  SmeSystemIdType dstSmeId;
+  SmeSystemIdBuf srcSmeId;
+  SmeSystemIdBuf dstSmeId;
 
   uint16_t    concatMsgRef;   // For concatenated messages only
   uint8_t     concatSeqNum;   //

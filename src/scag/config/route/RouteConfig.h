@@ -4,12 +4,15 @@
 #include <xercesc/dom/DOM.hpp>
 #include "scag/config/route/RouteStructures.h"
 #include "logger/Logger.h"
+#include <set>
 
 namespace scag {
 namespace config {
 
 using namespace xercesc;
 
+class SubjectNotFoundException {};
+/*
 class SubjectNotFoundException : public std::exception {
 public:
     SubjectNotFoundException( const char* subId,
@@ -21,6 +24,7 @@ public:
 private:
     std::string what_;
 };
+*/
 
 class RouteConfig{
 public:
@@ -48,19 +52,32 @@ public:
 
   status reload();
 
-  status store(const char * const filename) const;
+//  status store(const char * const filename) const;
 
   RouteIterator getRouteIterator() const;
 
+  Subject& getSubject(const char* subjName)
+  {
+    return *subjects.Get(subjName);
+  }
+
 protected:
   static smsc::logger::Logger *logger;
+  smsc::logger::Logger *log_;
   scag::config::RoutePVector routes;
   scag::config::SubjectPHash subjects;
   std::auto_ptr<char> config_filename;
 
+  typedef std::set<std::string> subjNameSet;
+
+  void expandSubject(Subject& subj, subjNameSet& names);
+
+/*
   static bool getAttribBool(const DOMElement &elem, const char * name);
   static int  getAttribInt(const DOMElement &elem, const char * name);
   static std::string getAttribStr(const DOMElement &elem, const char * name);
+*/
+
   static scag::config::Subject * createSubjectDef(const DOMElement &elem);
   static void createRouteSource(const DOMElement &srcElem, const scag::config::SubjectPHash &subjects, scag::config::Route * r) throw (SubjectNotFoundException);
   static void createRouteDestination(const DOMElement &dstElem, const scag::config::SubjectPHash &subjects, scag::config::Route * r) throw (SubjectNotFoundException);

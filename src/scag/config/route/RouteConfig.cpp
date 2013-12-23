@@ -1,5 +1,6 @@
 #include "RouteConfig.h"
 
+#include <list>
 #include <fstream>
 #include <xercesc/dom/DOM.hpp>
 #include "util/xml/utilFunctions.h"
@@ -40,9 +41,9 @@ RouteConfig::status RouteConfig::RouteIterator::fetchNext(Route *&record)
 
 RouteConfig::RouteConfig()
 {
-    if (!logger) {
-        logger = smsc::logger::Logger::getInstance("smsc.util.config.route.RouteConfig");
-    }
+  if ( !logger )
+    logger = smsc::logger::Logger::getInstance("smsc.util.config.route.RouteConfig");
+  log_ = logger;
 }
 
 RouteConfig::~RouteConfig()
@@ -81,6 +82,7 @@ RouteConfig::status RouteConfig::putSubject(Subject *subj)
 */
 Subject *RouteConfig::createSubjectDef(const DOMElement &elem)
 {
+/*
   DOMNodeList *maskElems = elem.getElementsByTagName(XmlStr("mask"));
   MaskVector masks;
   unsigned maskElemsLength = unsigned(maskElems->getLength());
@@ -93,6 +95,26 @@ Subject *RouteConfig::createSubjectDef(const DOMElement &elem)
   Subject* ret = new Subject(XmlStr(elem.getAttribute(XmlStr("id"))).c_str(), masks);
   smsc_log_debug(logger,"subject loaded: '%s'",ret->getId());
   return ret;
+*/
+  DOMNodeList *maskElems = elem.getElementsByTagName(XmlStr("mask"));
+  MaskVector masks;
+  size_t maskElemsLength = maskElems->getLength();
+  for (size_t i=0; i<maskElemsLength; i++)
+  {
+    DOMElement *mask = (DOMElement *) maskElems->item(i);
+    masks.push_back(Mask(XmlStr(mask->getAttribute(XmlStr("value")))));
+  }
+  MaskVector refs;
+  DOMNodeList *subjElems = elem.getElementsByTagName(XmlStr("subject"));
+  size_t subjElemsLength = subjElems->getLength();
+  for(size_t i=0;i<subjElemsLength;i++)
+  {
+    DOMElement *subj = (DOMElement *) subjElems->item(i);
+    XmlStr subjId(subj->getAttribute(XmlStr("id")));
+    refs.push_back(subjId.c_str());
+  }
+
+  return new Subject(XmlStr(elem.getAttribute(XmlStr("id"))).c_str(), masks,refs);
 }
 
 void RouteConfig::createRouteSource(const DOMElement &srcElem, const SubjectPHash &subjects, Route * r)
@@ -103,7 +125,7 @@ throw (SubjectNotFoundException)
     DOMElement *subjElem = (DOMElement *) srcElem.getElementsByTagName(XmlStr("subject"))->item(0);
     XmlStr subId(subjElem->getAttribute(XmlStr("id")));
     if (!subjects.Exists(subId))
-      throw SubjectNotFoundException(subId.c_str(),r->getId());
+      throw SubjectNotFoundException(/*subId.c_str(),r->getId()*/);
     r->sources[subId] = *subjects[subId];
   }
   else
@@ -123,7 +145,7 @@ throw (SubjectNotFoundException)
     DOMElement *subjElem = (DOMElement *) dstElem.getElementsByTagName(XmlStr("subject"))->item(0);
     XmlStr subId(subjElem->getAttribute(XmlStr("id")));
     if (!subjects.Exists(subId))
-      throw SubjectNotFoundException(subId.c_str(),r->getId());
+      throw SubjectNotFoundException(/*subId.c_str(),r->getId()*/);
     r->destinations[subId] = Destination(*subjects[subId], smeId.c_str());
   }
   else
@@ -179,6 +201,7 @@ const char * const replyPathToStr(const scag::transport::smpp::router::ReplyPath
   }
 }*/
 
+/*
 bool RouteConfig::getAttribBool(const DOMElement &elem, const char * name)
 {
     XmlStr attrib(elem.getAttribute(XmlStr(name)));
@@ -196,30 +219,64 @@ std::string RouteConfig::getAttribStr(const DOMElement &elem, const char * name)
     XmlStr attrib(elem.getAttribute(XmlStr(name)));
     return std::string(attrib);
 }
+*/
+
+static bool getBoolAttr(const DOMElement &elem,const char* name)
+{
+  XmlStr xname(name);
+  if(!elem.hasAttribute(xname))
+  {
+    return false;
+  }
+  XmlStr val(elem.getAttribute(xname));
+  return val=="true";
+}
+
+static const XMLCh* getAttr(const DOMElement& elem,const char* name)
+{
+  static XMLCh null=0;
+  XmlStr xname(name);
+  if(!elem.hasAttribute(xname))
+  {
+    return &null;
+  }
+  return elem.getAttribute(xname);
+}
+
+static int getIntAttr(const DOMElement& elem,const char* name,int defaultValue=0)
+{
+  XmlStr xname(name);
+  if(!elem.hasAttribute(xname))
+  {
+    return defaultValue;
+  }
+  return atoi(XmlStr(elem.getAttribute(xname)));
+}
+
 
 Route * RouteConfig::createRoute(const DOMElement &elem, const SubjectPHash &subjects)
 throw (SubjectNotFoundException)
 {
 
 
-  std::string routeid(getAttribStr(elem, "id"));
+  std::string routeid(XmlStr(getAttr(elem, "id")));
   if(routeid.length()>32)
   {
     __warning2__("\n\n\nROUTE ID TOO LONG=%s\n\n\n",routeid.c_str());
     routeid.erase(32);
   }
 
-  std::auto_ptr<Route> r(new Route( getAttribStr(elem, "id"),
+  std::auto_ptr<Route> r(new Route( std::string(XmlStr(getAttr(elem, "id"))),
                                     false, // getAttribBool(elem, "archived"),
-                                    getAttribBool(elem, "enabled"),
-                                    getAttribBool(elem, "active") /*not used*/,
-                                    getAttribBool(elem, "transit"),
-                                    getAttribBool(elem, "saa"),
-                                    getAttribBool(elem, "hideSaaText"),
-                                    getAttribStr(elem, "srcSmeId"),
-                                    getAttribInt(elem, "serviceId"),
-                                    getAttribStr(elem, "slicing"),
-                                    getAttribStr(elem, "slicedRespPolicy") )
+                                    getBoolAttr(elem, "enabled"),
+                                    getBoolAttr(elem, "active") /*not used*/,
+                                    getBoolAttr(elem, "transit"),
+                                    getBoolAttr(elem, "saa"),
+                                    getBoolAttr(elem, "hideSaaText"),
+                                    std::string(XmlStr(getAttr(elem, "srcSmeId"))),
+                                    getIntAttr(elem, "serviceId"),
+                                    std::string(XmlStr(getAttr(elem, "slicing"))),
+                                    std::string(XmlStr(getAttr(elem, "slicedRespPolicy"))) )
                          );
   smsc_log_debug(logger,"loading route '%s'",r->getId());
 
@@ -243,6 +300,44 @@ throw (SubjectNotFoundException)
   return r.release();
 }
 
+
+void RouteConfig::expandSubject(Subject& subj, subjNameSet& names)
+{
+  smsc_log_debug(log_,"Expanding subject:%s",subj.getId());
+  std::pair<subjNameSet::iterator,bool> insertResult = names.insert(subj.getId());
+  if (!insertResult.second)
+  {
+    std::string branch;
+    for (subjNameSet::iterator it=names.begin(); it!=names.end(); ++it)
+    {
+      branch.append(*it);
+      branch.append("-->");
+    }
+    branch.append(subj.getId());
+    smsc_log_info(log_,"Subject tree cyclic alert: %s", branch.c_str());
+    return;
+  }
+  while(!subj.getSubjRefs().empty())
+  {
+    std::string id=subj.getSubjRefs().back();
+    subj.getSubjRefs().pop_back();
+    smsc_log_debug(log_,"Found referenced subj:%s",id.c_str());
+    try{
+      Subject& refS=getSubject(id.c_str());
+      if(!refS.getSubjRefs().empty())
+      {
+        smsc_log_debug(log_,"Referenced subj isn't expanded yet. Expanding");
+        expandSubject(refS, names);
+      }
+      subj.getMasks().insert(subj.getMasks().end(),refS.getMasks().begin(),refS.getMasks().end());
+    }catch(...)
+    {
+      smsc_log_warn(log_,"Referenced subject not found:%s",id.c_str());
+    }
+  }
+  names.erase(insertResult.first);
+}
+
 RouteConfig::status RouteConfig::load(const char * const filename)
 {
   config_filename.reset(cStringCopy(filename));
@@ -253,8 +348,12 @@ RouteConfig::status RouteConfig::load(const char * const filename)
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *subj_defs = elem->getElementsByTagName(XmlStr("subject_def"));
     // Subjects
-    unsigned subj_defsLength = unsigned(subj_defs->getLength());
-    for (unsigned i=0; i<subj_defsLength; i++)
+    size_t subj_defsLength = subj_defs->getLength();
+
+    std::list<Subject*> subjs;
+    subjNameSet subjNames;
+
+    for (size_t i=0; i<subj_defsLength; i++)
     {
       DOMElement *elem2 = (DOMElement *)subj_defs->item(i);
       Subject *s = createSubjectDef(*elem2);
@@ -264,8 +363,30 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       }
       else
       {
-        subjects[s->getId()] = s;
+//        subjects[s->getId()] = s;
+        subjects.Insert(s->getId(),s);
+        subjs.push_back(s);
       }
+    }
+
+    // expand subjrefs
+    for(std::list<Subject*>::iterator it=subjs.begin();it!=subjs.end();it++)
+    {
+      Subject& subj=**it;
+      expandSubject(subj, subjNames);
+      std::set<Mask> ms;
+      MaskVector& mv=subj.getMasks();
+      for(MaskVector::iterator mit=mv.begin();mit!=mv.end();mit++)
+      {
+        ms.insert(*mit);
+      }
+      size_t before=mv.size();
+      mv.clear();
+      for(std::set<Mask>::iterator sit=ms.begin();sit!=ms.end();sit++)
+      {
+        mv.push_back(*sit);
+      }
+      smsc_log_debug(logger,"Unique mask pack for '%s': %d->%d",subj.getId(),before,mv.size());
     }
 
     // routes
@@ -282,7 +403,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       }
       catch (SubjectNotFoundException &ex)
       {
-        smsc_log_error(logger, "incorrect subject id: %s", ex.what());
+        smsc_log_error(logger, "incorrect subject id: subject not defined");
       }
     }
   }
@@ -303,7 +424,7 @@ RouteConfig::status RouteConfig::reload()
   __trace2__("smsc::util::config::route::RouteConfig - loaded %u routes, %u subjects", routes.size(), subjects.GetCount());
   return result;
 }
-
+/*
 RouteConfig::status RouteConfig::store(const char * const filename) const
 {
   try
@@ -383,7 +504,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
   }
   return success;
 }
-
+*/
 RouteConfig::RouteIterator RouteConfig::getRouteIterator() const
 {
   return RouteIterator(routes);
