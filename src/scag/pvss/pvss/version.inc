@@ -13,11 +13,15 @@ const char* getStrVersion()
   return VER_STR;
 }
 
+/*
+* function getVersion doesnt use anywhere!
+*
+*/
 void getVersion(int* major,int* minor,int* build)
 {
   if(major)*major=VER_MAJOR;
   if(minor)*minor=VER_MINOR;
-  if(build)*build=VER_BUILD;
+  if(build)*build=0; //VER_BUILD; to avoid error, jenkins VER_BUILD is a string
 }
 
 };
