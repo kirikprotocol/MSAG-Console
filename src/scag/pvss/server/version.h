@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 const char* getStrVersion();
-void getVersion(int* major,int* minor,int* build);
 
 #ifdef __cplusplus
 };
