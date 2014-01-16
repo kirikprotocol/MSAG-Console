@@ -8,6 +8,7 @@
 #include "scag/pvss/api/packets/Request.h"
 #include "scag/pvss/api/packets/Response.h"
 #include "informer/io/EmbedRefPtr.h"
+#include "core/synchronization/AtomicCounter.hpp"
 
 namespace scag2 {
 namespace pvss {
@@ -67,12 +68,12 @@ protected:
         unsigned long long tot;
         {
             smsc::core::synchronization::MutexGuard mg(reflock_);
-            if (!ref_) { ++total_; }
-            tot = total_;
+            if (ref_==0) { total_.inc(); }
+            tot = total_.get();
             ++ref_;
         }
         if ( tot && 0 == (tot % 1000) ) {
-            smsc_log_info(log_,"total number of Contexts: %llu",tot);
+            smsc_log_info(log_,"ref: total number of Contexts: %lld",tot);
         }
     }
 
@@ -81,19 +82,19 @@ protected:
         unsigned long long tot;
         {
             smsc::core::synchronization::MutexGuard mg(reflock_);
-            if (--ref_) return;
-            tot = --total_;
+            if(ref_) {--ref_; return;}
+            tot = total_.dec();
         }
         delete this;
         if ( tot && 0 == (tot % 1000) ) {
-            smsc_log_info(log_,"total number of Contexts: %llu",tot);
+            smsc_log_info(log_,"unref: total number of Contexts: %lld",tot);
         }
     }
 
 private:
     smsc::core::synchronization::Mutex reflock_;
     unsigned                           ref_;
-    static unsigned long long          total_;
+    static smsc::core::synchronization::AtomicCounter<int64_t> total_;
 
 private:
     util::msectime_type     creationTime_;
