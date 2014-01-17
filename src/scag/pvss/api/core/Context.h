@@ -73,23 +73,24 @@ protected:
             ++ref_;
         }
         if ( tot && 0 == (tot % 1000) ) {
-            smsc_log_info(log_,"ref: total number of Contexts: %lld",tot);
+            smsc_log_debug(log_,"ref: total number of Contexts: %lld",tot);
         }
     }
 
+
     void unref()
-    {
-        unsigned long long tot;
         {
-            smsc::core::synchronization::MutexGuard mg(reflock_);
-            if(ref_) {--ref_; return;}
-            tot = total_.dec();
+            unsigned long long tot;
+            {
+                smsc::core::synchronization::MutexGuard mg(reflock_);
+                if(--ref_) return;
+                tot = total_.dec();
+            }
+            delete this;
+            if ( tot && 0 == (tot % 1000) ) {
+                 smsc_log_debug(log_,"unref: total number of Contexts: %lld",tot);
+            }
         }
-        delete this;
-        if ( tot && 0 == (tot % 1000) ) {
-            smsc_log_info(log_,"unref: total number of Contexts: %lld",tot);
-        }
-    }
 
 private:
     smsc::core::synchronization::Mutex reflock_;
