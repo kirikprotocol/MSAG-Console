@@ -73,7 +73,7 @@ protected:
             ++ref_;
         }
         if ( tot && 0 == (tot % 1000) ) {
-            smsc_log_debug(log_,"ref: total number of Contexts: %lld",tot);
+            smsc_log_info(log_,"ref: total number of Contexts: %lld",tot);
         }
     }
 
@@ -88,7 +88,7 @@ protected:
             }
             delete this;
             if ( tot && 0 == (tot % 1000) ) {
-                 smsc_log_debug(log_,"unref: total number of Contexts: %lld",tot);
+                 smsc_log_info(log_,"unref: total number of Contexts: %lld",tot);
             }
         }
 
