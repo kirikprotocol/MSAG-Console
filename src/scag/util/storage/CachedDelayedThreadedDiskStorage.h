@@ -267,18 +267,17 @@ public:
         }
 
         try {
-            MutexGuard mg(diskLock_);
-            disk_->set(di->key,*serout_->getOwnedBuffer(),serout_->getFreeBuffer());
+            {
+                MutexGuard mg(diskLock_);
+                disk_->set(di->key,*serout_->getOwnedBuffer(),serout_->getFreeBuffer());
+            }
+            MutexGuard mg(statLock_);
+            ++pfset_;
+            bset_ += written;
         } catch ( std::exception& e ) {
             if (log_) {
                 smsc_log_error(log_,"cannot save key=%s: %s",di->key.toString().c_str(),e.what());
             }
-        }
-
-        {
-            MutexGuard mg(statLock_);
-            ++pfset_;
-            bset_ += written;
         }
 
         // save done, cleanup
@@ -445,14 +444,24 @@ private:
             MutexGuard mg(diskLock_);
             itemLoaded = disk_->get(k,*serin_->getFreeBuffer(true));
         }
-        {
-            MutexGuard mg(statLock_);
-            ++pfget_;
-            bget_ += serin_->getFreeBuffer()->size();
-        }
         if ( itemLoaded ) {
+            {
+                MutexGuard mg(statLock_);
+                ++pfget_;
+                bget_ += serin_->getFreeBuffer()->size();
+            }
             stored_type& ref = cache_->store2ref(spare_);
-            if (!serin_->deserialize(k,ref) && !create ) {
+            bool parseOk=false;
+            try {
+              parseOk=serin_->deserialize(k,ref);
+            } catch (const std::exception& e) {
+              smsc_log_error(log_, "parse profile '%s' error. Profile Dropped. std::exception: %s", k.toString().c_str(), e.what());
+              {
+                  MutexGuard mg(diskLock_);
+                  disk_->remove(k);
+              }
+            }
+            if (!parseOk && !create ) {
                 return cache_->val2store(0);
             }
         } else if (!create) {
