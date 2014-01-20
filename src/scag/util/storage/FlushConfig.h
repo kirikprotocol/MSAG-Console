@@ -25,7 +25,7 @@ struct FlushConfig
 
     std::string toString() const {
         char buf[200];
-        sprintf(buf,"flushSpeed=%ukb/s flushCount=%u flushLowMark=%u flushHighMark=%u flushInterval=%ums",
+        snprintf(buf, 200,"flushSpeed=%ukb/s flushCount=%u flushLowMark=%u flushHighMark=%u flushInterval=%ums",
                 flushSpeed, flushCount, flushLowMark, flushHighMark, flushInterval );
         return buf;
     }

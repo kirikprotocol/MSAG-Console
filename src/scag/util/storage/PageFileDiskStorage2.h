@@ -34,7 +34,7 @@ public:
 
     index_type append( buffer_type& buf ) {
         if (buf.empty()) return invalidIndex_;
-        const index_type i = store_->Append( &(buf[0]), buf.size() );
+        const index_type i = store_->Append( &(buf[0]), (unsigned)buf.size() );
         if (log_) {
             smsc_log_debug(log_,"append: key=%s buf=%u -> index=%llx",
                            keylogger_->toString(), unsigned(buf.size()),

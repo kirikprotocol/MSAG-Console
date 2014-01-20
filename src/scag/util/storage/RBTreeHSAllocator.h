@@ -264,7 +264,7 @@ private:
                 bufferSize = savedDataSize();
                 hdr.save(ptr);
                 ptr += hdr.dataSize();
-                io::EndianConverter::set32(ptr,nodes_.size());
+                io::EndianConverter::set32(ptr,(uint32_t)nodes_.size());
                 ptr += 4;
                 if ( ! nodes_.empty() ) {
                     uint32_t* uptr = reinterpret_cast<uint32_t*>(ptr);
