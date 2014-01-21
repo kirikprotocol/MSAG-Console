@@ -11,7 +11,7 @@ namespace pvss {
 namespace core {
 
 smsc::logger::Logger* Context::log_ = 0;
-smsc::core::synchronization::AtomicCounter<int64_t> Context::total_ = 0;
+smsc::core::synchronization::AtomicCounter<int64_t> Context::total_(0);
 
 Context::Context(Request* req) :
 ref_(0),
