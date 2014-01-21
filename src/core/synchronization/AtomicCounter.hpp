@@ -1,36 +1,7 @@
 #ifndef __CORE_SYNCHRONIZATION_ATOMICCOUNTER_HPP__
 #define __CORE_SYNCHRONIZATION_ATOMICCOUNTER_HPP__
 
-#ifdef __GNUC__
-// using gnuc atomics
-
-#else
-
-#ifdef __sun
-
-#ifdef __SunOS_5_9
-// unfortunately sunos5.9 does not have atomics in libc
-#ifndef ATOMICCOUNTERUSEMUTEX
-#define ATOMICCOUNTERUSEMUTEX
-#endif
-#else
-// using sunos atomics
-#include <sys/atomic.h>
-#include "util/int.h"
-#endif
-
-#else
-
-// poor-man atomics using mutex
-#ifndef ATOMICCOUNTERUSEMUTEX
-#define ATOMICCOUNTERUSEMUTEX
-#endif
-#endif
-#endif
-
-#ifdef ATOMICCOUNTERUSEMUTEX
-#include "Mutex.hpp"
-#endif
+#include "Atomics.hpp"
 
 namespace smsc {
 namespace core {
@@ -39,20 +10,41 @@ namespace synchronization {
 template <typename T> class AtomicCounter
 {
     volatile T count_;
-#ifdef ATOMICCOUNTERUSEMUTEX
+#ifdef ATOMICSUSEMUTEX
     // using mutex
     Mutex lock_;
 public:
-    inline AtomicCounter(T init = 0) : count_(init) {}
-    static inline const char* getType() { return "mutex"; }
-    inline T get() { return count_; }
-    inline T inc() {
+    AtomicCounter() : count_(0) {}
+    AtomicCounter(T init) : count_(init) {}
+    static const char* getType() { return "mutex"; }
+    T get() { return count_; }
+    void set(T val) {
+        MutexGuard mg(lock_);
+        count_ = val;
+    }
+    T inc() {
         MutexGuard mg(lock_);
         return ++count_;
     }
-    inline T dec() {
+    T dec() {
         MutexGuard mg(lock_);
         return --count_;
+    }
+    T add( T val ) {
+        MutexGuard mg(lock_);
+        return count_ += val;
+    }
+    T sub( T val ) {
+        MutexGuard mg(lock_);
+        return count_ -= val;
+    }
+    T cas( T oval, T nval ) {
+        MutexGuard mg(lock_);
+        if (count_ == oval) {
+            count_ = nval; return oval;
+        } else {
+            return count_;
+        }
     }
 #else
     // not mutex
@@ -60,18 +52,22 @@ public:
 #ifdef __GNUC__
     /// increment and return new value
 public:
-    inline AtomicCounter( T init = 0 ) : count_(init) {}
-    static inline const char* getType() { return "gnuc"; }
-    inline T get() { return count_; }
-    inline T inc() { return __sync_add_and_fetch(&count_,1); }
-    /// decrement and return new value
-    inline T dec() { return __sync_sub_and_fetch(&count_,1); }
+    AtomicCounter() : count_(0) {}
+    AtomicCounter( T init ) : count_(init) {}
+    static const char* getType() { return "gnuc"; }
+    T get() { return count_; }
+    void set(T val) { count_ = val; }
+    T inc() { return __sync_add_and_fetch(&count_,1); }
+    T dec() { return __sync_sub_and_fetch(&count_,1); }
+    T add( T val ) { return __sync_add_and_fetch(&count_,val); }
+    T sub( T val ) { return __sync_sub_and_fetch(&count_,val); }
+    T cas( T oval, T nval ) { return __sync_val_compare_and_swap(&count_,oval,nval); }
 #endif
 #endif
 
 };
 
-#ifndef ATOMICCOUNTERUSEMUTEX
+#ifndef ATOMICSUSEMUTEX
 #ifndef __GNUC__
 #ifdef __sun
 
@@ -80,11 +76,16 @@ template <> class AtomicCounter< tp > \
 { \
     volatile tp count_; \
 public: \
-    inline AtomicCounter(tp init = 0) : count_(init) {} \
-    static inline const char* getType() { return "sunos"; } \
-    inline tp get() { return count_; } \
-    inline tp inc() { return atomic_inc_ ## bits ## _nv(&count_); } \
-    inline tp dec() { return atomic_dec_ ## bits ## _nv(&count_); } \
+    AtomicCounter() : count_(0) {} \
+    AtomicCounter(tp init) : count_(init) {} \
+    static const char* getType() { return "sunos"; } \
+    tp get() { return count_; } \
+    void set(tp val) { count_ = val; } \
+    tp inc() { return atomic_inc_ ## bits ## _nv(&count_); } \
+    tp dec() { return atomic_dec_ ## bits ## _nv(&count_); } \
+    tp add(tp val) { return atomic_add_ ## bits ## _nv(&count_,val); } \
+    tp sub(tp val) { return atomic_add_ ## bits ## _nv(&count_,-val); } \
+    tp cas(tp oval, tp nval) { return atomic_cas_ ## bits ## (&count_,oval,nval); } \
 }
 
 ATOMICCOUNTERDECL(uint8_t,8);
