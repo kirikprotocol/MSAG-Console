@@ -65,7 +65,7 @@ private:
 protected:
     void ref()
     {
-        unsigned long long tot;
+        uint64_t tot;
         {
             smsc::core::synchronization::MutexGuard mg(reflock_);
             if (ref_==0) { total_.inc(); }
@@ -80,7 +80,7 @@ protected:
 
     void unref()
         {
-            unsigned long long tot;
+            uint64_t tot;
             {
                 smsc::core::synchronization::MutexGuard mg(reflock_);
                 if(--ref_) return;
@@ -95,7 +95,7 @@ protected:
 private:
     smsc::core::synchronization::Mutex reflock_;
     unsigned                           ref_;
-    static smsc::core::synchronization::AtomicCounter<int64_t> total_;
+    static smsc::core::synchronization::AtomicCounter<uint64_t> total_;
 
 private:
     util::msectime_type     creationTime_;
