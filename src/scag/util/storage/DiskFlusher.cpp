@@ -92,11 +92,10 @@ int DiskFlusher::Execute()
         // smsc_log_debug(log_,"pass at %llums: spd=%ukb/s sleep=%d",now,speedKbs,sleepTime);
 
         if ( sleepTime > 0 ) {
-            if (sleepTime < minSleepTime) sleepTime = minSleepTime;
             nextWakeTime = now + sleepTime;
-            smsc_log_debug(log_,"going to sleep for %u msec, nextwake=%llums",sleepTime,nextWakeTime);
+            smsc_log_debug(log_,"going to sleep for %ums, nextwake=%llums",sleepTime,nextWakeTime);
             MutexGuard mg(mon_);
-            mon_.wait(sleepTime);
+            mon_.wait((sleepTime < minSleepTime) ? minSleepTime:sleepTime);
             continue;
         }
 
