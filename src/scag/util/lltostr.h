@@ -10,7 +10,7 @@ namespace {
   char* lltostr( long long int v, char* endptr ) 
   {
       char buf[50];
-      ::sprintf(buf,"%lld",v);
+      ::snprintf(buf, 50,"%lld",v);
       const size_t len = strlen(buf);
       endptr -= len;
       ::memcpy( endptr, buf, len );

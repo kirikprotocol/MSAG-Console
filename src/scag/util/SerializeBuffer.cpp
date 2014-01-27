@@ -1,9 +1,10 @@
+#include <arpa/inet.h>
 #include "scag/util/SerializeBuffer.h"
 
 namespace scag{
 namespace util{
 
-using namespace smsc::sms;
+// using namespace smsc::sms;
 
 SerializeBuffer& SerializeBuffer::operator >> (std::string& str)
 {
@@ -32,6 +33,7 @@ SerializeBuffer& SerializeBuffer::operator << (std::string& str)
 }
 
 
+/*
 SerializeBuffer& SerializeBuffer::operator<<(const Address& addr)
 {
     this->Append((char*)&addr.length,1);
@@ -49,6 +51,7 @@ SerializeBuffer& SerializeBuffer::operator>>(Address& addr)
     this->Read(addr.value,addr.length);
     return *this;
 }
+ */
 
 SerializeBuffer& SerializeBuffer::operator<<(const char* str)
 {

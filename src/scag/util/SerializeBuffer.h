@@ -1,14 +1,15 @@
 #ifndef __SMSC_UTIL_SERIALIZE_BUFFER_H__
 #define __SMSC_UTIL_SERIALIZE_BUFFER_H__
 
-#include "sms/sms.h"
+// #include "sms/sms.h"
+#include <time.h>
 #include "core/buffers/TmpBuf.hpp"
 #include "util/Exception.hpp"
 
 namespace scag{
 namespace util{
 
-using namespace smsc::sms;
+// using namespace smsc::sms;
 //using namespace smsc::sms::BufOps;
 
 /*
@@ -53,8 +54,8 @@ class SerializeBuffer : public smsc::core::buffers::TmpBuf<char,2048>
 public:
     SerializeBuffer& operator >> (std::string& str);
     SerializeBuffer& operator << (std::string& str);
-    SerializeBuffer& operator<<(const Address& addr);
-    SerializeBuffer& operator>>(Address& addr);
+    // SerializeBuffer& operator<<(const Address& addr);
+    // SerializeBuffer& operator>>(Address& addr);
     SerializeBuffer& operator<<(const char* str);
     SerializeBuffer& operator<<(const uint32_t& val);
     SerializeBuffer& operator>>(uint32_t& val);
@@ -75,9 +76,12 @@ public:
 
 };
 
+}
+}
 
-
-
-
-}}
+namespace scag2 {
+namespace util {
+using scag::util::SerializeBuffer;
+}
+}
 #endif
