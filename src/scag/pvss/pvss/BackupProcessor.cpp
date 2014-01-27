@@ -256,7 +256,8 @@ BackupProcessor::BackupProcessor( PvssDispatcher& dispatcher,
                                   const std::string& archiveDir,
                                   size_t propertiesPerSec,
                                   const std::string& backupPrefix,
-                                  const std::string& backupSuffix ) :
+                                  const std::string& backupSuffix,
+                                  bool loadDump) :
 dispatcher_(&dispatcher),
 stopping_(false),
 propertiesPerSec_(propertiesPerSec),
@@ -265,7 +266,8 @@ archiveDir_(archiveDir),
 inputDir_(backupPrefix),
 backupPrefix_(backupPrefix),
 backupSuffix_(backupSuffix),
-speedControl_(propertiesPerSec)
+speedControl_(propertiesPerSec),
+loadDump_(loadDump)
 {
     log_ = smsc::logger::Logger::getInstance("bck.proc");
 
@@ -303,7 +305,11 @@ void BackupProcessor::start()
         MutexGuard mg(stopMon_);
         stopping_ = false;
     }
-    threadPool_.startTask( new BackupProcessingTask(*this) );
+    if (!threadPool_.startTask( new BackupProcessingTask(*this) )) {
+        MutexGuard mg(stopMon_);
+        stopping_ = true;
+        throw smsc::util::Exception("cannot start backup proc task");
+    }
     smsc_log_info(log_,"backup processor is started");
 }
 
@@ -321,6 +327,11 @@ void BackupProcessor::stop()
     smsc_log_info(log_,"backup processor is stopped");
 }
 
+int BackupProcessor::loadDump(){
+  loadDump_=true;
+  BackupProcessingTask t(*this);
+  return t.Execute();
+}
 
 std::string BackupProcessor::readTheNextFile( const std::string& dir )
 {
@@ -378,7 +389,7 @@ void BackupProcessor::controlSpeed()
     util::msectime_type towait = speedControl_.isReady( now, maxDelay );
     if ( towait > 10 && !stopping_ ) {
         MutexGuard mg(stopMon_);
-        stopMon_.wait(towait);
+        stopMon_.wait((unsigned) towait);
     }
 }
 
@@ -393,19 +404,21 @@ int BackupProcessor::BackupProcessingTask::Execute()
         // 1. collect all files in journal dir
         // 2. read the last file tail to find out what file should be next
         std::string nextFileName;
-        try {
+        if (!processor_.loadDump_) {//on load dump do not dig in archiveDir
+          try {
             nextFileName = processor_.readTheNextFile( processor_.archiveDir_ );
-        } catch ( FileReadException& e ) {
+          } catch ( FileReadException& e ) {
             smsc_log_error(log_,"exc in '%s': %s",e.getFileName(),e.what());
             throw InfosmeException(e.getCode(),"%s in file '%s'",e.what(),e.getFileName());
-        } catch ( std::exception& e ) {
+          } catch ( std::exception& e ) {
             smsc_log_error(log_,"readNextFile exc: %s",e.what());
             throw;
-        }
-        if ( nextFileName.empty() ) {
+          }
+          if ( nextFileName.empty() ) {
             smsc_log_info(log_,"next backup file is empty, so this is the first run");
-        } else {
+          } else {
             smsc_log_info(log_,"next backup file found: %s", nextFileName.c_str());
+          }
         }
 
         // then in the loop
@@ -416,6 +429,9 @@ int BackupProcessor::BackupProcessingTask::Execute()
 
             time_t fileDateTime = 0;
 
+            //fprintf(stderr,"loaddump1 loadDump=%d nextFileName=<%s> inputDir=<%s>\n"
+            //        ,processor_.loadDump_,nextFileName.c_str(),processor_.inputDir_.c_str());
+            //fprintf(stderr,"bkpref=%s suf=%s\n", processor_.backupPrefix_.c_str(),processor_.backupSuffix_.c_str());
             if ( nextFileName.empty() ) {
                 // none of the files was processed yet
                 std::vector< std::string > entries;
@@ -437,6 +453,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
                     }
                 }
                 if ( !fileDateTime ) {
+                    if(processor_.loadDump_) return 0; //no files in dumpDir
                     MutexGuard mg(mon_);
                     mon_.wait(failureSleep);
                     continue;
@@ -453,6 +470,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
             if ( -1 == stat(filename.c_str(),&st) ) {
                 if ( errno == ENOENT ) {
                     // not present yet
+                    if(processor_.loadDump_) return 0; //no selected file. end of dump.
                     MutexGuard mg(mon_);
                     mon_.wait(failureSleep);
                     wasnotthere = true;

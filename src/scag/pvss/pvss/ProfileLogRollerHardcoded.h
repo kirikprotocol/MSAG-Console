@@ -21,7 +21,12 @@ namespace pvss {
 class ProfileLogRollerHardcoded : public ProfileLogRoller
 {
 public:
-    ProfileLogRollerHardcoded( bool backupMode );
+  /**
+   *
+   * @param backupMode
+   * @param dumpDir if !empty, dump mode
+   */
+    ProfileLogRollerHardcoded( bool backupMode, const std::string& dumpDir, const std::string& dumpPrefix );
     virtual ~ProfileLogRollerHardcoded() {
         stop();
         WaitFor();
@@ -32,6 +37,8 @@ private:
     time_t                              lastConfigTime_;
     time_t                              oldmtime_; // previous mtime of config
     bool                                backupMode_;
+    bool                                dodump_;
+    std::string                         dumpPrefix_;
 };
 
 }

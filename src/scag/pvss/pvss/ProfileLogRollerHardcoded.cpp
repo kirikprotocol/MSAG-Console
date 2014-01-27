@@ -6,10 +6,12 @@
 namespace scag2 {
 namespace pvss {
 
-ProfileLogRollerHardcoded::ProfileLogRollerHardcoded( bool backupMode ) :
+ProfileLogRollerHardcoded::ProfileLogRollerHardcoded( bool backupMode, const std::string& dumpDir, const std::string& dumpPrefix ) :
 ProfileLogRoller(),
 lastConfigTime_(0), oldmtime_(0),
-backupMode_(backupMode) {}
+backupMode_(backupMode),
+dodump_(!dumpDir.empty()),
+dumpPrefix_(dumpDir+dumpPrefix){}
     
 bool ProfileLogRollerHardcoded::readConfiguration()
 {
@@ -50,15 +52,16 @@ bool ProfileLogRollerHardcoded::readConfiguration()
     eyeline::informer::ConfigWrapper cwrap1(*cfg1,log_);
     try {
 
-        const bool enabled = cwrap1.getBool("enabled",true);
+        const bool enabled = cwrap1.getBool("enabled",true)||dodump_;
 
         // 1. reading common params
-        const unsigned reloadInterval = (backupMode_ || !enabled) ? 0 :
+        const unsigned reloadInterval = (dodump_ || backupMode_ || !enabled) ? 0 :
             cwrap1.getInt("configReloadInterval",60,0,10000);
         if ( reloadInterval > 0 && reloadInterval < 30 ) {
             throw smsc::util::Exception("configReloadInterval is too small (%u)",reloadInterval);
         }
-        const std::string prefix = cwrap1.getString("backupPrefix");
+
+        const std::string prefix = dodump_ ? dumpPrefix_ : cwrap1.getString("backupPrefix");
         const std::string finalSuffix = cwrap1.getString("finalSuffix",".pvss");
         if ( finalSuffix.empty() || finalSuffix == ".log" ) {
             throw smsc::util::Exception("finalSuffix is not correct ('%s')",finalSuffix.c_str());
@@ -73,26 +76,28 @@ bool ProfileLogRollerHardcoded::readConfiguration()
             pls.reset( new RollingFileStream( streamName,
                                               prefix.c_str(),
                                               finalSuffix.c_str(), 
-                                              rollingInterval) );
+                                              rollingInterval,
+                                              dodump_) );
             addLogStream(pls);
             if ( !getLogStream(streamName,pls) ) {
                 throw smsc::util::Exception("cannot find log stream '%s'",streamName);
             }
         }
 
+        bool logToLogs=!dodump_; //dump to backup, not to log for --dump
         // adding loggers
         addLogger("pvss.abnt",
                   (backupMode_ || !enabled) ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
-                  pls, true);
+                  pls, logToLogs);
         addLogger("pvss.oper",
                   (backupMode_ || !enabled) ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
-                  pls, true);
+                  pls, logToLogs);
         addLogger("pvss.serv",
                   (backupMode_ || !enabled) ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
-                  pls, true);
+                  pls, logToLogs);
         addLogger("pvss.prov",
                   (backupMode_ || !enabled) ? Logger::LEVEL_FATAL : Logger::LEVEL_INFO,
-                  pls, true);
+                  pls, logToLogs);
 
         configReloadInterval_ = reloadInterval;
 

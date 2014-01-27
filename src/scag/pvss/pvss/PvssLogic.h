@@ -138,7 +138,6 @@ public:
     /// start a task that initialize the logic
     virtual LogicInitTask* startInit( bool checkAtStart = false ) = 0;
     virtual LogicRebuildIndexTask* startRebuildIndex(unsigned maxSpeed = 0) = 0;
-    virtual void dumpStorage( int index ) = 0;
 
     /// return the name of the logic
     virtual std::string toString() const = 0;
@@ -147,7 +146,7 @@ protected:
     void initGlossary(const string& path, Glossary& glossary );
 
     // initialize logic
-    virtual void init( bool checkAtStart = false ) = 0;
+    virtual void init( bool checkAtStart = false, bool readOnly = false ) = 0;
     virtual void rebuildIndex(unsigned maxSpeed = 0) = 0;
 
     virtual CommandResponse* processProfileRequest(ProfileRequest& request,
@@ -156,6 +155,7 @@ protected:
     template < class Key, class Prof = Profile > struct ProfileHeapAllocator
     {
         ProfileHeapAllocator() : backup_(0) {}
+        /// to backup Expire records on load/get/del expired properties in storage->get(key)
         void setProfileBackup( ProfileBackup& backup ) { backup_ = &backup; }
         inline Prof* alloc( const Key& k ) const {
             return new Prof(k,backup_);
@@ -193,7 +193,6 @@ public:
 
     virtual LogicInitTask* startInit( bool checkAtStart = false );
     virtual LogicRebuildIndexTask* startRebuildIndex(unsigned maxSpeed = 0);
-    virtual void dumpStorage( int index );
 
     virtual std::string toString() const {
         char buf[64];
@@ -210,7 +209,7 @@ public:
     inline unsigned getLocationNumber() const { return locationNumber_; }
 
 protected:
-    virtual void init( bool checkAtStart = false ) /* throw (smsc::util::Exception) */;
+    virtual void init( bool checkAtStart = false, bool readOnly = false ) /* throw (smsc::util::Exception) */;
     virtual void rebuildIndex( unsigned maxSpeed = 0);
 
     /// init an element storage and return the total number of good nodes in it
@@ -218,7 +217,6 @@ protected:
                                      bool checkAtStart = false,
                                      bool readonly = false ) /* throw (smsc::util::Exception) */;
     unsigned long rebuildElementStorage(unsigned index,unsigned maxSpeed);
-    void dumpElementStorage( unsigned index );
 
     virtual CommandResponse* processProfileRequest(ProfileRequest& request,
                                                    bool overrideReadonly );
@@ -316,6 +314,25 @@ private:
         unsigned index;
     };
 
+public:
+    /// state of AbonentStorage dump
+    class AbStorageDumpIterator{
+      Logger* logger_;
+      AbonentLogic* logic_; // not owned
+      IntHash<ElementStorage*>::Iterator elStIt;
+      AbonentLogic::AbonentStorage* storage; //not owned
+      AbonentLogic::DiskStorage::iterator_type iter;
+
+      bool dumpExpired_;
+      unsigned stIndex;
+
+      bool openNextStorage();
+    public:
+      AbStorageDumpIterator(AbonentLogic* logic, bool dumpExpired = false);
+      virtual ~AbStorageDumpIterator();
+      virtual bool step();
+    };
+
 private:
     IntHash<ElementStorage*> elementStorages_;
     unsigned                 locationNumber_;
@@ -351,7 +368,9 @@ public:
 
     virtual LogicInitTask* startInit( bool checkAtStart = false );
     virtual LogicRebuildIndexTask* startRebuildIndex( unsigned maxSpeed = 0);
-    virtual void dumpStorage( int index );
+
+    void dumpStorage(int dumpSpeed);
+
     virtual std::string toString() const { return "infrastruct logic"; }
 
     void shutdownStorages();
@@ -362,7 +381,7 @@ public:
     // virtual void keepAlive();
 
 protected:
-    virtual void init( bool checkAtStart = false ) /* throw (smsc::util::Exception) */;
+    virtual void init( bool checkAtStart = false, bool readOnly = false ) /* throw (smsc::util::Exception) */;
     virtual void rebuildIndex( unsigned maxSpeed = 0 );
     virtual CommandResponse* processProfileRequest(ProfileRequest& request,
                                                    bool overrideReadonly );
@@ -385,6 +404,12 @@ struct AbonentStorageConfig {
     unsigned disk;
   };
 
+  struct DebugDelay{
+    unsigned probability; //1 delayed per @probability requests (per logic)
+    unsigned minDelay; //msec
+    unsigned maxDelay;//msec
+  };
+
   AbonentStorageConfig();
   AbonentStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger);
 
@@ -398,6 +423,7 @@ public:
     bool        checkAtStart;
     FlushConfig flushConfig;
     vector<Location> locations;
+    DebugDelay  debugDelay;
 };
 
 struct InfrastructStorageConfig {

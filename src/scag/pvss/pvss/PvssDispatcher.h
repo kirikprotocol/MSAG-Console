@@ -43,7 +43,9 @@ public:
   PvssDispatcher( const NodeConfig& nodeCfg,
                   const AbonentStorageConfig& abntCfg,
                   const InfrastructStorageConfig* infCfg,
-                  bool  readonly );
+                  bool  readonly,
+                  const std::string& dumpDir,
+                  const std::string& dumpPrefix );
   virtual ~PvssDispatcher();
 
   virtual unsigned getIndex(Request& request) const;
@@ -54,49 +56,58 @@ public:
 
     void createLogics( bool makedirs,
                        const AbonentStorageConfig& abntcfg,
-                       const InfrastructStorageConfig* infcfg) /* throw (smsc::util::Exception) */;
+                       const InfrastructStorageConfig* infcfg);
+  void init();
 
-    void init();
+  bool isReadonly() const {
+    return readonly_;
+  }
 
-    bool isReadonly() const {
-        return readonly_;
-    }
+  ProfileLogRoller& getLogRoller() const {
+    return *logRoller_;
+  }
 
-    ProfileLogRoller& getLogRoller() const { return *logRoller_; }
+  void rebuildIndex(unsigned maxSpeed = 0);
+  void dumpStorage(const std::string& dumpDir, int dumpSpeed, bool dumpExpired);
 
-    void rebuildIndex( unsigned maxSpeed = 0 );
+  static unsigned getInfrastructNodeNumber() {
+    return 0;
+  }
 
-    /// dump the storage -1 -- infrastruct, >= 0 -- abonent
-    void dumpStorage( int index );
+  inline unsigned getNodeNumber() const {
+    return nodeCfg_.nodeNumber;
+  }
 
-    static unsigned getInfrastructNodeNumber() { return 0; }
-
-    inline unsigned getNodeNumber() const { return nodeCfg_.nodeNumber; }
-    inline unsigned getStoragesCount() const { return nodeCfg_.storagesCount; }
+  inline unsigned getStoragesCount() const {
+    return nodeCfg_.storagesCount;
+  }
 
   unsigned getLocationNumber(unsigned elementStorageNumber) const;
 
 private:
   AbonentLogic* getLocation(unsigned elementStorageNumber);
   void shutdown();
+  void speedControl();
 
 private:
-  unsigned getErrorIndex() const { return static_cast<unsigned>(-1); }
+  unsigned getErrorIndex() const {
+    return static_cast<unsigned>(-1);
+  }
 
-    class DiskManager;
+  class DiskManager;
 
 private:
-    const NodeConfig nodeCfg_;
-    uint16_t createdLocations_;
-    unsigned infrastructIndex_;
-    std::auto_ptr<InfrastructLogic> infrastructLogic_;
-    Logger *logger_;
-    Array<AbonentLogic*> abonentLogics_;
-    std::vector< DiskManager* > diskManagers_;  // owned
-    DiskFlusher*  infraFlusher_;
-    counter::CounterPtrAny cntAbonents_;
-    ProfileLogRoller* logRoller_;
-    bool readonly_;
+  const NodeConfig nodeCfg_;
+  uint16_t createdLocations_;
+  unsigned infrastructIndex_;
+  std::auto_ptr<InfrastructLogic> infrastructLogic_;
+  Logger* logger_;
+  Array<AbonentLogic*> abonentLogics_;
+  std::vector<DiskManager*> diskManagers_;
+  DiskFlusher*  infraFlusher_;
+  counter::CounterPtrAny cntAbonents_;
+  ProfileLogRoller* logRoller_;
+  bool readonly_;
 };
 
 }//pvss

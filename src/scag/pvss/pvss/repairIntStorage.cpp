@@ -130,7 +130,7 @@ struct OffsetValue{
     OffsetValue(File::offset_type argValue):value(argValue){}
     OffsetValue(const OffsetValue& src):value(src.value){}
 
-    static uint32_t Size(){return sizeof(File::offset_type);}
+    static uint32_t Size(){return (uint32_t) sizeof(File::offset_type);}
     void Read(File& f)
     {
         value=f.ReadNetInt64();

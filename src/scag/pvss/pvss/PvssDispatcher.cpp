@@ -1,3 +1,4 @@
+#include <queue>
 #include "PvssDispatcher.h"
 #include "ProfileLogRollerHardcoded.h"
 #include "scag/util/storage/StorageNumbering.h"
@@ -9,6 +10,11 @@
 #include "scag/counter/Accumulator.h"
 #include "scag/counter/Manager.h"
 #include "util/PtrDestroy.h"
+
+#include "scag/pvss/pvss/PvssLogic.h"
+#include "scag/pvss/profile/RollingFileStream.h"
+#include "scag/pvss/profile/ProfileBackup.h"
+#include "informer/io/SpeedControl.h"
 
 namespace {
 
@@ -97,11 +103,13 @@ private:
 PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg,
                                const AbonentStorageConfig& abntCfg,
                                const InfrastructStorageConfig* infCfg,
-                               bool readonly ) :
+                               bool readonly,
+                               const std::string& dumpDir,
+                               const std::string& dumpPrefix) :
 nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.locationsCount),
 logger_(Logger::getInstance("pvss.disp")),
 infraFlusher_(0),
-logRoller_( new ProfileLogRollerHardcoded(readonly)),
+logRoller_( new ProfileLogRollerHardcoded(readonly,dumpDir,dumpPrefix)),
 readonly_(readonly)
 {
     StorageNumbering::setInstance(nodeCfg.nodesCount);
@@ -213,6 +221,7 @@ std::string PvssDispatcher::flushIOStatistics( unsigned scale,
 void PvssDispatcher::createLogics( bool makedirs, const AbonentStorageConfig& abntcfg,
                                    const InfrastructStorageConfig* infcfg )
 {
+	smsc_log_debug(logger_, "void PvssDispatcher::createLogics start func");
     for (unsigned locationNumber = 0; locationNumber < nodeCfg_.locationsCount; ++locationNumber) {
 
         const AbonentStorageConfig::Location& locCfg = abntcfg.locations[locationNumber];
@@ -230,11 +239,13 @@ void PvssDispatcher::createLogics( bool makedirs, const AbonentStorageConfig& ab
             }
         }
         DiskManager* dmgr = diskManagers_[diskNumber];
+        smsc_log_debug(logger_, "void PvssDispatcher::createLogics DiskManager* dmgr =0x%x",(u_long)dmgr);
         AbonentLogic* logic = new AbonentLogic( *this,
                                                 locationNumber,
                                                 abntcfg,
                                                 dmgr->getFileManager(),
                                                 dmgr->getFlusher() );
+        smsc_log_debug(logger_, "void PvssDispatcher::createLogics AbonentLogic* logic =0x%x",(u_long)logic);
         abonentLogics_.Push(logic);
         ++createdLocations_;
     }
@@ -291,9 +302,7 @@ void PvssDispatcher::init()
     logRoller_->start();
 
     // starting flushers
-    for ( std::vector<DiskManager*>::const_iterator i = diskManagers_.begin();
-          i != diskManagers_.end();
-          ++i ) {
+    for ( std::vector<DiskManager*>::const_iterator i = diskManagers_.begin(); i != diskManagers_.end(); ++i ) {
         (*i)->start();
     }
     if ( infraFlusher_ ) infraFlusher_->start();
@@ -337,15 +346,34 @@ void PvssDispatcher::rebuildIndex( unsigned maxSpeed )
 }
 
 
-void PvssDispatcher::dumpStorage( int index )
+void PvssDispatcher::dumpStorage (const std::string& dumpDir, int dumpSpeed, bool dumpExpired)
 {
-    if ( index >= 0 ) {
-        for ( unsigned i = 0; i < unsigned(abonentLogics_.Count()); ++i ) {
-            abonentLogics_[i]->dumpStorage(index);
-        }
-    } else if ( infrastructLogic_.get() ) {
-        infrastructLogic_->dumpStorage(0);
+  //parallel abonent storage dump
+  std::queue<AbonentLogic::AbStorageDumpIterator> abntDumps;
+
+  for ( unsigned i = 0; i < unsigned(abonentLogics_.Count()); ++i ) {
+    abntDumps.push(AbonentLogic::AbStorageDumpIterator(abonentLogics_[i], dumpExpired));
+  }
+
+  eyeline::informer::SpeedControl<long long> speedControl(dumpSpeed);
+
+  while(!abntDumps.empty()){
+    AbonentLogic::AbStorageDumpIterator i=abntDumps.front(); abntDumps.pop();
+    if(i.step())
+      abntDumps.push(i);
+
+    speedControl.consumeQuant();
+    const util::msectime_type now = util::currentTimeMillis();
+    static util::msectime_type maxDelay = 5000;
+    util::msectime_type towait = speedControl.isReady( now, maxDelay );
+    if ( towait > 10 ) {
+      usleep(unsigned(towait*1000));
     }
+  }
+
+  if ( infrastructLogic_.get() ) {
+    infrastructLogic_->dumpStorage(dumpSpeed);
+  }
 }
 
 

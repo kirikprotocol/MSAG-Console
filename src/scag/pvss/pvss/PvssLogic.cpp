@@ -16,6 +16,7 @@
 #include "util/config/ConfString.h"
 #include "scag/counter/Accumulator.h"
 #include "scag/counter/Manager.h"
+#include "informer/io/SpeedControl.h"
 
 #include "scag/util/storage/CachedDelayedThreadedDiskStorage.h"
 
@@ -74,6 +75,12 @@ const char* DEF_GLOSSARY_NAME   = "/glossary";
 using smsc::core::buffers::File;
 using smsc::core::buffers::FileException;
 
+static int randint(int min, int max)
+{
+  return min+int((max-min+1)*rand()/(RAND_MAX+1.0));
+}
+
+
 void PvssLogic::initGlossary(const string& path, Glossary& glossary) {
     if (!File::Exists(path.c_str())) {
         smsc_log_debug(logger_, "create storage dir '%s'", path.c_str());
@@ -94,14 +101,18 @@ Response* PvssLogic::process(Request& request, bool overrideReadonly) /* throw(P
     smsc_log_warn(logger_, "%p: %p processing error: PvapException", this, &request);
     throw;
   } catch (const std::runtime_error &e) {
-    smsc_log_warn(logger_, "%p: %p processing error: std::runtime_error: %s", this, &request, e.what());
+    const char* request_str=request.toString().c_str(); if(!request_str) request_str="(null)";
+    smsc_log_warn(logger_, "%p: %p (%s) processing error: std::runtime_error: %s", this, &request, request_str, e.what());
   } catch (const FileException &e) {
-      smsc_log_warn(logger_, "%p: %p processing error: FileException: %s", this, &request, e.what());
-      throw;
+    const char* request_str=request.toString().c_str(); if(!request_str) request_str="(null)";
+    smsc_log_warn(logger_, "%p: %p (%s) processing error: FileException: %s", this, &request, request_str, e.what());
+    throw;
   } catch (const std::exception &e) {
-    smsc_log_warn(logger_, "%p: %p processing error: std::exception: %s", this, &request, e.what());
+    const char* request_str=request.toString().c_str(); if(!request_str) request_str="(null)";
+    smsc_log_warn(logger_, "%p: %p (%s) processing error: std::exception: %s", this, &request, request_str, e.what());
   } catch (...) {
-    smsc_log_warn(logger_, "%p: %p processing error: unknown exception", this, &request);      
+    const char* request_str=request.toString().c_str(); if(!request_str) request_str="(null)";
+    smsc_log_warn(logger_, "%p: %p (%s) processing error: unknown exception", this, &request, request_str);
   }
   return 0;
 }
@@ -145,40 +156,69 @@ PvssLogic::LogicRebuildIndexTask* AbonentLogic::startRebuildIndex(unsigned maxSp
     return task;
 }
 
-void AbonentLogic::dumpStorage( int i )
+
+
+
+/// state of storage dump
+AbonentLogic::AbStorageDumpIterator::~AbStorageDumpIterator(){}
+AbonentLogic::AbStorageDumpIterator::AbStorageDumpIterator(AbonentLogic* logic, bool dumpExpired)
+  :logger_(logic->logger_), logic_(logic)
+  ,elStIt(logic_->elementStorages_)//dirty hack, while Hash::Iterator::Iterator are trivial
+  ,dumpExpired_(dumpExpired)
 {
-    smsc_log_error(logger_,"dumping storage %u is not impl yet", i);
-    /*
-    smsc_log_debug(logger_,"dump i=%u storages=%u node(i)=%u disp.node=%u disp.loc=%u loc=%u",
-                  unsigned(i),
-                  unsigned(dispatcher_.getStoragesCount()),
-                  unsigned(util::storage::StorageNumbering::instance().node(i)),
-                  unsigned(dispatcher_.getNodeNumber()),
-                  unsigned(dispatcher_.getLocationNumber(i)),
-                  unsigned(locationNumber_));
-    if ( i >= 0 &&
-         i < dispatcher_.getStoragesCount() &&
-         util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() &&
-         dispatcher_.getLocationNumber(i) == locationNumber_ ) {
-        smsc_log_info(logger_,"INITING STORAGE %u",i);
-        initElementStorage( i, false, true );
-        smsc_log_info(logger_,"DUMPING STORAGE %u",i);
-        AbonentStorage* storage = elementStorages_.Get(i)->storage;
-        AbntAddr key;
-        Profile profile;
-        typedef DiskStorage::value_type value_type;
-        value_type value( &profile, new value_type::backup_type );
-        for ( DiskStorage::iterator_type iter = storage->dataBegin();
-              iter.next( key, value ); )
-        {
-            smsc_log_debug(logger_,"key: %s, val:%p", key.toString().c_str(), value.value );
-            // dumping
-            if ( value.value ) {
-                smsc_log_info(logger_,"%s: %s",key.toString().c_str(),value.value->toString().c_str());
-            }
-        }
+  logic_->init(false,true);
+  logic_->profileBackup_.setExtendedExpDump(dumpExpired_);
+  elStIt=logic_->elementStorages_.First();
+  smsc_log_debug(logger_, "dump storage location s=%u", logic->locationNumber_);
+  openNextStorage();
+}
+
+bool AbonentLogic::AbStorageDumpIterator::openNextStorage(){
+  smsc_log_info(logger_,"finish dumping storage %u@%u location",stIndex, logic_->locationNumber_);
+  int k;
+  ElementStorage* pElSt;
+  if(!elStIt.Next(k,pElSt))
+    return false;
+  storage=pElSt->storage;
+  stIndex=pElSt->index;
+  iter = storage->dataBegin();
+  smsc_log_info(logger_,"start dumping storage %u@%u location",stIndex, logic_->locationNumber_);
+  return true;
+}
+
+bool AbonentLogic::AbStorageDumpIterator::step(){
+retry:
+  AbntAddr abnAddr;
+  AbonentLogic::DiskStorage::buffer_type* value=storage->serializer().getFreeBuffer(true); //value -- vector<unsigned char>. new here
+  if(!iter.next( abnAddr, *value )){
+    if(openNextStorage()) // it can change storage
+      goto retry; //don't waste time quantum :P  i found the reason for goto :) :) :D
+    smsc_log_debug(logger_,"key(%u) : no more. finished", logic_->getLocationNumber());
+    return false;
+  }
+
+  smsc_log_debug(logger_,"key(%u@%d): '%s' found", stIndex, logic_->getLocationNumber(), abnAddr.toString().c_str());
+
+  try{
+    LockableProfile prof(abnAddr,dumpExpired_?&logic_->profileBackup_:NULL);
+    AbonentStorage::stored_type stor(&prof);
+    storage->serializer().deserialize(abnAddr,stor); //*value migrated (swap) from serializer.newbuf_ to stor.backup
+    delete stor.backup; //delete value o it will deleted by ~serializer
+
+    const PropertyHash& phash = prof.getProperties();
+    PropertyHash::Iterator it(&phash);
+    char* key;
+    Property* val;
+    while ( it.Next(key,val) ) {
+      logic_->profileBackup_.addProperty(*val,true); //expired props is not in hash
+      smsc_log_debug(logger_,"key(%d): %s prop: %s",
+          logic_->getLocationNumber(), abnAddr.toString().c_str(), val->toString().c_str());
     }
-     */
+    logic_->profileBackup_.flushLogs(prof);
+  }catch(std::exception& e){
+    smsc_log_error( logger_, "Exception in pvss dump on dump of key %s: %s", abnAddr.toString().c_str(), e.what() );
+  }
+  return true;
 }
 
 
@@ -219,14 +259,14 @@ unsigned long AbonentLogic::reportStatistics() const
 }
 
 
-void AbonentLogic::init( bool checkAtStart ) /* throw (smsc::util::Exception) */
+void AbonentLogic::init( bool checkAtStart, bool readOnly ) /* throw (smsc::util::Exception) */
 {
     smsc_log_debug(logger_," init abonent location #%u", locationNumber_ );
     unsigned long total = 0;
     for ( unsigned i = 0; i < dispatcher_.getStoragesCount(); ++i ) {
         if ( util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() ) {
             if ( dispatcher_.getLocationNumber(i) == locationNumber_ ) {
-                total += initElementStorage(i,checkAtStart);
+                total += initElementStorage(i,checkAtStart,readOnly);
             }
         }
     }
@@ -398,6 +438,12 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
   }
   ElementStorage* elstorage = *elstoragePtr;
 
+    if(config_.debugDelay.probability)
+      if(0==rand()%config_.debugDelay.probability){
+        int delay =randint(config_.debugDelay.minDelay,config_.debugDelay.maxDelay);
+        usleep(delay*1000);
+      }
+
     const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
     if ( createProfile && dispatcher_.isReadonly() && !overrideReadonly ) {
         throw smsc::util::Exception("pvss in readonly mode");
@@ -405,6 +451,7 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
     LockableProfile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
     /// FIXME: temporary
     if (pf) pf->setKey( profkey );
+    bool changedOk=false;
     {
         ProfileCommandProcessor::ReadonlyFilter rf(commandProcessor_,
                                                    dispatcher_.isReadonly() && !overrideReadonly );
@@ -413,13 +460,15 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
         bool ok = rf.applyCommonLogic(profkey, profileRequest, pf, createProfile);
         if (ok && pf->isChanged() ) {
             {
-                MutexGuard mg(elstorage->mutex);
-                ok = elstorage->storage->markDirty(profileKey.getAddress());
+                MutexGuard muGuard(elstorage->mutex);
+                changedOk = elstorage->storage->markDirty(profileKey.getAddress());
             }
-            if (ok) { diskFlusher_->wakeup(); }
-            commandProcessor_.finishProcessing(ok);
+            commandProcessor_.finishProcessing(changedOk);
         }
     }
+    if (changedOk) { diskFlusher_->wakeup(); }// placed here to avoid deadlock diskflusher.mon_
+                                              //& MutexGuardTmpl< LockableProfile > mg(pf)
+                                              // in DiskFlusher::Execute
     return commandProcessor_.getResponse();
 }
 
@@ -587,7 +636,7 @@ public:
     void shutdown() {
         delete storage_; storage_ = 0;
     }
-    void dumpStorage( int index );
+    void dumpStorage(int dumpSpeed);
     void init( bool checkAtStart = false );
     void rebuildIndex( unsigned maxSpeed = 0 );
 
@@ -600,9 +649,9 @@ public:
                             unsigned dt );
 
     unsigned long filledDataSize() const {
-        unsigned long v = static_cast<unsigned long>(storage_->filledDataSize());
-        cntTotal_->setValue(v);
-        return v;
+      unsigned long v = static_cast<unsigned long>(storage_->filledDataSize());
+      cntTotal_->setValue(v);
+      return v;
     }
     
 private:
@@ -664,15 +713,15 @@ void InfrastructLogic::InfraLogic::resizePageSize( std::auto_ptr< DiskDataStorag
             smsc::core::buffers::File::Unlink((fnew+".bin").c_str());
         } catch (...) {
         }
-        std::auto_ptr< DiskDataStorage::storage_type > pf(new DiskDataStorage::storage_type);
+        std::auto_ptr< DiskDataStorage::storage_type > pageFile(new DiskDataStorage::storage_type);
         try {
-            pf->Create(fnew+".bin", cfg.pageSize, cfg.recordCount);
+            pageFile->Create(fnew+".bin", cfg.pageSize, cfg.recordCount);
         } catch (...) {
             smsc_log_error(log_,"file %s.bin cannot be created",fnew.c_str());
             throw smsc::util::Exception("file %s.bin cannot be created",fnew.c_str());
         }
 
-        std::auto_ptr< DiskDataStorage > data( new DiskDataStorage(pf.release(),
+        std::auto_ptr< DiskDataStorage > data( new DiskDataStorage(pageFile.release(),
                                                                    smsc::logger::Logger::getInstance("newdd")));
         smsc_log_debug(log_,"data storage is created");
 
@@ -765,6 +814,63 @@ void InfrastructLogic::InfraLogic::flushIOStatistics( std::string& rv,
     }
 }
 
+void InfrastructLogic::InfraLogic::dumpStorage(int dumpSpeed){
+   eyeline::informer::SpeedControl<> speedControl(dumpSpeed);
+   DiskStorage::iterator_type iter = storage_->dataBegin();
+   smsc_log_info(log_,"START DUMPING INFRA STORAGE %s",name_.c_str());
+
+   IntProfileKey key;
+   InfraLogic::DiskStorage::buffer_type value; //value -- vector<unsigned char>
+   while(iter.next( key, value )){
+     //smsc_log_debug(log_,"key %s: %s found", name_.c_str(), key.toString().c_str());
+
+     //FIXME parse value. Don't reread it.
+     /*try {
+         io::Deserializer dsr(&data[0],data.size(),glossary);
+         dsr >> prof;
+     } catch ( std::exception& e ) {
+         smsc_log_warn(logger,"exception: %s", e.what());
+     }*/
+
+     //see CachedDelayedThreadedDiskStorage::faultHandler() at first
+     LockableProfile* pf = storage_->get(key, false);
+     if(!pf){
+       smsc_log_warn(log_,"key %s: %s properties for key don't found",
+         name_.c_str(),key.toString().c_str());
+       continue;
+     }
+
+     {
+       //smsc::core::synchronization::MutexGuardTmpl< LockableProfile > mg(*pf);
+
+       pf->setKey( key.toString() );
+       const PropertyHash& phash = pf->getProperties();
+       PropertyHash::Iterator it(&phash);
+       char* propName;
+       Property* val;
+       while ( it.Next(propName,val) ) {
+         profileBackup_.addProperty(*val,true);
+         //smsc_log_debug(log_,"key %s: %s prop: %s",
+         //  name_.c_str(), key.toString().c_str(), value->toString().c_str());
+       }
+       profileBackup_.flushLogs(*pf);
+     }
+
+     {
+       speedControl.consumeQuant();
+
+       const util::msectime_type now = util::currentTimeMillis();
+       static util::msectime_type maxDelay = 5000; //millisec
+       util::msectime_type towait = speedControl.isReady( now, maxDelay );
+       if ( towait > 10 ) {
+         usleep(unsigned(towait*1000)); //mkSec
+       }
+     }
+   }
+   smsc_log_debug(log_,"key %s: no more. finished",name_.c_str());
+}
+
+
 
 
 // ===================================================================
@@ -809,11 +915,21 @@ PvssLogic::LogicRebuildIndexTask* InfrastructLogic::startRebuildIndex(unsigned m
     task->Execute();
     return 0;
 }
-void InfrastructLogic::dumpStorage( int i )
-{
-    smsc_log_warn(logger_,"dump storage is not impl yet");
-}
 
+void InfrastructLogic::dumpStorage(int dumpSpeed){
+  try {
+    init(false);
+    provider_->dumpStorage(dumpSpeed);
+    operator_->dumpStorage(dumpSpeed);
+    service_->dumpStorage(dumpSpeed);
+  } catch ( std::exception& e ) {
+    std::string failure = std::string(e.what()) + " in " + toString();
+    throw smsc::util::Exception(failure.c_str());
+  } catch (...) {
+    std::string failure = std::string("unknown exception") + " in " + toString();
+    throw smsc::util::Exception(failure.c_str());
+  }
+}
 
 std::string InfrastructLogic::reportStatistics() const
 {
@@ -848,7 +964,7 @@ void InfrastructLogic::keepAlive()
  */
 
 
-void InfrastructLogic::init( bool /*checkAtStart*/ )
+void InfrastructLogic::init( bool /*checkAtStart*/, bool /*readOnly*/ )
 {
     initGlossary(config_.dbPath,glossary_);
     provider_ = new InfraLogic("prv", "pvss.prov",*diskFlusher_,dispatcher_);
@@ -995,7 +1111,16 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
     smsc_log_warn(logger, "Parameter <PVSS.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
-    loadFlushConfig( logger, flushConfig, storageType, cfg );
+  loadFlushConfig( logger, flushConfig, storageType, cfg );
+  try {
+    debugDelay.probability=(unsigned)cfg.getInt("debug.delay.probability");
+    debugDelay.minDelay=(unsigned)cfg.getInt("debug.delay.minDelay");
+    debugDelay.maxDelay=(unsigned)cfg.getInt("debug.delay.maxDelay");
+    if(debugDelay.minDelay>debugDelay.maxDelay) throw ConfigException("minDelay>maxDelay");
+  }catch(...){
+    smsc_log_warn(logger, "AbonenStorage.debug.delay is invalid. disabled.");
+    debugDelay.probability=0;
+  }
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig() {

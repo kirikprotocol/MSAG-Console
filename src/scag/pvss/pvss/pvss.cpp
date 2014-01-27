@@ -3,7 +3,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <exception>
+#include <stdexcept>
 
 #include "logger/Logger.h"
 #include "util/Exception.hpp"
@@ -248,6 +248,80 @@ void getAbntStorageConfig(AbonentStorageConfig& abntCfg, ConfigView& locationsCo
   }
 }
 
+/**
+ * get --opt params (--opt param --opt2)
+ * @param param [out] result here
+ * @param optional may be param optional
+ * @param optname name of arg to report errors
+ * @return 0 -- optional and not found, >0 - amount of consumed args. found and setted right
+ *         std::invalid_argument on fail
+ */
+int getopt_param(int argc,char* argv[], char** param, const std::string& optname, bool optional=false){
+  if(argc<1)
+    if(optional) return 0;
+    else throw std::invalid_argument("invalid arg <"+optname+"/"+argv[0]+"> ");
+  if(argv[0][0]=='-' && argv[0][1]=='-')
+    if(argv[0][2]!='\0' ){
+      if(optional) return 0;
+      else throw std::invalid_argument("invalid arg <"+optname+"/"+argv[0]+"> ");
+    }else{ // -- to escape next --param
+      if(argc<2)
+        throw std::invalid_argument("invalid arg <"+optname+"/"+argv[0]+"> ");
+      *param=argv[1];
+      return 2;
+    }
+  *param=argv[0];
+  return 1;
+}
+
+/**
+ * get int option param
+ * @param argc
+ * @param argv
+ * @param param  [out] result value here
+ * @param optional
+ * @return 0 -- optional. Absent. >1 - n args consumed. ok.
+ */
+int getopt_param(int argc,char* argv[], long* param, const std::string& optname, bool optional=false){
+  char* string_param;
+  char* tail;
+  int res=getopt_param(argc,argv,&string_param,optname,optional);
+  if(!res) return res;
+  *param=strtol(string_param,&tail,10);
+  return res;
+}
+
+int getopt_param(int argc,char* argv[], std::string& param, const std::string& optname, bool optional=false){
+  char* string_param;
+  int res=getopt_param(argc,argv,&string_param,optname,optional);
+  if(!res) return res;
+  param=string_param;
+  return res;
+}
+
+int getopt_param(int argc,char* argv[], long* param, const std::string& optname, bool optional, long min, long max, long default_){
+  long value;
+  int res=getopt_param(argc,argv,&value,optname,optional);
+  if(!res){
+    *param=default_;
+    return 0;
+  }
+  std::string s;
+  if(value < min || value > max)
+    throw std::out_of_range("arg <"+optname+"/"+argv[0]+"> out of range "+ smsc::util::format(s,"[%ld,%ld]",min,max));
+  *param=value;
+  return res;
+}
+
+
+#ifdef CHECKCONTENTION
+unsigned smsc::core::synchronization::Mutex::contentionLimit;
+void reportContention(const char* from, unsigned waslocked, unsigned oldcount){
+  fprintf(stderr,"%s contented by %u for %u usec\n",from,oldcount,waslocked);
+  smsc_log_debug(smsc::logger::Logger::getInstance("logger"),"%s contented by %u for %u usec\n",from,oldcount,waslocked);
+}
+#endif
+
 int main(int argc, char* argv[]) {
 
     try {
@@ -280,6 +354,7 @@ int main(int argc, char* argv[]) {
 
     try {
         smsc_log_info(logger,"creating counter manager...");
+
         scag2::counter::impl::TemplateManagerImpl* tmgr =
             new scag2::counter::impl::TemplateManagerImpl();
         tmgr->init();
@@ -305,53 +380,82 @@ int main(int argc, char* argv[]) {
     bool checkIndex = false;
     bool backup = false;
     bool backupSkipOnce = false;
-    int dodump = -2;
-    for ( int i = 1; i < argc; ++i ) {
+    bool dodump = false;
+    bool dumpExpired = false;
+    bool loadDump = false;
+    std::string dumpDir,loadDumpDir;
+    long dumpSpeed=999; //records per second. Not 0
+    const std::string dumpFilePrefix="/dump-";
+    try {
+      for ( int i = 1; i < argc; ++i ) {
         std::string sarg(argv[i]);
         if ( sarg == "--recovery" || sarg == "--rebuild-index" ) {
-            recovery = true;
-            smsc_log_info(logger,"%s on command line", sarg.c_str());
-            continue;
+          recovery = true;
+          smsc_log_info(logger,"%s on command line", sarg.c_str());
+          continue;
         }
         if ( sarg == "--check-index" ) {
-            checkIndex = true;
-            smsc_log_info(logger,"%s on command line", sarg.c_str());
-            continue;
+          checkIndex = true;
+          smsc_log_info(logger,"%s on command line", sarg.c_str());
+          continue;
         }
         if ( sarg == "--backup" ) {
-            backup = true;
-            smsc_log_info(logger,"%s on command line", sarg.c_str());
-            continue;
+          backup = true;
+          smsc_log_info(logger,"%s on command line", sarg.c_str());
+          continue;
         }
         if ( sarg == "--allow-skip-once" ) {
-            backupSkipOnce = true;
-            smsc_log_info(logger,"%s on command line", sarg.c_str());
-            continue;
+          backupSkipOnce = true;
+          smsc_log_info(logger,"%s on command line", sarg.c_str());
+          continue;
         }
         if ( sarg == "--dump" ) {
-            if ( i >= argc ) {
-                smsc_log_error(logger,"--dump requires an argument");
-                std::exit(1);
-            }
-            dodump = atoi(argv[++i]);
-            smsc_log_info(logger,"%s on command line", sarg.c_str());
-            continue;
+          if(backup) throw std::logic_error("--dump is incompatible with --backup");
+          if(loadDump) throw std::logic_error("--dump is incompatible with --load_dump");
+          i++;
+          i+=getopt_param(argc-i,argv+i,dumpDir,sarg);
+          i+=getopt_param(argc-i,argv+i,&dumpSpeed,sarg,true,1,1000000,100);
+          i--;
+          dodump=true;
+          smsc_log_info(logger,"%s to %s with %ld records per second on command line", sarg.c_str(), dumpDir.c_str(),dumpSpeed);
+          continue;
         }
-        std::string extraMsg;
+        if ( sarg == "--dump-expired" ) {
+          dumpExpired = true;
+          if(!dodump) throw std::logic_error("--dump-expired demands --dump");
+          smsc_log_info(logger,"%s on command line", sarg.c_str());
+          continue;
+        }
+
+        if ( sarg == "--load_dump" ) {
+          if(backup) throw std::logic_error("--load_dump is incompatible with --backup");
+          if(dodump) throw std::logic_error("--load_dump is incompatible with --dump");
+          i++;
+          i+=getopt_param(argc-i,argv+i,loadDumpDir,sarg);
+          i+=getopt_param(argc-i,argv+i,&dumpSpeed,sarg,true,1,1000000,100);
+          i--;
+          loadDump = true;
+          smsc_log_info(logger,"%s to %s with %ld records per second on command line", sarg.c_str(), dumpDir.c_str(),dumpSpeed);
+          continue;
+        }
         if ( sarg != "--help" ) {
-            if (extraMsg.empty()) extraMsg = "Unknown option " + sarg + "\n";
-        }
-        fprintf(stderr,"%sUsage: %s [--recovery] [--check-index] [--backup [--allow-skip-once]]\n",
-                extraMsg.c_str(), argv[0]);
-        smsc_log_error(logger,"%sUsage: %s [--recovery] [--check-index] [--backup [--allow-skip-once]]",
-                       extraMsg.c_str(), argv[0]);
-        std::exit(1);
+          throw std::invalid_argument("Unknown option " + sarg);
+        }else
+          throw std::logic_error("");
+      }
+    } catch (std::logic_error& e) {
+      fprintf(stderr,"%s\nUsage: %s [--recovery] [--check-index] [--backup [--allow-skip-once]] [--dump <dir> [max_speed] [--dump-expired]]|[--load_dump <dir> [max_speed]]\n",
+          e.what(), argv[0]);
+      smsc_log_error(logger,"%s\nUsage: %s [--recovery] [--check-index] [--backup [--allow-skip-once]] [--dump <dir> [max_speed] [--dump-expired]]|[--load_dump <dir> [max_speed]]",
+          e.what(), argv[0]);
+      std::exit(1);
     }
 
     try{
         smsc_log_info(logger,"###########################################################################");
+        smsc_log_info(logger,"---------------------------------------------------------------------------");
         smsc_log_info(logger,"Starting up %s%s", getStrVersion(),
-                      ( backup ? " in backup mode" : "" ));
+                      ( backup ? " in backup mode" : (dodump ? "in dump mode" : "") ));
 
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
@@ -394,7 +498,7 @@ int main(int argc, char* argv[]) {
         // std::string abonentBackup, serviceBackup, operatorBackup, providerBackup;
         std::string backupArchiveDir, backupPrefix, backupSuffix;
         size_t propPerSec = 10;
-        if ( backup ) {
+        if ( backup || loadDump) {
             std::auto_ptr<smsc::util::config::Config> 
                 backupConfig(manager.getConfig().getSubConfig("PVSS.backup",false));
             eyeline::informer::ConfigWrapper wrap(*backupConfig,logger);
@@ -502,16 +606,34 @@ int main(int argc, char* argv[]) {
         PvssDispatcher pvssDispatcher(nodeCfg,
                                       abntCfg,
                                       infCfg.get(),
-                                      backup );
+                                      backup,
+                                      dumpDir,
+                                      dumpFilePrefix);
 
         try {
-            const bool makedirs = !(recovery || (dodump>=-1));
+            const bool makedirs = !(recovery || dodump);
+            smsc_log_debug(logger,"pvss.cpp before pvssDispatcher.createLogics( makedirs, abntCfg, infCfg.get() );");
             pvssDispatcher.createLogics( makedirs, abntCfg, infCfg.get() );
             if ( recovery ) {
+                smsc_log_info(logger,"working in recovery mode for dir <%s>",dumpDir.c_str());
                 pvssDispatcher.rebuildIndex( maxSpeed );
                 return 0;
-            } else if ( dodump >= -1 ) {
-                pvssDispatcher.dumpStorage( dodump );
+            } else if ( dodump ) {
+                smsc_log_info(logger,"working in create dump mode for dir <%s>",dumpDir.c_str());
+                pvssDispatcher.dumpStorage(dumpDir,(int)dumpSpeed,dumpExpired);
+                return 0;
+            }else if(loadDump){
+                smsc_log_info(logger,"working in loadDump mode for dir <%s>",loadDumpDir.c_str());
+                pvssDispatcher.init();
+                BackupProcessor backupProcessor(pvssDispatcher,
+                                                backupArchiveDir,
+                                                dumpSpeed,
+                                                loadDumpDir+dumpFilePrefix,
+                                                backupSuffix,
+                                                true);
+                backupProcessor.loadDump();
+                //wait dump completeness
+                //sleep(30);
                 return 0;
             } else {
                 pvssDispatcher.init();
@@ -541,7 +663,8 @@ int main(int argc, char* argv[]) {
                                                       backupPrefix,
                                                       backupSuffix ));
             backupProcessor->start();
-        }
+        }else
+          smsc_log_info(logger,"working in main mode");
 
         try {
             // server->init();

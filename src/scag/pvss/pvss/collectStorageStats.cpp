@@ -70,7 +70,7 @@ int main( int argc, const char** argv )
         return -1;
     }
     size_t sum = 0;
-    for ( unsigned i = 0, iend = histo.size(); i != iend; ++i ) {
+    for ( unsigned i = 0, iend = (unsigned) histo.size(); i != iend; ++i ) {
         if ( histo[i] ) {
             printf( "%05u %llu\n",i,uint64_t(histo[i]) );
             sum += histo[i];

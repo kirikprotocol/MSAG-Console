@@ -27,12 +27,16 @@ public:
                      const std::string& archiveDir,
                      size_t propertiesPerSec,
                      const std::string& backupPrefix,
-                     const std::string& backupSuffix );
+                     const std::string& backupSuffix,
+                     bool loadDump=false);
     virtual ~BackupProcessor();
 
     /// start processor and lock until exited
     void start();
     void stop();
+
+    /// call backupTask::Execute in same thread and wait
+    int loadDump();
     // void startTask( ScopeType scope, const std::string& backup );
 
 private:
@@ -71,6 +75,8 @@ private:
     // speed control
     eyeline::informer::SpeedControl<>         speedControl_;
     unsigned                                  speedCounter_;
+
+    bool                                      loadDump_;//restore dump mode
 };
 
 } // namespace pvss
