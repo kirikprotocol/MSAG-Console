@@ -391,12 +391,15 @@ public class Edit extends EditBean {
         this.masks = masks;
     }
 
-    public Collection getNotCheckedSubjects(){
+    public Collection getNotSelectedSubjects(){
         List<String> list = new ArrayList<String>();
-        Set<String> childSubjectNames = appContext.getScagRoutingManager().getSubjects().keySet();
-        for(String childSubjectName: childSubjectNames)
-            if (!childSubjectName.equals(name) && childSubjects.contains(childSubjectName))
-                list.add(childSubjectName);
+        Set<String> subjectNames = appContext.getScagRoutingManager().getSubjects().keySet();
+        for(String subjectName: subjectNames) {
+            if (!subjectName.equals(name) && !childSubjects.contains(subjectName)) {
+                list.add(subjectName);
+                if (logger.isDebugEnabled()) logger.debug("Added not selected subject '"+subjectName+"'.");
+            }
+        }
         return new SortedList(list);
     }
 
