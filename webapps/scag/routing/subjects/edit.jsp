@@ -163,11 +163,9 @@
                               <td><fmt:message>subjects.edit.label.subject</fmt:message></td>
                               <td align=RIGHT>
                                   <select id=subjSelect name="fake_name" class="txt">
-                                      <c:forEach items="${bean.allSubjects}" var="name">
-                                          <c:if test="${!bean.srcChecked(name) && bean.name ne name}">
-                                              <c:set var="ename" value="${fn:escapeXml(name)}"/>
-                                              <option value="${ename}">${name}</option>
-                                          </c:if>
+                                      <c:forEach items="${bean.notCheckedSubjects}" var="name">
+                                          <c:set var="ename" value="${fn:escapeXml(name)}"/>
+                                          <option value="${ename}">${name}</option>
                                       </c:forEach>
                                   </select>
                               </td>
