@@ -114,13 +114,13 @@
                 newRow.className = "row" + ((tbl.rows.length + 1) & 1);
                 newRow.id = "srcRow_" + (global_counter++);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="/images/subject.gif">';
+                newCell.innerHTML = '<img src="content/images/subject.gif">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
                 newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=checkedSources value="' + subjValue + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeSubj(\'' + newRow.id + '\');" style="cursor: pointer;">';
+                newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSubj(\'' + newRow.id + '\');" style="cursor: pointer;">';
                 newRow.appendChild(newCell);
                 selectElem.options[selectElem.selectedIndex] = null;
                 selectElem.focus();
