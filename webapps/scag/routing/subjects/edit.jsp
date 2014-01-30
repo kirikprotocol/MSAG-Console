@@ -169,7 +169,7 @@
                                       </c:forEach>
                                   </select>
                               </td>
-                              <td><img src="/images/but_add.gif" onclick="addSubj()" style="cursor:pointer;"></td>
+                              <td><img src="content/images/but_add.gif" onclick="addSubj()" style="cursor:pointer;"></td>
                           </tr>
                           <tr>
                               <td><fmt:message>subjects.edit.label.mask</fmt:message></td>
