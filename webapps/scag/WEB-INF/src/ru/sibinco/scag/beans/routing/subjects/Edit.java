@@ -391,8 +391,13 @@ public class Edit extends EditBean {
         this.masks = masks;
     }
 
-    public Collection getAllSubjects(){
-        return new SortedList(appContext.getScagRoutingManager().getSubjects().keySet());
+    public Collection getNotCheckedSubjects(){
+        List<String> list = new ArrayList<String>();
+        Set<String> childSubjectNames = appContext.getScagRoutingManager().getSubjects().keySet();
+        for(String childSubjectName: childSubjectNames)
+            if (!childSubjectName.equals(name) && childSubjects.contains(childSubjectName))
+                list.add(childSubjectName);
+        return new SortedList(list);
     }
 
     public void setSubjects(final String[] subjects){

@@ -165,7 +165,7 @@
                                   <select id=subjSelect name="fake_name" class="txt">
                                       <c:forEach items="${bean.notCheckedSubjects}" var="name">
                                           <c:set var="ename" value="${fn:escapeXml(name)}"/>
-                                          <option value="${ename}">${name}</option>
+                                          <option value="${ename}">${ename}</option>
                                       </c:forEach>
                                   </select>
                               </td>
