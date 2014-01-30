@@ -31,11 +31,6 @@ import java.util.*;
 
 /**
  * The <code>HttpRoutingManager</code> class represents
- * <p><p/>
- * Date: 06.05.2006
- * Time: 15:55:26
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
 public class HttpRoutingManager extends Manager{
 
@@ -44,12 +39,12 @@ public class HttpRoutingManager extends Manager{
     public final static int HTTP_SUBJECT_TYPE = 0;
     public final static int HTTP_SITE_TYPE = 1;
 
-    private Map routes = null;
-    private Map subjects = null;
-    private Map sites = null;
+    private Map<String, HttpRoute> routes = null;
+    private Map<String, HttpSubject> subjects = null;
+    private Map<String, HttpSite> sites = null;
     private Option options = null;
     private final File msagConfFolder;
-    private ArrayList statMessages = new ArrayList();
+    private ArrayList<StatMessage> statMessages = new ArrayList<StatMessage>();
     private ServiceProvidersManager serviceProvidersManager;
     private HSDaemon hsDaemon;
     private boolean routesChanged = false;
@@ -82,7 +77,7 @@ public class HttpRoutingManager extends Manager{
     }
 
     private void loadSubjects(final NodeList subjList) throws SibincoException {
-        subjects = Collections.synchronizedMap(new HashMap());
+        subjects = Collections.synchronizedMap(new HashMap<String,HttpSubject>());
         for (int i = 0; i < subjList.getLength(); i++) {
             final Element subjElem = (Element) subjList.item(i);
             subjects.put(subjElem.getAttribute("id"), createSubject(subjElem));
@@ -90,7 +85,7 @@ public class HttpRoutingManager extends Manager{
     }
 
     private void loadSites(final NodeList siteList) throws SibincoException {
-        sites = Collections.synchronizedMap(new HashMap());
+        sites = Collections.synchronizedMap(new HashMap<String, HttpSite>());
         for (int i = 0; i < siteList.getLength(); i++) {
             final Element siteElement = (Element) siteList.item(i);
             sites.put(siteElement.getAttribute("id"), createSite(siteElement));
@@ -136,7 +131,7 @@ public class HttpRoutingManager extends Manager{
           final String name = paramElement.getAttribute("name");
           try {
             if (name.equals(PARAM_NAME_LAST_USED_HTTP_ROUTE_ID)) {
-              lastUsedHttpRouteId = Integer.decode(Utils.getNodeText(paramElement)).intValue();
+              lastUsedHttpRouteId = Integer.decode(Utils.getNodeText(paramElement));
             }
           } catch (NumberFormatException e) {
             logger.error("Int parameter \"" + name + "\" misformatted: " + lastUsedHttpRouteId + ", skipped", e);
@@ -149,7 +144,7 @@ public class HttpRoutingManager extends Manager{
     }
 
     private void loadRoutes(NodeList routeList) throws SibincoException {
-        routes = Collections.synchronizedMap(new HashMap());
+        routes = Collections.synchronizedMap(new HashMap<String, HttpRoute>());
         for (int i = 0; i < routeList.getLength(); i++) {
             final Element routeElem = (Element) routeList.item(i);
             String id = routeElem.getAttribute("id");
@@ -157,14 +152,14 @@ public class HttpRoutingManager extends Manager{
         }
     }
 
-    public HttpRoute createRoute(String name, Service serviceObj, boolean enabled, boolean defaultRoute,
+    /*public HttpRoute createRoute(String name, Service serviceObj, boolean enabled, boolean defaultRoute,
                                  boolean transit, Abonent abonent, RouteSite routeSite) throws SibincoException {
-      return new HttpRoute(new Long(++lastUsedHttpRouteId), name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite);
-    }
+      return new HttpRoute(++lastUsedHttpRouteId, name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite);
+    }*/
 
     public HttpRoute createRoute(String name, Service serviceObj, boolean enabled, boolean defaultRoute,
                                  boolean transit, Abonent abonent, RouteSite routeSite, boolean saa) throws SibincoException {
-      return new HttpRoute(new Long(++lastUsedHttpRouteId), name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite, saa);
+      return new HttpRoute(++lastUsedHttpRouteId, name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite, saa);
     }
 
     private HttpRoute createRoute(String id, Element routeElem, Map subjects) throws SibincoException {
@@ -172,7 +167,7 @@ public class HttpRoutingManager extends Manager{
     }
 
     public boolean isDefaultRoute(Long serviceId) {
-        return getRoutesByServiceId(serviceId).length>0?false:true;
+        return getRoutesByServiceId(serviceId).length <= 0;
     }
 
     public synchronized void setDefaultHttpRoute(final String user, final Set checkedSet, final Long serviceId) {
@@ -180,12 +175,11 @@ public class HttpRoutingManager extends Manager{
         String id = (String)checkedSet.iterator().next();
         HttpRoute[] httpRoutes = getRoutesByServiceId(serviceId);
         //unchecking previous default for service
-        HttpRoute cur;
-        for (int i=0; i<httpRoutes.length;i++) {
-           ((HttpRoute)httpRoutes[i]).setDefaultRoute(false);
-        }
+
+        for (HttpRoute httpRoute : httpRoutes) httpRoute.setDefaultRoute(false);
+
         //checking new default route
-        ((HttpRoute)routes.get(id)).setDefaultRoute(true);
+        (routes.get(id)).setDefaultRoute(true);
         setRoutesChanged(true);
         StatMessage message = new StatMessage(user, "Routes", "Set default route: " + checkedSet.toString() + " for service " + serviceId);
         StatusManager.getInstance().addStatMessages(message);
@@ -193,10 +187,7 @@ public class HttpRoutingManager extends Manager{
     }
 
     private String getParamXmlText() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("   <param name=\"" + PARAM_NAME_LAST_USED_HTTP_ROUTE_ID + "\" type=\"int\">").
-               append(lastUsedHttpRouteId).append("</param>").append("\n");
-        return buffer.toString();
+        return ("   <param name=\"" + PARAM_NAME_LAST_USED_HTTP_ROUTE_ID + "\" type=\"int\">") + lastUsedHttpRouteId + "</param>" + "\n";
     }
 
     private void saveToFile(final String filename) throws SibincoException {
@@ -215,18 +206,12 @@ public class HttpRoutingManager extends Manager{
             Functions.storeConfigHeader(out, "http_routes", "http_routes.dtd", localEncoding);
             out.print(getParamXmlText());
             options.store(out);
-            for (Iterator iterator = subjects.values().iterator(); iterator.hasNext();) {
-                final HttpSubject httpSubject = (HttpSubject) iterator.next();
-                httpSubject.store(out);
-            }
-            for (Iterator iterator = sites.values().iterator(); iterator.hasNext();) {
-                final HttpSite httpSite = (HttpSite) iterator.next();
-                httpSite.store(out);
-            }
-            for (Iterator iterator = routes.values().iterator(); iterator.hasNext();) {
-                final HttpRoute httpRoute = (HttpRoute) iterator.next();
-                httpRoute.store(out);
-            }
+            for (final HttpSubject httpSubject : subjects.values()) httpSubject.store(out);
+
+            for (final HttpSite httpSite : sites.values()) httpSite.store(out);
+
+            for (final HttpRoute httpRoute : routes.values()) httpRoute.store(out);
+
             Functions.storeConfigFooter(out, "http_routes");
             out.flush();
             out.close();
@@ -249,7 +234,7 @@ public class HttpRoutingManager extends Manager{
     }
 
     public int getServiceIdByRouteId(final String routeId) throws SibincoException {
-      final HttpRoute route = (HttpRoute)routes.get(routeId);
+      final HttpRoute route = routes.get(routeId);
       if (route == null) return 0;
       return route.getService().getId().intValue();
     }
@@ -311,7 +296,7 @@ public class HttpRoutingManager extends Manager{
         return null;
     }
 
-    public synchronized void deleteSite(final String siteId, final String user, final Set checkedSet) {
+    /*public synchronized void deleteSite(final String siteId, final String user, final Set checkedSet) {
         HttpSite httpSite = (HttpSite) getSites().get(siteId);
         if (httpSite != null) {
             httpSite.getSites().keySet().removeAll(checkedSet);
@@ -320,17 +305,17 @@ public class HttpRoutingManager extends Manager{
             StatusManager.getInstance().addStatMessages(new StatMessage(user,
                     "Subject", "Deleted site(s): " + checkedSet.toString() + "."));
         }
-    }
+    }*/
 
-    public synchronized void deleteSubjectsSite(final String user, final Set checkedSet) throws SCAGJspException{
+    public synchronized void deleteSubjectsSite(final String user, final Set<String> checkedSet) throws SCAGJspException{
         String subj;
-        for (Iterator i=getRoutes().values().iterator();i.hasNext();) {
-          HttpRoute route = (HttpRoute)i.next();
-          RouteSite routeSite = route.getRouteSite();
-          for(Iterator ii = checkedSet.iterator();ii.hasNext();) {
-            subj = (String)ii.next();
-            if (routeSite.getSiteSubjects().get(subj) !=null) throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_DELETE_SUBJECT_IS_BOUND," Subject \""+subj+"\" to route \""+route.getName()+"\"");
-          }
+        for (HttpRoute route : getRoutes().values()) {
+            RouteSite routeSite = route.getRouteSite();
+            for (String aCheckedSet : checkedSet) {
+                subj = aCheckedSet;
+                if (routeSite.getSiteSubjects().get(subj) != null)
+                    throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_DELETE_SUBJECT_IS_BOUND, " Subject \"" + subj + "\" to route \"" + route.getName() + "\"");
+            }
         }
         getSites().keySet().removeAll(checkedSet);
         setRoutesChanged(true);
@@ -339,15 +324,15 @@ public class HttpRoutingManager extends Manager{
                 "Subject", "Deleted subject site(s): " + checkedSet.toString() + "."));
     }
 
-    public synchronized void deleteSubjects(final String user, final Set checkedSet) throws SCAGJspException{
+    public synchronized void deleteSubjects(final String user, final Set<String> checkedSet) throws SCAGJspException{
         String subj;
-        for (Iterator i=getRoutes().values().iterator();i.hasNext();) {
-          HttpRoute route = (HttpRoute)i.next();
-          Abonent abonent = route.getAbonent() ;
-          for(Iterator ii = checkedSet.iterator();ii.hasNext();) {
-            subj = (String)ii.next();
-            if (abonent.getSubjects().get(subj) !=null) throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_DELETE_SUBJECT_IS_BOUND," Subject \""+subj+"\" to route \""+route.getName()+"\"");
-          }
+        for (HttpRoute route : getRoutes().values()) {
+            Abonent abonent = route.getAbonent();
+            for (String aCheckedSet : checkedSet) {
+                subj = aCheckedSet;
+                if (abonent.getSubjects().get(subj) != null)
+                    throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_DELETE_SUBJECT_IS_BOUND, " Subject \"" + subj + "\" to route \"" + route.getName() + "\"");
+            }
         }
 
         getSubjects().keySet().removeAll(checkedSet);
@@ -357,13 +342,13 @@ public class HttpRoutingManager extends Manager{
                 "Subject", "Deleted subject(s): " + checkedSet.toString() + "."));
     }
 
-    /**
+    /*/**
      * Method for get modified date of primary config
      *
      * @return Date - modified date
      * @throws SibincoException if exception will be occurred
      */
-    public Date getLoadFileDate() throws SibincoException {
+    /*public Date getLoadFileDate() throws SibincoException {
         File tempConfFile = new File(msagConfFolder, HTTP_ROUTES_PRIMARY_CONFIG);
         if (tempConfFile.exists()) {
             final long lastModified = tempConfFile.lastModified();
@@ -371,30 +356,23 @@ public class HttpRoutingManager extends Manager{
                 return new Date(lastModified);
         }
         return null;
-    }
+    }*/
 
     public List getRoteIdsByServiceIds(String[] checked){
-        final List roteIds = new ArrayList();
-        for (int i = 0; i < checked.length; i++) {
-            final String serviceIdStr = checked[i];
+        final List<Long> roteIds = new ArrayList<Long>();
+        for (final String serviceIdStr : checked) {
             final Long serviceId = Long.decode(serviceIdStr);
             HttpRoute[] routes = getRoutesByServiceId(serviceId);
-            for (int j = 0; j < routes.length; j++) {
-                roteIds.add(routes[j].getId());
-            }
+            for (HttpRoute route : routes) roteIds.add(route.getId());
         }
         return roteIds;
     }
 
     public HttpRoute[] getRoutesByServiceId(final Long svcId) {
-        List result = new ArrayList();
-        for (Iterator it = routes.values().iterator(); it.hasNext();) {
-            final HttpRoute route = (HttpRoute) it.next();
-            if(route != null && route.getService().getId().equals(svcId)){
-               result.add(route);
-            }
-        }
-        return (HttpRoute[]) result.toArray(new HttpRoute[result.size()]);
+        List<HttpRoute> result = new ArrayList<HttpRoute>();
+        for (final HttpRoute route : routes.values())
+            if (route != null && route.getService().getId().equals(svcId)) result.add(route);
+        return result.toArray(new HttpRoute[result.size()]);
     }
 
      public synchronized void deleteRoutes(final String user, final Set checkedSet) {
@@ -413,27 +391,27 @@ public class HttpRoutingManager extends Manager{
         addStatMessages(message);
     }
 
-    public synchronized HttpSite getHttpSiteByName(String name) {
+    /*public synchronized HttpSite getHttpSiteByName(String name) {
         return (HttpSite) sites.get(name);
-    }
+    }*/
 
     public synchronized String getHttpRouteNameById(String id) {
-        HttpRoute route = (HttpRoute)routes.get(id);
+        HttpRoute route = routes.get(id);
         if (route !=null)
           return route.getName();
         else
           return "unknown";
     }
 
-    public Map getRoutes() {
+    public Map<String, HttpRoute> getRoutes() {
         return routes;
     }
 
-    public Map getSubjects() {
+    public Map<String, HttpSubject> getSubjects() {
         return subjects;
     }
 
-    public Map getSites() {
+    public Map<String, HttpSite> getSites() {
         return sites;
     }
 

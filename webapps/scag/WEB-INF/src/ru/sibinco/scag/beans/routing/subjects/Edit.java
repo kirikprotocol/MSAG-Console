@@ -37,6 +37,8 @@ public class Edit extends EditBean {
     private String name;
     private String defaultSme;
     private String[] masks = new String[0];
+    private Set<String> childSubjects = new TreeSet<String>();
+
     private String[] address = new String[0];
 
     private String description;
@@ -53,6 +55,8 @@ public class Edit extends EditBean {
     private String[] pathLinks = new String[0];
     private String defaultSiteObjId = null;
 
+    protected String[] checkedSources = null;
+
     public String getId() {
         return getName();
     }
@@ -65,7 +69,7 @@ public class Edit extends EditBean {
     protected void load(final String loadId) throws SCAGJspException {
 
         if (transportId == Transport.SMPP_TRANSPORT_ID) {
-            final Subject subject = (Subject) appContext.getScagRoutingManager().getSubjects().get(loadId);
+            final Subject subject = appContext.getScagRoutingManager().getSubjects().get(loadId);
             if (null != subject) {
                 name = subject.getName();
                 defaultSme = null != subject.getSvc() ? subject.getSvc().getId() : null;
@@ -80,18 +84,19 @@ public class Edit extends EditBean {
                 }
                 description = subject.getNotes();
 
-                final List maskList = new ArrayList();
+                final List<String> maskList = new ArrayList<String>();
                 for (Iterator i = subject.getMasks().iterator(); i.hasNext();) {
                     final Mask mask = (Mask) i.next();
                     maskList.add(mask.getMask());
                 }
-                masks = (String[]) maskList.toArray(new String[0]);
+                masks = maskList.toArray(new String[maskList.size()]);
                 maskList.clear();
 
+                childSubjects = subject.getChildSubjects();
             }
         } else if (transportId == Transport.HTTP_TRANSPORT_ID) {
             if (getSubjectType() == HttpRoutingManager.HTTP_SUBJECT_TYPE) {
-                HttpSubject httpSubject = (HttpSubject) appContext.getHttpRoutingManager().getSubjects().get(getHttpSubjId());
+                HttpSubject httpSubject = appContext.getHttpRoutingManager().getSubjects().get(getHttpSubjId());
                 if (null != httpSubject) {
                     name = httpSubject.getName();
                     address = httpSubject.getMasks();
@@ -101,7 +106,7 @@ public class Edit extends EditBean {
                 }
             } else if (getSubjectType() == HttpRoutingManager.HTTP_SITE_TYPE) {
 
-                HttpSite httpSite = (HttpSite) appContext.getHttpRoutingManager().getSites().get(getHttpSiteId());
+                HttpSite httpSite = appContext.getHttpRoutingManager().getSites().get(getHttpSiteId());
                 if (null != httpSite) {
                     sites = httpSite.getArraySite();
                     sitesHost = httpSite.getSiteAsStr();
@@ -116,9 +121,9 @@ public class Edit extends EditBean {
         masks = Functions.trimStrings(masks);
         address = Functions.trimStrings(address);
 
-        final Map subjects = appContext.getScagRoutingManager().getSubjects();
-        final Map httpSubjects = appContext.getHttpRoutingManager().getSubjects();
-        final Map httpSites = appContext.getHttpRoutingManager().getSites();
+        final Map<String, Subject> subjects = appContext.getScagRoutingManager().getSubjects();
+        final Map<String, HttpSubject> httpSubjects = appContext.getHttpRoutingManager().getSubjects();
+        final Map<String, HttpSite> httpSites = appContext.getHttpRoutingManager().getSites();
         final Svc defSvc = (Svc) appContext.getSmppManager().getSvcs().get(defaultSme);
         final Center defCenter = (Center) appContext.getSmppManager().getCenters().get(defaultSme);
         final MetaEndpoint defMetaSvc = (MetaEndpoint) appContext.getSmppManager().getMetaServices().get(defaultSme);
@@ -137,21 +142,19 @@ public class Edit extends EditBean {
                 if (subjects.containsKey(getName()))
                     throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
                 try {
-//                    subjects.put(getName(), defSvc == null ? new Subject(getName(), defCenter, masks, getDescription())
-//                            : new Subject(getName(), defSvc, masks, getDescription()));
                     if( defSvc!=null ){
-                        subjects.put( getName(), new Subject(getName(), defSvc, masks, getDescription()) );
+                        subjects.put( getName(), new Subject(getName(), defSvc, masks, childSubjects, getDescription()) );
                     }
                     else if( defCenter!=null ) {
-                        subjects.put( getName(), new Subject(getName(), defCenter, masks, getDescription()) );
+                        subjects.put( getName(), new Subject(getName(), defCenter, masks, childSubjects, getDescription()) );
                     }
                     else if( defMetaSvc!=null ) {
                         logger.info( "Subject:Create with metaSvc");
-                        subjects.put( getName(), new Subject(getName(), defMetaSvc, masks, getDescription()) );
+                        subjects.put( getName(), new Subject(getName(), defMetaSvc, masks, childSubjects, getDescription()) );
                     }
                     else if( defMetaCenter!=null ) {
                         logger.info( "Subject:Create with metaCenter");
-                        subjects.put( getName(), new Subject(getName(), defMetaCenter, masks, getDescription()) );
+                        subjects.put( getName(), new Subject(getName(), defMetaCenter, masks, childSubjects, getDescription()) );
                     }
                     messagetxt = "Added new subject: '" + getName() + "'.";
                 } catch (SibincoException e) {
@@ -175,29 +178,27 @@ public class Edit extends EditBean {
                     try {
                         HttpSite httpSite = new HttpSite(getName());
 
-                        for (int j = 0; j < sitesPort.length; j++) {
-                             String port = sitesPort[j];
-                             int portlen = sitesPort[j].lastIndexOf(':');
-                             String siteName = port.substring(0, portlen);
-                             port = port.substring(portlen + 1);
-                             final Site site = new Site(siteName, Integer.parseInt(port), siteName.equals(defaultSiteObjId));
-                             List listPath = new ArrayList();
-                             for (int k = 0; k < pathLinks.length; k++) {
-                                  String pathLink = pathLinks[k];
-                                  int s1 = pathLink.lastIndexOf(':');
-                                  String sitPath = pathLink.substring(0, s1);
+                        for (String port: sitesPort) {
+                            int portlen = port.lastIndexOf(':');
+                            String siteName = port.substring(0, portlen);
+                            port = port.substring(portlen + 1);
+                            final Site site = new Site(siteName, Integer.parseInt(port), siteName.equals(defaultSiteObjId));
+                            List<String> listPath = new ArrayList<String>();
+                            for (String pathLink : pathLinks) {
+                                int s1 = pathLink.lastIndexOf(':');
+                                String sitPath = pathLink.substring(0, s1);
 
-                                  int s2 = pathLink.lastIndexOf("^");
+                                int s2 = pathLink.lastIndexOf("^");
 
-                                  if (sitPath.equals(site.getHost())) {
-                                      String path = pathLink.substring(s2 + 1);
-                                      if (port.equals(pathLink.substring(s1+1, s2))){
-                                          logger.debug("http subject destination site: host="+sitPath + ", port="+port+", path="+path);
-                                          listPath.add(path);
-                                      }
-                                  }
-                             }
-                             site.setPathLinks((String[]) listPath.toArray(new String[listPath.size()]));
+                                if (sitPath.equals(site.getHost())) {
+                                    String path = pathLink.substring(s2 + 1);
+                                    if (port.equals(pathLink.substring(s1 + 1, s2))) {
+                                        logger.debug("http subject destination site: host=" + sitPath + ", port=" + port + ", path=" + path);
+                                        listPath.add(path);
+                                    }
+                                }
+                            }
+                             site.setPathLinks(listPath.toArray(new String[listPath.size()]));
                              httpSite.getSites().put(site.getId(), site);
                         }
 
@@ -222,26 +223,24 @@ public class Edit extends EditBean {
                         throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
                     subjects.remove(getEditId());
                     try {
-//                        subjects.put(getName(), defSvc == null ? new Subject(getName(), defCenter, masks, getDescription())
-//                                : new Subject(getName(), defSvc, masks, getDescription()));
                         if( defSvc!=null ) {
-                            subjects.put( getName(), new Subject(getName(), defSvc, masks, getDescription()) );
+                            subjects.put( getName(), new Subject(getName(), defSvc, masks, childSubjects, getDescription()) );
                         }
                         else if( defCenter!=null ) {
-                            subjects.put( getName(), new Subject(getName(), defCenter, masks, getDescription()) );
+                            subjects.put( getName(), new Subject(getName(), defCenter, masks, childSubjects, getDescription()) );
                         }
                         else if( defMetaSvc!=null ) {
-                            subjects.put( getName(), new Subject(getName(), defMetaSvc, masks, getDescription()) );
+                            subjects.put( getName(), new Subject(getName(), defMetaSvc, masks, childSubjects, getDescription()) );
                         }
                         else if( defMetaCenter!=null ) {
-                            subjects.put( getName(), new Subject(getName(), defMetaCenter, masks, getDescription()) );
+                            subjects.put( getName(), new Subject(getName(), defMetaCenter, masks, childSubjects, getDescription()) );
                         }
                     } catch (SibincoException e) {
                         logger.debug("Could not create new subject", e);
                         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
                     }
                 } else {
-                    final Subject subject = (Subject) subjects.get(getName());
+                    final Subject subject = subjects.get(getName());
                     if (defSvc != null) {
                         subject.setSvcWithNullOther(defSvc);
                     } else if(defCenter!=null) {
@@ -275,7 +274,7 @@ public class Edit extends EditBean {
                             throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
                         }
                     } else {
-                        final HttpSubject httpSubject = (HttpSubject) httpSubjects.get(getName());
+                        final HttpSubject httpSubject = httpSubjects.get(getName());
                         httpSubject.setMasks(address);
                         messagetxt = "Changed http subject: '" + httpSubject.getName() + "'.";
                     }
@@ -283,27 +282,25 @@ public class Edit extends EditBean {
 
                     try {
                         HttpSite httpSite = new HttpSite(getName());
-                        for (int j = 0; j < sitesPort.length; j++) {
-                             String port = sitesPort[j];
-                             int portlen = sitesPort[j].lastIndexOf(':');
+                        for (String port: sitesPort) {
+                             int portlen = port.lastIndexOf(':');
                              String siteName = port.substring(0, portlen);
                              port = port.substring(portlen + 1);
                              final Site site = new Site(siteName, Integer.parseInt(port), (siteName+":"+port).equals(defaultSiteObjId));
-                             List listPath = new ArrayList();
-                             for (int k = 0; k < pathLinks.length; k++) {
-                                 String pathLink = pathLinks[k];
-                                 int s1 = pathLink.lastIndexOf(':');
-                                 String sitPath = pathLink.substring(0, s1);
-                                 int s2 = pathLink.lastIndexOf("^");
-                                 if (sitPath.equals(site.getHost())) {
-                                     String path = pathLink.substring(s2 + 1);
-                                     if (port.equals(pathLink.substring(s1+1, s2))){
-                                        logger.debug("site: host="+sitPath + ", port="+port+", path="+path);
+                             List<String> listPath = new ArrayList<String>();
+                            for (String pathLink : pathLinks) {
+                                int s1 = pathLink.lastIndexOf(':');
+                                String sitPath = pathLink.substring(0, s1);
+                                int s2 = pathLink.lastIndexOf("^");
+                                if (sitPath.equals(site.getHost())) {
+                                    String path = pathLink.substring(s2 + 1);
+                                    if (port.equals(pathLink.substring(s1 + 1, s2))) {
+                                        logger.debug("site: host=" + sitPath + ", port=" + port + ", path=" + path);
                                         listPath.add(path);
-                                     }
-                                 }
-                             }
-                             site.setPathLinks((String[]) listPath.toArray(new String[listPath.size()]));
+                                    }
+                                }
+                            }
+                             site.setPathLinks(listPath.toArray(new String[listPath.size()]));
                              httpSite.getSites().put(site.getId(), site);
                         }
 
@@ -333,7 +330,7 @@ public class Edit extends EditBean {
     }
 
     public String getSmeIds() {
-        final StringBuffer result = new StringBuffer();
+        final StringBuilder result = new StringBuilder();
         SortedList smes = new SortedList();
         smes.addAll(appContext.getSmppManager().getSvcs().keySet());
         smes.addAll(appContext.getSmppManager().getCenters().keySet());
@@ -346,7 +343,7 @@ public class Edit extends EditBean {
     }
 
     public String getUngroupedSmeIds() {
-        final StringBuffer result = new StringBuffer();
+        final StringBuilder result = new StringBuilder();
         SortedList smes = new SortedList();
         smes.addAll(appContext.getSmppManager().getServicesByMetaGroupId("").keySet());
         smes.addAll(appContext.getSmppManager().getCentersByMetaGroupId("").keySet());
@@ -371,8 +368,7 @@ public class Edit extends EditBean {
     }
 
     public String getName() {
-        if(name != null)name.trim();
-        return name;
+        return name != null ? name.trim() : null;
     }
 
     public void setName(final String name) {
@@ -395,6 +391,14 @@ public class Edit extends EditBean {
         this.masks = masks;
     }
 
+    public Collection getAllSubjects(){
+        return new SortedList(appContext.getScagRoutingManager().getSubjects().keySet());
+    }
+
+    public void setSubjects(final String[] subjects){
+        childSubjects = new TreeSet<String>(Arrays.asList(subjects));
+    }
+
     public String[] getAddress() {
         return address;
     }
@@ -404,8 +408,7 @@ public class Edit extends EditBean {
     }
 
     public String getDescription() {
-        if(description != null)description.trim();
-        return description;
+        return description != null ? description.trim() : null;
     }
 
     public void setDescription(final String description) {
@@ -490,5 +493,9 @@ public class Edit extends EditBean {
 
     public void setPathLinks(final String[] pathLinks) {
         this.pathLinks = pathLinks;
+    }
+
+    public boolean isSrcChecked(final String srcName) {
+        return childSubjects.contains(srcName);
     }
 }

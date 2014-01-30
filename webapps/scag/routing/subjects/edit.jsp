@@ -87,6 +87,48 @@
             return sString;
         }
 
+        function removeSubj(rowId)
+        {
+            var selectElem = document.getElementById('subjSelect');
+            var tbl = document.getElementById('sources_table');
+            var rowElem = tbl.rows[rowId];
+            var subjObj = findChildById(rowElem, 'subjSrc');
+            var subjValue = subjObj.value;
+            var oOption = document.createElement("OPTION");
+            try {
+                selectElem.add(oOption); // For MSIE
+            } catch (ex) {
+                selectElem.add(oOption, null); // For Firefox
+            }
+            oOption.innerText = oOption.text = oOption.value = subjValue;
+            selectElem.disabled = false;
+            tbl.deleteRow(rowElem.rowIndex);
+        }
+
+        function addSubj() {
+            var selectElem = document.getElementById('subjSelect');
+            if (selectElem.options.length > 0) {
+                var subjValue = selectElem.options[selectElem.selectedIndex].value;
+                var tbl = document.getElementById('sources_table');
+                var newRow = tbl.insertRow(tbl.rows.length);
+                newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+                newRow.id = "srcRow_" + (global_counter++);
+                newCell = document.createElement("td");
+                newCell.innerHTML = '<img src="/images/subject.gif">';
+                newRow.appendChild(newCell);
+                newCell = document.createElement("td");
+                newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=checkedSources value="' + subjValue + '">';
+                newRow.appendChild(newCell);
+                newCell = document.createElement("td");
+                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeSubj(\'' + newRow.id + '\');" style="cursor: pointer;">';
+                newRow.appendChild(newCell);
+                selectElem.options[selectElem.selectedIndex] = null;
+                selectElem.focus();
+                if (selectElem.options.length == 0)
+                    selectElem.disabled = true;
+            }
+        }
+
       </script>
       <c:choose>
       <c:when test="${bean.transportId == 1}">
@@ -118,6 +160,22 @@
                           <col width="100%" align="right">
                           <col width="100%" align="left">
                           <tr>
+                              <td><fmt:message>subjects.edit.label.subject</fmt:message></td>
+                              <td align=RIGHT>
+                                  <select id=subjSelect name="fake_name" class="txt">
+
+                                      <%for (String name: bean.getAllSubjects()) {
+                                      if (!bean.isSrcChecked(name) && !bean.getName().equals(name)) {
+                                          String encName = StringEncoderDecoder.encode(name);%>
+                                      <option value="<%=encName%>"><%=encName%></option>
+                                  <%  }
+                                   }
+                                  %>
+                                  </select>
+                              </td>
+                              <td><img src="/images/but_add.gif" onclick="addSubj()" style="cursor:pointer;"></td>
+                          </tr>
+                          <tr>
                               <td><fmt:message>subjects.edit.label.mask</fmt:message></td>
                               <td><input id="newSrcMask" class="txt" name="masks" validation="routeMask"
                                          onkeyup="resetValidation(this)"></td>
@@ -145,6 +203,20 @@
                               </tr>
                               <c:set var="rowN" value="${rowN+1}"/>
                           </c:forEach>
+                          <%
+                              for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();) {
+                                  String name = (String) i.next();
+                                  String encName = StringEncoderDecoder.encode(name);
+                                  String rowId = "subjRow_" + StringEncoderDecoder.encodeHEX(name);
+                                  if (bean.isSrcChecked(name)) {%>
+                                      <tr class=row<%=(rowN++) & 1%> id="<%=rowId%>">
+                                          <td><img src="content/images/subject.gif"></td>
+                                          <td><%=encName%><input id=subjSrc type=hidden name=checkedSources value="<%=encName%>"></td>
+                                          <td><img src="content/images/but_del.gif" onClick="removeSubj('<%=rowId%>');" style="cursor: pointer;"></td>
+                                      </tr><%
+                                  }
+                              }
+                          %>
                       </table>
                   </td>
                   <td valign="top">&nbsp;</td>

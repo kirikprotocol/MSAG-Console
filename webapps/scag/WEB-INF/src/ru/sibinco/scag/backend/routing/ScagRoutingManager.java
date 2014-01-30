@@ -10,7 +10,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
-import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
@@ -20,7 +19,6 @@ import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.Manager;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.installation.HSDaemon;
-import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
 
@@ -37,17 +35,12 @@ import java.util.*;
 
 /**
  * The <code>ScagRoutingManager</code> class represents
- * <p><p/>
- * Date: 21.10.2005
- * Time: 15:00:19
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
 public class ScagRoutingManager extends Manager {
 
-    private Map routes = null;
-    private Map subjects = null;
-    private final ArrayList statMessages = new ArrayList();
+    private Map<String, Route> routes = null;
+    private Map<String, Subject> subjects = null;
+    private final ArrayList<StatMessage> statMessages = new ArrayList<StatMessage>();
     private Logger logger = Logger.getLogger(this.getClass());
     private final File scagConfFolder;
     private SmppManager smppManager;
@@ -62,7 +55,6 @@ public class ScagRoutingManager extends Manager {
     private static final String SMPP_ROUTES_PRIMARY_CONFIG = "smpp_routes.xml";
     private static final String SMPP_ROUTES_TEMPORAL_CONFIG = "smpp_routes_.xml";
     private static final String SMPP_ROUTES_TRACEABLE_CONFIG = "smpp_routes__.xml";
-
 
     public ScagRoutingManager(File smscConfFolder, SmppManager smppManager,
                               ServiceProvidersManager serviceProvidersManager, HSDaemon hsDaemon) {
@@ -82,40 +74,29 @@ public class ScagRoutingManager extends Manager {
         }
     }
 
-    public boolean isSmeUsed(final String svcId) {
-        for (Iterator it = routes.values().iterator(); it.hasNext();) {
-            final Route route = (Route) it.next();
-            for (Iterator j = route.getDestinations().values().iterator(); j.hasNext();) {
-                final Destination destination = (Destination) j.next();
-                if (destination.getSvc().getId().equals(svcId))
-                    return true;
-            }
-        }
+    /*public boolean isSmeUsed(final String svcId) {
+        for (final Route route : routes.values())
+            for (final Destination destination : route.getDestinations().values())
+                if (destination.getSvc().getId().equals(svcId)) return true;
         return false;
-    }
+    }*/
 
     public List getRoteIdsByServiceIds(String[] checked){
-        final List roteIds = new ArrayList();
-        for (int i = 0; i < checked.length; i++) {
-            final String serviceIdStr = checked[i];
+        final List<String> roteIds = new ArrayList<String>();
+        for (final String serviceIdStr : checked) {
             final Long serviceId = Long.decode(serviceIdStr);
             Route[] routes = getRoutesByServiceId(serviceId);
-            for (int j = 0; j < routes.length; j++) {
-                roteIds.add(routes[j].getId());
-            }
+            for (Route route : routes) roteIds.add(route.getId());
         }
         return roteIds;
     }
 
     public Route[] getRoutesByServiceId(final Long svcId) {
-        List result = new ArrayList();
-        for (Iterator it = routes.values().iterator(); it.hasNext();) {
-            final Route route = (Route) it.next();
-            if(route.getService().getId().equals(svcId)){
-               result.add(route);
-            }
-        }
-        return (Route[]) result.toArray(new Route[result.size()]);
+        List<Route> result = new ArrayList<Route>();
+        for (final Route route : routes.values())
+            if (route.getService().getId().equals(svcId)) result.add(route);
+
+        return result.toArray(new Route[result.size()]);
     }
 
     public synchronized boolean hasSavedConfiguration() {
@@ -178,12 +159,12 @@ public class ScagRoutingManager extends Manager {
         return new Subject(subjElem, smppManager);
     }
 
-    protected Route createRoute(final Element routeElem, final Map subjects) throws SibincoException {
+    protected Route createRoute(final Element routeElem, final Map<String, Subject> subjects) throws SibincoException {
         return new Route(routeElem, subjects, smppManager, serviceProvidersManager);
     }
 
     private void loadSubjects(final NodeList subjList) throws SibincoException {
-        subjects = Collections.synchronizedMap(new HashMap());
+        subjects = Collections.synchronizedMap(new HashMap<String, Subject>());
         for (int i = 0; i < subjList.getLength(); i++) {
             final Element subjElem = (Element) subjList.item(i);
             subjects.put(subjElem.getAttribute("id"), createSubject(subjElem, smppManager));
@@ -191,7 +172,7 @@ public class ScagRoutingManager extends Manager {
     }
 
     private void loadRoutes(final NodeList routeList) throws SibincoException {
-        routes = Collections.synchronizedMap(new HashMap());
+        routes = Collections.synchronizedMap(new HashMap<String, Route>());
         for (int i = 0; i < routeList.getLength(); i++) {
             final Element routeElem = (Element) routeList.item(i);
             String id = routeElem.getAttribute("id");
@@ -204,58 +185,56 @@ public class ScagRoutingManager extends Manager {
     }
 
     private void saveToFile(final String filename, boolean backup) throws SibincoException {
-
         // Check subject.
-        for (Iterator it = subjects.values().iterator(); it.hasNext();) {
-            final Subject subject = (Subject) it.next();
+        for (final Subject subject : subjects.values()) {
             logger.error("not error, info for debug: " + subject);
             if (subject.getName() == null) {
-                logger.error("Couldn't save default subject to file, subject name is null:"+subject);
+                logger.error("Couldn't save default subject to file, subject name is null:" + subject);
                 throw new SibincoException("Couldn't save default subject to file, subject name is null.");
             }
 
             if (subject.getCenter() == null && subject.getSvc() == null && subject.getMetaSvc() == null && subject.getMetaCenter() == null) {
-                logger.error("Couldn't save default subject with name "+subject.getName()+" to file: subjects service endpoints and centers is null.");
-                throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: all service endpoints and centers is null.");
+                logger.error("Couldn't save default subject with name " + subject.getName() + " to file: subjects service endpoints and centers is null.");
+                throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: all service endpoints and centers is null.");
             }
 
-            if (subject.getCenter() != null){
-                if (subject.getCenter().getId() == null){
-                    logger.error("Couldn't save default subject with name "+subject.getName()+" to file, center id is null:"+subject);
-                    throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: center id is null.");
+            if (subject.getCenter() != null) {
+                if (subject.getCenter().getId() == null) {
+                    logger.error("Couldn't save default subject with name " + subject.getName() + " to file, center id is null:" + subject);
+                    throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: center id is null.");
                 }
             }
 
-            if (subject.getMetaCenter() != null){
-                if (subject.getMetaCenter().getId() == null){
-                    logger.error("Couldn't save default subject with name "+subject.getName()+" to file, meta center id is null:"+subject);
-                    throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: meta center id is null.");
+            if (subject.getMetaCenter() != null) {
+                if (subject.getMetaCenter().getId() == null) {
+                    logger.error("Couldn't save default subject with name " + subject.getName() + " to file, meta center id is null:" + subject);
+                    throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: meta center id is null.");
                 }
             }
 
-            if (subject.getSvc() != null){
-                if (subject.getSvc().getId() == null){
-                    logger.error("Couldn't save default subject with name "+subject.getName()+" to file, svc id is null:"+subject);
-                    throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: svc id is null.");
+            if (subject.getSvc() != null) {
+                if (subject.getSvc().getId() == null) {
+                    logger.error("Couldn't save default subject with name " + subject.getName() + " to file, svc id is null:" + subject);
+                    throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: svc id is null.");
                 }
             }
 
-            if (subject.getMetaSvc() != null){
-                if (subject.getMetaSvc().getId() == null){
-                    logger.error("Couldn't save default subject with name "+subject.getName()+" to file, meta svc id is null:"+subject);
-                    throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: meta svc id is null.");
+            if (subject.getMetaSvc() != null) {
+                if (subject.getMetaSvc().getId() == null) {
+                    logger.error("Couldn't save default subject with name " + subject.getName() + " to file, meta svc id is null:" + subject);
+                    throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: meta svc id is null.");
                 }
             }
 
             MaskList masks = subject.getMasks();
-            if (masks == null){
-                logger.error("Couldn't save default subject with name "+subject.getName()+" to file, masks is null:"+subject);
-                throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: masks is null.");
+            if (masks == null) {
+                logger.error("Couldn't save default subject with name " + subject.getName() + " to file, masks is null:" + subject);
+                throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: masks is null.");
             }
 
-            if (masks.size() == 0){
-                logger.error("Couldn't save default subject with name "+subject.getName()+" to file, mask list is empty: "+subject);
-                throw new SibincoException("Couldn't save default subject with name "+subject.getName()+" to file: masks list is empty.");
+            if (masks.size() == 0) {
+                logger.error("Couldn't save default subject with name " + subject.getName() + " to file, mask list is empty: " + subject);
+                throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: masks list is empty.");
             }
 
         }
@@ -268,15 +247,10 @@ public class ScagRoutingManager extends Manager {
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream((backup)?newFile:file), localEncoding));
 
             Functions.storeConfigHeader(out, "routes", "smpp_routes.dtd", localEncoding);
-            for (Iterator it = subjects.values().iterator(); it.hasNext();) {
-                final Subject subject = (Subject) it.next();
-                subject.store(out);
-            }
-            for (Iterator it = routes.values().iterator(); it.hasNext();) {
-                final Route route = (Route) it.next();
-                //System.out.println("ScagRoutingManager.asveToFile().route ID=" + route.getId());
-                route.store(out);
-            }
+            for (final Subject subject : subjects.values()) subject.store(out);
+
+            for (final Route route : routes.values()) route.store(out);
+
             Functions.storeConfigFooter(out, "routes");
             out.flush();
             out.close();
@@ -301,7 +275,6 @@ public class ScagRoutingManager extends Manager {
         if (tempConfFile.exists()) {
             final long lastModified = tempConfFile.lastModified();
             if (lastModified != 0) {
-                //System.out.println("lastModified = " + lastModified);
                 return new Date(lastModified);
             } else
                 System.out.println("tempConfFile.lastModified() == 0");
@@ -316,7 +289,7 @@ public class ScagRoutingManager extends Manager {
      * @return Date - modified date
      * @throws SibincoException if exception will be occurred
      */
-    public Date getLoadFileDate() throws SibincoException {
+    /*public Date getLoadFileDate() throws SibincoException {
         File tempConfFile = new File(scagConfFolder, SMPP_ROUTES_PRIMARY_CONFIG);
         if (tempConfFile.exists()) {
             final long lastModified = tempConfFile.lastModified();
@@ -324,14 +297,14 @@ public class ScagRoutingManager extends Manager {
                 return new Date(lastModified);
         }
         return null;
-    }
+    }*/
 
     public int getProviderIdByServiceId(final Long serviceId) throws SibincoException {
       return (serviceProvidersManager.getServiceProviderByServiceId(serviceId)).getId().intValue();
     }
 
     public int getServiceIdByRouteId(final String routeId) throws SibincoException {
-      final Route route = (Route)routes.get(routeId);
+      final Route route = routes.get(routeId);
       if (route == null) return 0;
       return route.getService().getId().intValue();
     }
@@ -379,11 +352,11 @@ public class ScagRoutingManager extends Manager {
         saveToFile(SMPP_ROUTES_TRACEABLE_CONFIG);
     }
 
-    public Map getRoutes() {
+    public Map<String, Route> getRoutes() {
         return routes;
     }
 
-    public Map getSubjects() {
+    public Map<String, Subject> getSubjects() {
         return subjects;
     }
 

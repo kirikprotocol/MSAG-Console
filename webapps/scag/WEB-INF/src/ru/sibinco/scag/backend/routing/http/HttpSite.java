@@ -15,18 +15,13 @@ import java.util.*;
 
 /**
  * The <code>HttpSite</code> class represents
- * <p><p/>
- * Date: 19.05.2006
- * Time: 14:04:57
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
 public class HttpSite {
 
     private static Logger log = Logger.getLogger(HttpSite.class);
 
     private String name;
-    private Map sites = new HashMap();
+    private Map<String, Site> sites = new HashMap<String,Site>();
 
 
     public HttpSite(Element subjElement) throws SibincoException {
@@ -36,7 +31,7 @@ public class HttpSite {
 
         for (int i = 0; i < sitekList.getLength(); i++) {
             Site site = new Site();
-            List path = new ArrayList();
+            List<String> path = new ArrayList<String>();
             Element siteElem = (Element) sitekList.item(i);
             site.setHost(siteElem.getAttribute("host").trim());
             site.setPort(Integer.parseInt(siteElem.getAttribute("port").trim()));
@@ -46,7 +41,7 @@ public class HttpSite {
                 Element pathElement = (Element) pathList.item(j);
                 path.add(pathElement.getAttribute("value").trim());
             }
-            site.setPathLinks((String[]) path.toArray(new String[path.size()]));
+            site.setPathLinks(path.toArray(new String[path.size()]));
             String id = site.getId();
             sites.put(id, site);
             log.debug("init "+site);
@@ -56,54 +51,44 @@ public class HttpSite {
 
     public PrintWriter store(PrintWriter out) {
         out.println("  <site_subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\">");
-        for (Iterator iterator = sites.values().iterator(); iterator.hasNext();) {
-            final Site site = (Site) iterator.next();
-            out.println("    <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\"  port=\"" + site.getPort() + "\" default=\""+site.isDefaultSite()+"\">");
+        for (final Site site : sites.values()) {
+            out.println("    <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\"  port=\"" + site.getPort() + "\" default=\"" + site.isDefaultSite() + "\">");
             String[] pathLinks = site.getPathLinks();
-            for (int i = 0; i < pathLinks.length; i++) {
-                out.println("      <path value=\"" + pathLinks[i] + "\"/>");
-            }
+            for (String pathLink : pathLinks) out.println("      <path value=\"" + pathLink + "\"/>");
             out.println("    </site>");
         }
         out.println("  </site_subject_def>");
         return out;
     }
 
-    public HttpSite(String name, Map sites) {
+    /*public HttpSite(String name, Map<String, Site> sites) {
         if (name == null)
             throw new NullPointerException("Name is null");
         this.name = name;
         this.sites = sites;
-    }
+    }*/
 
     public HttpSite(String name)  {
         if (name == null)
             throw new NullPointerException("Name is null");
         this.name = name;
-        this.sites = new HashMap();
+        this.sites = new HashMap<String, Site>();
     }
 
     public Site[] getArraySite() {
-        List siteList = new ArrayList();
-        for (Iterator i = sites.values().iterator(); i.hasNext();) {
-            final Site site = (Site) i.next();
-            siteList.add(site);
-        }
-        return (Site[]) siteList.toArray(new Site[siteList.size()]);
+        List<Site> siteList = new ArrayList<Site>();
+        for (final Site site : sites.values()) siteList.add(site);
+        return siteList.toArray(new Site[siteList.size()]);
     }
 
     public String[] getSiteAsStr() {
-        List siteList = new ArrayList();
-        for (Iterator i = sites.values().iterator(); i.hasNext();) {
-            final Site site = (Site) i.next();
-            siteList.add(site.getHost());
-        }
-        return (String[]) siteList.toArray(new String[siteList.size()]);
+        List<String> siteList = new ArrayList<String>();
+        for (final Site site : sites.values()) siteList.add(site.getHost());
+        return siteList.toArray(new String[siteList.size()]);
     }
 
     public String getName() {
-        if(name != null)name.trim();
-        return name;
+        return name != null ? name.trim() : null;
     }
 
     public void setName(String name) {
@@ -118,7 +103,7 @@ public class HttpSite {
         setName(id);
     }
 
-    public Map getSites() {
+    public Map<String,Site> getSites() {
         return sites;
     }
 }

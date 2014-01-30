@@ -8,36 +8,26 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.sibinco.lib.Constants;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.route.Mask;
-import ru.sibinco.lib.backend.route.MaskList;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
-import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * The <code>Route</code> class represents
- * <p><p/>
- * Date: 21.10.2005
- * Time: 11:25:51
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
 public class Route {
 
     private final Logger logger = Logger.getLogger(this.getClass());
 
     private String name;
-    private Map sources;
-    private Map destinations;
+    private Map<String, Source> sources;
+    private Map<String, Destination> destinations;
     private boolean enabled = true;
     private boolean transit = true;
     private boolean saa = false;
@@ -48,8 +38,7 @@ public class Route {
     private Service service;
     private String notes;
 
-
-    public Route(final String routeName, final Map sources, final Map destinations,
+    public Route(final String routeName, final Map<String, Source> sources, final Map<String, Destination> destinations,
                  final boolean enabled, final String slicing, final String slicedRespPolicy,
                  final String srcSmeId, final Service service, final String notes) {
         if (routeName == null)
@@ -72,7 +61,7 @@ public class Route {
         this.notes = notes;
     }
 
-    public Route(final String routeName, final Map sources, final Map destinations,
+    public Route(final String routeName, final Map<String, Source> sources, final Map<String, Destination> destinations,
                  final boolean enabled, final String slicing, final String slicedRespPolicy,
                  final String srcSmeId, final Service service, final String notes, final boolean transit) {
         if (routeName == null)
@@ -94,10 +83,9 @@ public class Route {
         this.srcSmeId = srcSmeId;
         this.service = service;
         this.notes = notes;
-
     }
 
-    public Route( final String routeName, final Map sources, final Map destinations,
+    public Route( final String routeName, final Map<String, Source> sources, final Map<String, Destination> destinations,
                  final boolean enabled, final String slicing, final String slicedRespPolicy,
                  final String srcSmeId, final Service service, final String notes, final boolean transit,
                  boolean saa, boolean hideSaaText) {
@@ -122,7 +110,6 @@ public class Route {
         this.srcSmeId = srcSmeId;
         this.service = service;
         this.notes = notes;
-
     }
 
     public Route(String routeName) {
@@ -132,8 +119,8 @@ public class Route {
             throw new IllegalArgumentException("Route name is too long");
 
         this.name = routeName;
-        this.sources = new HashMap();
-        this.destinations = new HashMap();
+        this.sources = new HashMap<String, Source>();
+        this.destinations = new HashMap<String, Destination>();
         this.enabled = false;
         this.transit = false;
         this.slicing = "NONE";
@@ -145,10 +132,7 @@ public class Route {
 
 
     public Route(Element routeElem, Map subjects, SmppManager smppManager,
-                 ServiceProvidersManager serviceProvidersManager)
-                 throws SibincoException
-    {
-
+                 ServiceProvidersManager serviceProvidersManager) throws SibincoException{
         name = routeElem.getAttribute("id");
         if (name.length() > Constants.ROUTE_ID_MAXLENGTH) {
             throw new SibincoException("Route name is too long: " + name.length() + " chars \"" + name + '"');
@@ -162,10 +146,7 @@ public class Route {
 
         String saaStr = routeElem.getAttribute("saa");
         if( !trStr.equals("") && saaStr.equals("") ){
-            if( trStr.equals("true") )
-                saa = false;
-            else
-                saa= true;
+            saa = !trStr.equals("true");
         } else {
             saa = routeElem.getAttribute("saa").equalsIgnoreCase("true");
         }
@@ -183,8 +164,8 @@ public class Route {
             notes += Utils.getNodeText(notesList.item(i));
     }
 
-    private Map loadSources(Element routElement, Map subjects) {
-        Map result = new HashMap();
+    private Map<String, Source> loadSources(Element routElement, Map subjects) {
+        Map<String, Source> result = new HashMap<String, Source>();
         NodeList list = routElement.getElementsByTagName("source");
         for (int i = 0; i < list.getLength(); i++) {
             try {
@@ -197,60 +178,19 @@ public class Route {
         return result;
     }
 
-    private Map loadDestinations(Element routeElem, Map subjects, SmppManager smppManager)
-//            throws SibincoException
-    {
-        Map result = new HashMap();
+    private Map<String, Destination> loadDestinations(Element routeElem, Map subjects, SmppManager smppManager){
+        Map<String, Destination> result = new HashMap<String, Destination>();
         NodeList list = routeElem.getElementsByTagName("destination");
-        //logger.error( "Destination list=" + list + " size=" +list.getLength() );
         for (int i = 0; i < list.getLength(); i++) {
-            Destination destination = null;
+            Destination destination;
             try {
                 destination = new Destination((Element) list.item(i), subjects, smppManager);
+                result.put(destination.getName(), destination);
             } catch (SibincoException e) {
-                logger.warn( "Cann't create destination with id=" + list.item(i).getLocalName() + "child=" + list.item(i).getFirstChild().getLocalName() );
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                logger.warn("Could not create destination with id=" + list.item(i).getLocalName() + "child=" + list.item(i).getFirstChild().getLocalName() );
             }
-            result.put(destination.getName(), destination);
         }
         return result;
-    }
-
-    public void updateSources(Set sourcesString, String masksString, Map allSubjects) {
-        Map sources_selected = new HashMap();
-        for (Iterator iterator = sourcesString.iterator(); iterator.hasNext();) {
-            String token = (String) iterator.next();
-            final Source source = new Source((Subject) allSubjects.get(token));
-            sources_selected.put(source.getName(), source);
-        }
-        MaskList masks = new MaskList(masksString);
-        for (Iterator it = masks.iterator(); it.hasNext();) {
-            Mask mask = (Mask) it.next();
-            final Source source = new Source(mask);
-            sources_selected.put(source.getName(), source);
-        }
-        sources.keySet().retainAll(sources_selected.keySet());
-        sources_selected.keySet().removeAll(sources.keySet());
-        sources.putAll(sources_selected);
-    }
-
-    public void updateDestinations(Set destinationsStrings, String masksString, Map allSubjects, Svc defaultSme) throws SibincoException {
-        Map list = new HashMap();
-        for (Iterator i = destinationsStrings.iterator(); i.hasNext();) {
-            String token = (String) i.next();
-            final Destination destination = new Destination((Subject) allSubjects.get(token));
-            list.put(destination.getName(), destination);
-        }
-
-        MaskList masks = new MaskList(masksString);
-        for (Iterator i = masks.iterator(); i.hasNext();) {
-            Mask m = (Mask) i.next();
-            final Destination destination = new Destination(m, defaultSme);
-            list.put(destination.getName(), destination);
-        }
-        destinations.keySet().retainAll(list.keySet());
-        list.keySet().removeAll(destinations.keySet());
-        destinations.putAll(list);
     }
 
     public PrintWriter  store(PrintWriter out) {
@@ -268,15 +208,8 @@ public class Route {
                     + "\">");
             if (notes != null)
                 out.println("    <notes>" + notes + "</notes>");
-
-            for (Iterator i = sources.values().iterator(); i.hasNext();) {
-                Source source = (Source) i.next();
-                source.store(out);
-            }
-            for (Iterator i = destinations.values().iterator(); i.hasNext();) {
-                Destination destination = (Destination) i.next();
-                destination.store(out);
-            }
+            for (Source source : sources.values()) source.store(out);
+            for (Destination destination : destinations.values()) destination.store(out);
             out.println("  </route>");
             return out;
         } catch (Exception e) {
@@ -303,32 +236,11 @@ public class Route {
         this.name = name;
     }
 
-    public void addSources(Source newSource) {
-        if (newSource == null)
-            throw new NullPointerException("Source is null");
-        sources.put(newSource.getName(), newSource);
-    }
-
-    public Source removeSource(String sourceName) {
-        return (Source) sources.remove(sourceName);
-    }
-
-    public void addDestination(Destination newDestination) {
-        if (newDestination == null)
-            throw new NullPointerException("Destination is null");
-
-        destinations.put(newDestination.getName(), newDestination);
-    }
-
-    public Destination removeDestination(String destinationName) {
-        return (Destination) destinations.remove(destinationName);
-    }
-
-    public Map getSources() {
+    public Map<String, Source> getSources() {
         return sources;
     }
 
-    public Map getDestinations() {
+    public Map<String, Destination> getDestinations() {
         return destinations;
     }
 
@@ -360,33 +272,16 @@ public class Route {
         return hideSaaText;
     }
 
-    public void setHideSaaText(boolean hideSaaText) {
-        this.hideSaaText = hideSaaText;
-    }
-
     public String getSlicing() {
         return slicing;
-    }
-
-    public void setSlicing(final String slicing) {
-        this.slicing = slicing;
     }
 
     public String getSlicedRespPolicy() {
         return slicedRespPolicy;
     }
 
-    public void setSlicedRespPolicy(final String slicedRespPolicy) {
-        this.slicedRespPolicy = slicedRespPolicy;
-    }
-
-
     public String getSrcSmeId() {
         return srcSmeId;
-    }
-
-    public void setSrcSmeId(final String srcSmeId) {
-        this.srcSmeId = srcSmeId;
     }
 
     public Service getService() {

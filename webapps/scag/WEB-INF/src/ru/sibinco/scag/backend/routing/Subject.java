@@ -17,6 +17,8 @@ import org.w3c.dom.NodeList;
 
 import java.util.Collection;
 import java.io.PrintWriter;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * The <code>Subject</code> class represents
@@ -32,14 +34,22 @@ public class Subject {
     private Svc svc = null;
     private Center center = null;
     private MaskList masks;
+    private Set<String> childSubjects;
     private String notes = "";
     private MetaEndpoint metaSvc = null;
     private MetaEndpoint metaCenter = null;
 
-
     public Subject(Element subjElement, SmppManager smppManager) throws SibincoException {
 
         name = StringEncoderDecoder.encode(subjElement.getAttribute("id"));
+
+        NodeList list = subjElement.getElementsByTagName("subject");
+        childSubjects = new TreeSet<String>();
+        for(int i = 0; i < list.getLength(); i++){
+            Element element = (Element) list.item(i);
+            childSubjects.add(element.getAttribute("id"));
+        }
+
         NodeList masksList = subjElement.getElementsByTagName("mask");
         masks = new MaskList();
         for (int i = 0; i < masksList.getLength(); i++) {
@@ -59,7 +69,7 @@ public class Subject {
         }
     }
 
-    public Subject(String name, Object defaultSme, String[] masksStrings, String notes) throws SibincoException {
+    public Subject(String name, Object defaultSme, String[] masksStrings, Set<String> childSubjects, String notes) throws SibincoException {
         if (name == null)
             throw new NullPointerException("Name is null");
         if (masksStrings == null)
@@ -79,13 +89,14 @@ public class Subject {
                 ((MetaEndpoint)defaultSme).getType().equals(Constants.META_TYPE_SMSC)){
             this.metaCenter = (MetaEndpoint)defaultSme;
         }
+        this.childSubjects = childSubjects;
         this.masks = new MaskList(masksStrings);
         if (masks.size() == 0)
             throw new SibincoException("Masks is empty");
         this.notes = notes;
     }
 
-    public Subject(String name, Collection masksStrings, Object defaultSme, String notes) throws SibincoException {
+    public Subject(String name, Collection masksStrings, Set<String> childSubjects, Object defaultSme, String notes) throws SibincoException {
         this.notes = notes;
         if (name == null)
             throw new NullPointerException("Name is null");
@@ -95,6 +106,9 @@ public class Subject {
             throw new NullPointerException("DefaultSme is null");
 
         this.name = name;
+
+        this.childSubjects = childSubjects;
+
         masks = new MaskList(masksStrings);
         if (masks.size() == 0)
             throw new NullPointerException("Masks is empty");
@@ -110,22 +124,24 @@ public class Subject {
                 ((MetaEndpoint)defaultSme).getType().equals(Constants.META_TYPE_SMSC)){
             this.metaCenter = (MetaEndpoint)defaultSme;
         }
-
     }
 
     public PrintWriter store(PrintWriter out) {
         out.println("  <subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\" defSme=\"" +
-//                StringEncoderDecoder.encode(getSvc() == null ? getCenter().getId() : getSvc().getId()) + "\">");
                 StringEncoderDecoder.encode(
                         getSvc()!=null ? getSvc().getId() :
-                        getCenter()!=null ? getCenter().getId() :
-                        getMetaSvc()!=null?getMetaSvc().getId():
-                        getMetaCenter().getId()
+                                getCenter()!=null ? getCenter().getId() :
+                                        getMetaSvc()!=null ? getMetaSvc().getId():
+                                                getMetaCenter().getId()
                 ) + "\">");
 
         if (notes != null)
             out.println("    <notes>" + notes + "</notes>");
         getMasks().store(out);
+
+        for(String s: childSubjects)
+            out.println("    <subject id=\"" + s + "\"/>");
+
         out.println("  </subject_def>");
         return out;
     }
@@ -181,17 +197,17 @@ public class Subject {
         return metaSvc;
     }
 
-    public void setMetaSvc(final MetaEndpoint meta) {
+    /*public void setMetaSvc(final MetaEndpoint meta) {
         this.metaSvc = meta;
-    }
+    }*/
 
     public MetaEndpoint getMetaCenter() {
         return metaCenter;
     }
 
-    public void setMetaCenter(MetaEndpoint meta) {
+    /*public void setMetaCenter(MetaEndpoint meta) {
         this.metaCenter = meta;
-    }
+    }*/
 
     public void setSvcWithNullOther(final Svc svc) {
         this.svc = svc;
@@ -222,14 +238,28 @@ public class Subject {
     }
 
     public String toString(){
+        StringBuilder sb = new StringBuilder();
+        int i=0;
+        for(String s: childSubjects){
+            if (i< childSubjects.size()-1){
+                sb.append(s).append(",");
+            } else {
+                sb.append(s);
+            }
+            i++;
+        }
         return "Subject{name="+(name != null ? name : "N/A") +
                ", svc id="+( (svc != null && svc.getId() != null) ? svc.getId() : "N/A" ) +
                ", center id="+( (center != null && center.getId() != null) ? center.getId() : "N/A") +
                ", metaSvc id="+( (metaSvc != null) && metaSvc.getId() != null ? metaSvc.getId() : "N/A" ) +
                ", metaCenter id="+( (metaCenter != null && metaCenter.getId() != null) ? metaCenter.getId() : "N/A")+
                ", notes="+( (notes != null && notes.compareTo("") != 0) ? notes : "N/A")+
-               ", masks="+( masks != null ? masks : "N/A") +"}.";
+               ", masks="+( masks != null ? masks : "N/A") +
+               ", child subjects="+ (childSubjects != null ? sb.toString() : "N/A") + "}.";
+    }
 
+    public Set<String> getChildSubjects(){
+        return childSubjects;
     }
 
 }
