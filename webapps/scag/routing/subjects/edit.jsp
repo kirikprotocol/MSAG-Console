@@ -163,14 +163,12 @@
                               <td><fmt:message>subjects.edit.label.subject</fmt:message></td>
                               <td align=RIGHT>
                                   <select id=subjSelect name="fake_name" class="txt">
-
-                                      <%for (String name: bean.getAllSubjects()) {
-                                      if (!bean.isSrcChecked(name) && !bean.getName().equals(name)) {
-                                          String encName = StringEncoderDecoder.encode(name);%>
-                                      <option value="<%=encName%>"><%=encName%></option>
-                                  <%  }
-                                   }
-                                  %>
+                                      <c:forEach items="${bean.allSubjects}" var="name">
+                                          <c:if test="${!bean.srcChecked(name) && bean.name ne name}">
+                                              <c:set var="ename" value="${fn:escapeXml(name)}"/>
+                                              <option value="${ename}">${name}</option>
+                                          </c:if>
+                                      </c:forEach>
                                   </select>
                               </td>
                               <td><img src="/images/but_add.gif" onclick="addSubj()" style="cursor:pointer;"></td>
@@ -203,20 +201,6 @@
                               </tr>
                               <c:set var="rowN" value="${rowN+1}"/>
                           </c:forEach>
-                          <%
-                              for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();) {
-                                  String name = (String) i.next();
-                                  String encName = StringEncoderDecoder.encode(name);
-                                  String rowId = "subjRow_" + StringEncoderDecoder.encodeHEX(name);
-                                  if (bean.isSrcChecked(name)) {%>
-                                      <tr class=row<%=(rowN++) & 1%> id="<%=rowId%>">
-                                          <td><img src="content/images/subject.gif"></td>
-                                          <td><%=encName%><input id=subjSrc type=hidden name=checkedSources value="<%=encName%>"></td>
-                                          <td><img src="content/images/but_del.gif" onClick="removeSubj('<%=rowId%>');" style="cursor: pointer;"></td>
-                                      </tr><%
-                                  }
-                              }
-                          %>
                       </table>
                   </td>
                   <td valign="top">&nbsp;</td>
