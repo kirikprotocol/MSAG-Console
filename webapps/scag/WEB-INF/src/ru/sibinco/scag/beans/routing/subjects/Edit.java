@@ -403,7 +403,12 @@ public class Edit extends EditBean {
         return new SortedList(list);
     }
 
-    public Collection getSelectedSubjects(){
+    public Collection getSubjects(){
+        if (logger.isDebugEnabled()){
+            for(String s: childSubjects){
+                logger.debug("Subject '"+name+"' contains child subject '"+s+"'.");
+            }
+        }
         return childSubjects;
     }
 

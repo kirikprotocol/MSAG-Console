@@ -282,7 +282,7 @@
                               <c:set var="rowN" value="${rowN+1}"/>
                           </c:forEach>
 
-                          <c:forEach items="${bean.selectedSubjects}" var="subject">
+                          <c:forEach items="${bean.subjects}" var="subject">
                               <c:set var="esubject" value="${fn:escapeXml(subject)}"/>
                               <tr class="row${rowN%2}" id="subjRow_${esubject}">
                                   <td><img src="content/images/subject.gif"></td>
@@ -291,6 +291,7 @@
                                            onClick="removeSubj('subjRow_${esubject}')"
                                            style="cursor: pointer;"></td>
                               </tr>
+                              <c:set var="rowN" value="${rowN+1}"/>
                           </c:forEach>
 
                       </table>
