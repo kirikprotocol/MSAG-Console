@@ -403,7 +403,11 @@ public class Edit extends EditBean {
         return new SortedList(list);
     }
 
-    public void setSubjects(final String[] subjects){
+    public Set<String> getSelectedSubjects(){
+        return childSubjects;
+    }
+
+    public void setSubject(final String[] subjects){
         childSubjects = new TreeSet<String>(Arrays.asList(subjects));
     }
 

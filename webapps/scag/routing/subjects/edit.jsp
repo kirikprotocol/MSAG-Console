@@ -254,6 +254,7 @@
                           <col width="1%">
                           <col width="100%">
                           <col width="100%">
+
                           <c:forEach items="${bean.address}" var="i">
                               <c:set var="eaddress" value="${fn:escapeXml(i)}"/>
                               <tr class="row${rowN%2}" id="addressRow_${eaddress}">
@@ -265,6 +266,18 @@
                               </tr>
                               <c:set var="rowN" value="${rowN+1}"/>
                           </c:forEach>
+
+                          <c:forEach items="${bean.selectedSubjects}" var="subject">
+                              <c:set var="esubject" value="${fn:escapeXml(subject)}"/>
+                              <tr class="row${rowN%2}" id="subjRow_${esubject}">
+                                  <td><img src="content/images/subject.gif"></td>
+                                  <td>${esubject}<input type="hidden" name="subject" value="${esubject}"></td>
+                                  <td><img src="content/images/but_del.gif"
+                                           onClick="removeSubj('subjRow_${esubject}')"
+                                           style="cursor: pointer;"></td>
+                              </tr>
+                          </c:forEach>
+
                       </table>
                   </td>
                   <td valign="top">&nbsp;</td>
