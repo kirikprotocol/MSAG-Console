@@ -407,10 +407,6 @@ public class Edit extends EditBean {
         return childSubjects;
     }
 
-    public void setSubject(final String[] subjects){
-        childSubjects = new TreeSet<String>(Arrays.asList(subjects));
-    }
-
     public String[] getAddress() {
         return address;
     }
@@ -509,5 +505,9 @@ public class Edit extends EditBean {
 
     public boolean isSrcChecked(final String srcName) {
         return childSubjects.contains(srcName);
+    }
+
+    public void setCheckedSources(String[] checkedSources) {
+        childSubjects = new TreeSet<String>(Arrays.asList(checkedSources));
     }
 }
