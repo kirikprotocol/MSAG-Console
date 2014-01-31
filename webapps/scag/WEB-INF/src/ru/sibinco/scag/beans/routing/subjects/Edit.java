@@ -405,6 +405,7 @@ public class Edit extends EditBean {
 
     public Collection getSubjects(){
         if (logger.isDebugEnabled()){
+            logger.debug("Subject '"+name+"' contains "+childSubjects.size()+" subjects.");
             for(String s: childSubjects){
                 logger.debug("Subject '"+name+"' contains child subject '"+s+"'.");
             }
