@@ -3,6 +3,7 @@
  */
 package ru.sibinco.scag.backend.routing;
 
+import org.apache.log4j.Logger;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.endpoints.meta.MetaEndpoint;
@@ -30,6 +31,8 @@ import java.util.TreeSet;
  */
 public class Subject {
 
+    private static Logger logger = Logger.getLogger(Subject.class);
+
     private String name = null;
     private Svc svc = null;
     private Center center = null;
@@ -47,7 +50,9 @@ public class Subject {
         childSubjects = new TreeSet<String>();
         for(int i = 0; i < list.getLength(); i++){
             Element element = (Element) list.item(i);
-            childSubjects.add(element.getAttribute("id"));
+            String id = element.getAttribute("id");
+            childSubjects.add(id);
+            if (logger.isDebugEnabled()) logger.debug("For subject '"+name+"' loaded child subject '"+id+"'.");
         }
 
         NodeList masksList = subjElement.getElementsByTagName("mask");

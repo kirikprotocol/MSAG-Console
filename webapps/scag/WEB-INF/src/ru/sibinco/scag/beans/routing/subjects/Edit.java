@@ -403,7 +403,7 @@ public class Edit extends EditBean {
         return new SortedList(list);
     }
 
-    public Set<String> getSelectedSubjects(){
+    public Collection getSelectedSubjects(){
         return childSubjects;
     }
 
@@ -503,11 +503,12 @@ public class Edit extends EditBean {
         this.pathLinks = pathLinks;
     }
 
-    public boolean isSrcChecked(final String srcName) {
-        return childSubjects.contains(srcName);
-    }
-
-    public void setCheckedSources(String[] checkedSources) {
+    public void setCheckedSource(String[] checkedSources) {
+        if (logger.isDebugEnabled()) {
+            for(String checkedSource: checkedSources){
+                logger.debug("set checked source "+checkedSource);
+            }
+        }
         childSubjects = new TreeSet<String>(Arrays.asList(checkedSources));
     }
 }

@@ -286,7 +286,7 @@
                               <c:set var="esubject" value="${fn:escapeXml(subject)}"/>
                               <tr class="row${rowN%2}" id="subjRow_${esubject}">
                                   <td><img src="content/images/subject.gif"></td>
-                                  <td>${esubject}<input id="subjSrc" type="hidden" name="checkedSources" value="${esubject}"></td>
+                                  <td>${esubject}<input id="subjSrc" type="hidden" name="checkedSource" value="${esubject}"></td>
                                   <td><img src="content/images/but_del.gif"
                                            onClick="removeSubj('subjRow_${esubject}')"
                                            style="cursor: pointer;"></td>
