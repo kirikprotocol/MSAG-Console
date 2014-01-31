@@ -105,6 +105,21 @@
             tbl.deleteRow(rowElem.rowIndex);
         }
 
+        function findChildById(elem, id) {
+            var childs = elem.childNodes;
+            for (var i = 0; i < childs.length; i++) {
+                var child = childs.item(i);
+                try {
+                    if (child.id == id) return child;
+                }
+                catch (Exception) {
+                }
+                var res = findChildById(child, id);
+                if (res != null) return res;
+            }
+            return null;
+        }
+
         function addSubj() {
             var selectElem = document.getElementById('subjSelect');
             if (selectElem.options.length > 0) {
