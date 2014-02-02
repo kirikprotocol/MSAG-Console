@@ -132,7 +132,7 @@
                 newCell.innerHTML = '<img src="content/images/subject.gif">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=checkedSources value="' + subjValue + '">';
+                newCell.innerHTML = subjValue + '<input id="subjSrc" type="hidden" name="checkedSource" value="' + subjValue + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
                 newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSubj(\'' + newRow.id + '\');" style="cursor: pointer;">';
