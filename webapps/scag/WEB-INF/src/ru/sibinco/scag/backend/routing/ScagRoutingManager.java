@@ -227,16 +227,11 @@ public class ScagRoutingManager extends Manager {
             }
 
             MaskList masks = subject.getMasks();
-            if (masks == null) {
-                logger.error("Couldn't save default subject with name " + subject.getName() + " to file, masks is null:" + subject);
+            TreeSet<String> childSubjects = subject.getChildSubjects();
+            if ((masks == null || masks.size() == 0) && (childSubjects == null || childSubjects.size() == 0)) {
+                logger.error("Couldn't save default subject with name " + subject.getName() + " to file, masks and subjects are null or empty:" + subject);
                 throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: masks is null.");
             }
-
-            if (masks.size() == 0) {
-                logger.error("Couldn't save default subject with name " + subject.getName() + " to file, mask list is empty: " + subject);
-                throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: masks list is empty.");
-            }
-
         }
 
         final File file = new File(scagConfFolder, filename);
