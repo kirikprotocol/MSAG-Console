@@ -55,8 +55,6 @@ public class Edit extends EditBean {
     private String[] pathLinks = new String[0];
     private String defaultSiteObjId = null;
 
-    protected String[] checkedSources = null;
-
     public String getId() {
         return getName();
     }
@@ -134,11 +132,15 @@ public class Edit extends EditBean {
         }
         if (isAdd()) {
             if (transportId == Transport.SMPP_TRANSPORT_ID) {
-                if( masks == null || masks.length == 0 ){
-                    logger.error( "Could not save subject with empty mask!" );
-                    throw new SCAGJspException( Constants.errors.routing.subjects.COULD_NOT_SAVE_WITH_EMPTY_MASK );
+                if( (masks == null || masks.length == 0) && (childSubjects == null || childSubjects.size() == 0) ){
+                    logger.error( "Could not save subject with empty mask and empty child subjects!" );
+                    throw new SCAGJspException( Constants.errors.routing.subjects.COULD_NOT_SAVE_WITH_EMPTY_MASK_AND_CHILD_SUBJECT);
                 }
-                logger.debug("masks: "+ Arrays.toString(masks));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("masks: " + (masks != null ? (masks.length > 0 ? Arrays.toString(masks): "empty") : "null"));
+                    logger.debug("subjects: "+(childSubjects != null ? (childSubjects.size() > 0 ?
+                            Arrays.toString(childSubjects.toArray(new String[childSubjects.size()])) : "empty") : "null"));
+                }
                 if (subjects.containsKey(getName()))
                     throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
                 try {
@@ -213,13 +215,14 @@ public class Edit extends EditBean {
             }
         } else {
             if (transportId == Transport.SMPP_TRANSPORT_ID) {
-                if( masks == null || masks.length == 0 ){
-                    logger.error( "Could not save subject with empty mask!" );
-                    throw new SCAGJspException( Constants.errors.routing.subjects.COULD_NOT_SAVE_WITH_EMPTY_MASK );
+                if( (masks == null || masks.length == 0) && (childSubjects == null || childSubjects.size() == 0) ){
+                    logger.error( "Could not save subject with empty mask and empty child subject!" );
+                    throw new SCAGJspException( Constants.errors.routing.subjects.COULD_NOT_SAVE_WITH_EMPTY_MASK_AND_CHILD_SUBJECT);
                 }
                 if (logger.isDebugEnabled()) {
-                    logger.debug("masks: "+ Arrays.toString(masks));
-                    logger.debug("subjects: "+Arrays.toString(childSubjects.toArray(new String[childSubjects.size()])));
+                    logger.debug("masks: " + (masks != null ? (masks.length > 0 ? Arrays.toString(masks): "empty") : "null"));
+                    logger.debug("subjects: "+(childSubjects != null ? (childSubjects.size() > 0 ?
+                            Arrays.toString(childSubjects.toArray(new String[childSubjects.size()])) : "empty") : "null"));
                 }
                 if (!getEditId().equals(getName())) {
                     if (subjects.containsKey(getName()))

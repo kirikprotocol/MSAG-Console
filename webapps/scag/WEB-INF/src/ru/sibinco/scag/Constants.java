@@ -76,7 +76,7 @@ public class Constants {
                 public static final Constants SUBJECT_ALREADY_EXISTS = new Constants("error.routing.subjects.subject_already_exists");
                 public static final Constants HTTP_SUBJECT_ALREADY_EXISTS = new Constants("error.routing.subjects.http_subject_already_exists");
                 public static final Constants COULD_NOT_CREATE = new Constants("error.routing.subjects.could_not_create");
-                public static final Constants COULD_NOT_SAVE_WITH_EMPTY_MASK = new Constants("error.routing.subjects.could_not_save_with_empty_mask");
+                public static final Constants COULD_NOT_SAVE_WITH_EMPTY_MASK_AND_CHILD_SUBJECT = new Constants("error.routing.subjects.could_not_save_with_empty_mask_and_child_subject");
                 public static final Constants COULD_NOT_CREATE_HTTP_SUBJECT = new Constants("error.routing.subjects.could_not_create_http_subject");
                 public static final Constants COULD_NOT_CREATE_HTTP_SUBJECT_SITE = new Constants("error.routing.subjects.could_not_create_http_subject_site");
                 public static final Constants DEFAULT_SME_NOT_FOUND = new Constants("error.routing.subjects.default_sme_not_found");
