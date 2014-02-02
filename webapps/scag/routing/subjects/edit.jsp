@@ -176,7 +176,7 @@
                           <col width="100%" align="left">
                           <tr>
                               <td><fmt:message>subjects.edit.label.subject</fmt:message></td>
-                              <td align=RIGHT>
+                              <td align="RIGHT">
                                   <select id="subjSelect" name="fake_name" class="txt">
                                       <c:forEach items="${bean.notSelectedSubjects}" var="name">
                                           <c:set var="ename" value="${fn:escapeXml(name)}"/>
@@ -210,6 +210,17 @@
                                   <td>${emask}<input type="hidden" name="masks" value="${emask}"></td>
                                   <td><img src="content/images/but_del.gif"
                                            onClick="removeRow('sources_table', 'maskRow_${emask}')"
+                                           style="cursor: pointer;"></td>
+                              </tr>
+                              <c:set var="rowN" value="${rowN+1}"/>
+                          </c:forEach>
+                          <c:forEach items="${bean.selectedSubjects}" var="subject">
+                              <c:set var="esubject" value="${fn:escapeXml(subject)}"/>
+                              <tr class="row${rowN%2}" id="subjRow_${esubject}">
+                                  <td><img src="content/images/subject.gif"></td>
+                                  <td>${esubject}<input id="subjSrc" type="hidden" name="checkedSource" value="${esubject}"></td>
+                                  <td><img src="content/images/but_del.gif"
+                                           onClick="removeSubj('subjRow_${esubject}')"
                                            style="cursor: pointer;"></td>
                               </tr>
                               <c:set var="rowN" value="${rowN+1}"/>
@@ -269,19 +280,6 @@
                           <col width="1%">
                           <col width="100%">
                           <col width="100%">
-
-                          <c:forEach items="${bean.selectedSubjects}" var="subject">
-                              <c:set var="esubject" value="${fn:escapeXml(subject)}"/>
-                              <tr class="row${rowN%2}" id="subjRow_${esubject}">
-                                  <td><img src="content/images/subject.gif"></td>
-                                  <td>${esubject}<input id="subjSrc" type="hidden" name="checkedSource" value="${esubject}"></td>
-                                  <td><img src="content/images/but_del.gif"
-                                           onClick="removeSubj('subjRow_${esubject}')"
-                                           style="cursor: pointer;"></td>
-                              </tr>
-                              <c:set var="rowN" value="${rowN+1}"/>
-                          </c:forEach>
-
                           <c:forEach items="${bean.address}" var="i">
                               <c:set var="eaddress" value="${fn:escapeXml(i)}"/>
                               <tr class="row${rowN%2}" id="addressRow_${eaddress}">

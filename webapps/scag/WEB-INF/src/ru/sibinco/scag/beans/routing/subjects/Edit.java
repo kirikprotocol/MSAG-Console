@@ -411,8 +411,7 @@ public class Edit extends EditBean {
                 logger.debug("Subject '"+name+"' contains child subject '"+s+"'.");
             }
         }
-        List<String> list = new ArrayList<String>(childSubjects);
-        return new SortedList(list);
+        return childSubjects;
     }
 
     public String[] getAddress() {
