@@ -76,8 +76,6 @@ public class Subject {
     public Subject(String name, Object defaultSme, String[] masksStrings, TreeSet<String> childSubjects, String notes) throws SibincoException {
         if (name == null)
             throw new NullPointerException("Name is null");
-        if (masksStrings == null)
-            throw new NullPointerException("Masks is null");
         if (defaultSme == null)
             throw new NullPointerException("DefaultSme is null");
         this.name = name;
@@ -94,7 +92,9 @@ public class Subject {
             this.metaCenter = (MetaEndpoint)defaultSme;
         }
         this.childSubjects = childSubjects;
-        this.masks = new MaskList(masksStrings);
+        if (masksStrings != null){
+            this.masks = new MaskList(masksStrings);
+        }
         if (masks.size() == 0 && childSubjects.size() == 0)
             throw new SibincoException("Masks list and child subjects list are empty");
         this.notes = notes;
@@ -141,7 +141,7 @@ public class Subject {
 
         if (notes != null)
             out.println("    <notes>" + notes + "</notes>");
-        getMasks().store(out);
+        if (masks != null && masks.size() > 0) masks.store(out);
 
         for(String s: childSubjects)
             out.println("    <subject id=\"" + s + "\"/>");

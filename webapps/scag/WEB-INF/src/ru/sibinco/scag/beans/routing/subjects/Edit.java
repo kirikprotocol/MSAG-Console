@@ -258,12 +258,14 @@ public class Edit extends EditBean {
                         logger.info( "Subject:Update with metaCenter");
                         subject.setMetaCenterWithNullOther(defMetaCenter);
                     }
+
                     try {
                         subject.setMasks(new MaskList(masks));
                     } catch (SibincoException e) {
                         logger.debug("Could not set masks list for subject", e);
                         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_SET_MASKS, e);
                     }
+
                     subject.setChildSubjects(childSubjects);
                     subject.setNotes(getDescription());
                     messagetxt = "Changed subject: '" + subject.getName() + "'.";
@@ -395,6 +397,19 @@ public class Edit extends EditBean {
     }
 
     public void setMasks(final String[] masks) {
+        if (logger.isDebugEnabled()){
+            if (masks != null){
+                if (masks.length > 0){
+                    for(String mask: masks){
+                        logger.debug("set mask: "+mask);
+                    }
+                } else {
+                    logger.debug("masks array is empty");
+                }
+            } else {
+                logger.debug("masks is null");
+            }
+        }
         this.masks = masks;
     }
 
@@ -426,6 +441,19 @@ public class Edit extends EditBean {
     }
 
     public void setAddress(final String[] address) {
+        if (logger.isDebugEnabled()){
+            if (address != null){
+                if (address.length > 0){
+                    for(String s: address){
+                        logger.debug("set address "+s);
+                    }
+                } else {
+                    logger.debug("adresses array is empty");
+                }
+            } else {
+                logger.debug("addresses is null");
+            }
+        }
         this.address = address;
     }
 
@@ -519,10 +547,18 @@ public class Edit extends EditBean {
 
     public void setCheckedSource(final String[] checkedSources) {
         if (logger.isDebugEnabled()) {
-            for(String checkedSource: checkedSources){
-                logger.debug("set checked source "+checkedSource);
+            if (checkedSources != null){
+                if (checkedSources.length > 0){
+                    for(String checkedSource: checkedSources){
+                        logger.debug("set checked source "+checkedSource);
+                    }
+                } else {
+                    logger.debug("checked sources array is empty");
+                }
+            } else {
+                logger.debug("checked sources is null");
             }
         }
-        childSubjects = new TreeSet<String>(Arrays.asList(checkedSources));
+        if (checkedSources != null) childSubjects = new TreeSet<String>(Arrays.asList(checkedSources));
     }
 }
