@@ -400,17 +400,19 @@ public class Edit extends EditBean {
                 if (logger.isDebugEnabled()) logger.debug("Added not selected subject '"+subjectName+"'.");
             }
         }
+
         return new SortedList(list);
     }
 
-    public Collection getSubjects(){
+    public Collection getSelectedSubjects(){
         if (logger.isDebugEnabled()){
-            logger.debug("Subject '"+name+"' contains "+childSubjects.size()+" subjects.");
+            logger.debug("Subject '"+name+"' contains "+childSubjects.size()+" child subjects.");
             for(String s: childSubjects){
                 logger.debug("Subject '"+name+"' contains child subject '"+s+"'.");
             }
         }
-        return childSubjects;
+        List<String> list = new ArrayList<String>(childSubjects);
+        return new SortedList(list);
     }
 
     public String[] getAddress() {
