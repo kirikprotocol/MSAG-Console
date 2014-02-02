@@ -92,9 +92,9 @@ public class Subject {
             this.metaCenter = (MetaEndpoint)defaultSme;
         }
         this.childSubjects = childSubjects;
-        if (masksStrings != null){
-            this.masks = new MaskList(masksStrings);
-        }
+
+        this.masks = new MaskList(masksStrings);
+
         if (masks.size() == 0 && childSubjects.size() == 0)
             throw new SibincoException("Masks list and child subjects list are empty");
         this.notes = notes;
@@ -114,8 +114,6 @@ public class Subject {
         this.childSubjects = childSubjects;
 
         masks = new MaskList(masksStrings);
-        if (masks.size() == 0)
-            throw new NullPointerException("Masks is empty");
 
         if(defaultSme instanceof Svc){
             this.svc = (Svc)defaultSme;
