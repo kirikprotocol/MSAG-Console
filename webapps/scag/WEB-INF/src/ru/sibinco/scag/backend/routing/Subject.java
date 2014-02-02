@@ -18,7 +18,6 @@ import org.w3c.dom.NodeList;
 
 import java.util.Collection;
 import java.io.PrintWriter;
-import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -37,7 +36,7 @@ public class Subject {
     private Svc svc = null;
     private Center center = null;
     private MaskList masks;
-    private Set<String> childSubjects;
+    private TreeSet<String> childSubjects;
     private String notes = "";
     private MetaEndpoint metaSvc = null;
     private MetaEndpoint metaCenter = null;
@@ -74,7 +73,7 @@ public class Subject {
         }
     }
 
-    public Subject(String name, Object defaultSme, String[] masksStrings, Set<String> childSubjects, String notes) throws SibincoException {
+    public Subject(String name, Object defaultSme, String[] masksStrings, TreeSet<String> childSubjects, String notes) throws SibincoException {
         if (name == null)
             throw new NullPointerException("Name is null");
         if (masksStrings == null)
@@ -96,12 +95,12 @@ public class Subject {
         }
         this.childSubjects = childSubjects;
         this.masks = new MaskList(masksStrings);
-        if (masks.size() == 0)
-            throw new SibincoException("Masks is empty");
+        if (masks.size() == 0 && childSubjects.size() == 0)
+            throw new SibincoException("Masks list and child subjects list are empty");
         this.notes = notes;
     }
 
-    public Subject(String name, Collection masksStrings, Set<String> childSubjects, Object defaultSme, String notes) throws SibincoException {
+    public Subject(String name, Collection masksStrings, TreeSet<String> childSubjects, Object defaultSme, String notes) throws SibincoException {
         this.notes = notes;
         if (name == null)
             throw new NullPointerException("Name is null");
@@ -263,8 +262,12 @@ public class Subject {
                ", child subjects="+ (childSubjects != null ? sb.toString() : "N/A") + "}.";
     }
 
-    public Set<String> getChildSubjects(){
+    public TreeSet<String> getChildSubjects(){
         return childSubjects;
+    }
+
+    public void setChildSubjects(TreeSet<String> childSubjects){
+        this.childSubjects = childSubjects;
     }
 
 }

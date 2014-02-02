@@ -37,7 +37,7 @@ public class Edit extends EditBean {
     private String name;
     private String defaultSme;
     private String[] masks = new String[0];
-    private Set<String> childSubjects = new TreeSet<String>();
+    private TreeSet<String> childSubjects = new TreeSet<String>();
 
     private String[] address = new String[0];
 
@@ -217,7 +217,10 @@ public class Edit extends EditBean {
                     logger.error( "Could not save subject with empty mask!" );
                     throw new SCAGJspException( Constants.errors.routing.subjects.COULD_NOT_SAVE_WITH_EMPTY_MASK );
                 }
-                logger.debug("masks: "+ Arrays.toString(masks));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("masks: "+ Arrays.toString(masks));
+                    logger.debug("subjects: "+Arrays.toString(childSubjects.toArray(new String[childSubjects.size()])));
+                }
                 if (!getEditId().equals(getName())) {
                     if (subjects.containsKey(getName()))
                         throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
@@ -258,6 +261,7 @@ public class Edit extends EditBean {
                         logger.debug("Could not set masks list for subject", e);
                         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_SET_MASKS, e);
                     }
+                    subject.setChildSubjects(childSubjects);
                     subject.setNotes(getDescription());
                     messagetxt = "Changed subject: '" + subject.getName() + "'.";
                 }
@@ -510,7 +514,7 @@ public class Edit extends EditBean {
         this.pathLinks = pathLinks;
     }
 
-    public void setCheckedSource(String[] checkedSources) {
+    public void setCheckedSource(final String[] checkedSources) {
         if (logger.isDebugEnabled()) {
             for(String checkedSource: checkedSources){
                 logger.debug("set checked source "+checkedSource);
