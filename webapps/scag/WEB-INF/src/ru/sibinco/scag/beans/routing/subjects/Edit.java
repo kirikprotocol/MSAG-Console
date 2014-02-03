@@ -575,7 +575,7 @@ public class Edit extends EditBean {
         //Map<Integer, String> number2id = new HashMap<Integer, String>();
         int i = 0;
         for(String id: currentSubjects.keySet()){
-            if (id.equals(editedSubjectId)) {
+            if (!id.equals(editedSubjectId)) {
                 id2number.put(id, i);
                 if ( logger.isDebugEnabled()) logger.debug("set number for subject: "+id+" -> "+i);
                 //number2id.put(i, id);
@@ -588,7 +588,7 @@ public class Edit extends EditBean {
         Graph graph = new Graph(currentSubjects.size());
 
         for(String id1: currentSubjects.keySet()){
-            if (id1.equals(editedSubjectId)){
+            if (!id1.equals(editedSubjectId)){
                 Subject subject = currentSubjects.get(id1);
                 Integer v = id2number.get(id1);
                 for(String id2: subject.getChildSubjects()){
