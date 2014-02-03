@@ -81,7 +81,8 @@ public class Constants {
                 public static final Constants COULD_NOT_CREATE_HTTP_SUBJECT_SITE = new Constants("error.routing.subjects.could_not_create_http_subject_site");
                 public static final Constants DEFAULT_SME_NOT_FOUND = new Constants("error.routing.subjects.default_sme_not_found");
                 public static final Constants COULD_NOT_SET_MASKS = new Constants("error.routing.subjects.could_not_set_masks");
-                public static final Constants COULD_NOT_DELETE_SUBJECT_IS_BOUND = new Constants("error.routing.subjects.could_not_delete_subject_is_bound");              
+                public static final Constants COULD_NOT_DELETE_SUBJECT_IS_BOUND = new Constants("error.routing.subjects.could_not_delete_subject_is_bound");
+                public static final Constants COULD_NOT_SAVE_SUBJECTS_HAS_CYCLE_DEPENDENCY = new Constants("error.routing.subjects.could_not_save_subjects_has_cycle_dependency");
             }
 
             public interface sites{

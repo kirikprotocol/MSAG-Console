@@ -22,6 +22,8 @@ import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.util.Cycle;
+import ru.sibinco.scag.util.Graph;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -224,9 +226,12 @@ public class Edit extends EditBean {
                     logger.debug("subjects: "+(childSubjects != null ? (childSubjects.size() > 0 ?
                             Arrays.toString(childSubjects.toArray(new String[childSubjects.size()])) : "empty") : "null"));
                 }
+
                 if (!getEditId().equals(getName())) {
+
                     if (subjects.containsKey(getName()))
                         throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
+
                     subjects.remove(getEditId());
                     try {
                         if( defSvc!=null ) {
@@ -258,6 +263,9 @@ public class Edit extends EditBean {
                         logger.info( "Subject:Update with metaCenter");
                         subject.setMetaCenterWithNullOther(defMetaCenter);
                     }
+
+                    if (hasCycle(subjects, getName(), childSubjects))
+                        throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_SAVE_SUBJECTS_HAS_CYCLE_DEPENDENCY, getName());
 
                     try {
                         subject.setMasks(new MaskList(masks));
@@ -560,5 +568,46 @@ public class Edit extends EditBean {
             }
         }
         if (checkedSources != null) childSubjects = new TreeSet<String>(Arrays.asList(checkedSources));
+    }
+
+    private boolean hasCycle(Map<String, Subject> currentSubjects, String editedSubjectId, TreeSet<String> childSubjects){
+        Map<String, Integer> id2number = new HashMap<String, Integer>();
+        //Map<Integer, String> number2id = new HashMap<Integer, String>();
+        int i = 0;
+        for(String id: currentSubjects.keySet()){
+            if (id.equals(editedSubjectId)) {
+                id2number.put(id, i);
+                if ( logger.isDebugEnabled()) logger.debug("set number for subject: "+id+" -> "+i);
+                //number2id.put(i, id);
+                i++;
+            }
+        }
+        id2number.put(name, i);
+        if (logger.isDebugEnabled()) logger.debug("set number for edited subject: "+name+" --> "+i);
+
+        Graph graph = new Graph(currentSubjects.size());
+
+        for(String id1: currentSubjects.keySet()){
+            if (id1.equals(editedSubjectId)){
+                Subject subject = currentSubjects.get(id1);
+                Integer v = id2number.get(id1);
+                for(String id2: subject.getChildSubjects()){
+                    int w = id2number.get(id2);
+                    graph.addEdge(v, w);
+                    if (logger.isDebugEnabled()) logger.debug("set edge: "+v+"("+id1+") -> "+w+"("+id2+")");
+                }
+            }
+        }
+
+        for(String id2: childSubjects){
+            Integer w = id2number.get(id2);
+            graph.addEdge(i, w);
+            if (logger.isDebugEnabled()) logger.debug("set edge: "+i+"("+name+") -> "+w+"("+id2+")");
+        }
+
+        Cycle cycle = new Cycle(graph);
+        boolean hasCycle = cycle.hasCycle();
+        if (logger.isDebugEnabled()) logger.debug("Subjects graph has cycle.");
+        return hasCycle;
     }
 }
