@@ -105,9 +105,12 @@ public class MaskList {
     }
 
     public PrintWriter store(PrintWriter out) {
+        TreeSet<Mask> sortedMasks = new TreeSet<Mask>();
         for (Iterator i = iterator(); i.hasNext();) {
-            ((Mask) i.next()).store(out);
+            sortedMasks.add((Mask) i.next());
         }
+
+        for (Mask mask: sortedMasks) mask.store(out);
         return out;
     }
 

@@ -11,7 +11,7 @@ import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import java.io.PrintWriter;
 
 
-public class Mask
+public class Mask implements Comparable
 {
   private static final String pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
   private static final String pattern1 = pattern_header + "\\d{0,20}\\?{0,20}$";
@@ -151,4 +151,16 @@ public class Mask
            && mask.length() == address.mask.length()
            && address.mask.startsWith(mask.substring(0, mask.length() - getQuestionsCount()));
   }
+
+  public String getMaskSimple() {
+    return mask;
+  }
+
+  public int compareTo(Object o) {
+    if(o == null || !(o instanceof Mask)) {
+      return 1;
+    }
+    return getMaskSimple().compareTo(((Mask)o).getMaskSimple());
+  }
+
 }
