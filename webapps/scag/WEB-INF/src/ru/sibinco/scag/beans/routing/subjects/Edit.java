@@ -84,13 +84,13 @@ public class Edit extends EditBean {
                 }
                 description = subject.getNotes();
 
-                final List<String> maskList = new ArrayList<String>();
+                final TreeSet<String> sortedMasks = new TreeSet<String>();
                 for (Iterator i = subject.getMasks().iterator(); i.hasNext();) {
                     final Mask mask = (Mask) i.next();
-                    maskList.add(mask.getMask());
+                    sortedMasks.add(mask.getMask());
                 }
-                masks = maskList.toArray(new String[maskList.size()]);
-                maskList.clear();
+                masks = sortedMasks.toArray(new String[sortedMasks.size()]);
+                sortedMasks.clear();
 
                 childSubjects = subject.getChildSubjects();
             }
