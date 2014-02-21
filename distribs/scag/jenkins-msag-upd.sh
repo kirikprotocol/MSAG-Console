@@ -13,6 +13,8 @@ mkdir $WORKSPACE/.distr/webapps/msag/WEB-INF || true
 mkdir $WORKSPACE/.distr/webapps/msag/WEB-INF/lib || true
 mkdir $WORKSPACE/.distr/webapps/msag/WEB-INF/classes || true
 mkdir $WORKSPACE/.distr/webapps/msag/WEB-INF/classes/locales || true
+mkdir $WORKSPACE/.distr/webapps/msag/routing || true
+mkdir $WORKSPACE/.distr/webapps/msag/routing/subjects || true
 
 cp $WORKSPACE/.build/msag/bin/liblogger.so $WORKSPACE/.distr/lib
 cp $WORKSPACE/.build/msag/bin/scag/msag $WORKSPACE/.distr/services/msag/bin
