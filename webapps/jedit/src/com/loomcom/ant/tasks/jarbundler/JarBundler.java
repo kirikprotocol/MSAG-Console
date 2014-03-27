@@ -401,7 +401,7 @@ public class JarBundler extends MatchingTask {
 
   /**
    * Override the stub file path to build on non-MacOS platforms
-   * @param s the path to the stub file
+   * @param f the path to the stub file
    */
   public void setStubFile(File f) {
     mStubFile = f;
