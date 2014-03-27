@@ -34,6 +34,7 @@ import java.io.ByteArrayInputStream;
 
 import org.gjt.sp.jedit.browser.*;
 import org.gjt.sp.jedit.gui.*;
+import org.gjt.sp.jedit.gui.SplashScreen;
 import org.gjt.sp.jedit.menu.*;
 import org.gjt.sp.jedit.syntax.SyntaxStyle;
 import org.gjt.sp.jedit.syntax.Token;
