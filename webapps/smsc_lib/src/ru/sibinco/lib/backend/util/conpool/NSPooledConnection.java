@@ -4,6 +4,7 @@ import org.apache.log4j.Category;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
+import javax.sql.StatementEventListener;
 import java.sql.*;
 import java.util.Properties;
 
@@ -86,6 +87,14 @@ public class NSPooledConnection implements javax.sql.PooledConnection
         }
       }
     }
+  }
+
+  public void addStatementEventListener(StatementEventListener listener) {
+    throw new RuntimeException("SQLFeatureNotSupported");
+  }
+
+  public void removeStatementEventListener(StatementEventListener listener) {
+    throw new RuntimeException("SQLFeatureNotSupported");
   }
 
   public void lock()

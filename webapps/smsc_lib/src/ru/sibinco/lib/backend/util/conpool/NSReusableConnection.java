@@ -1,7 +1,8 @@
 package ru.sibinco.lib.backend.util.conpool;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.Properties;
+import java.util.concurrent.Executor;
 
 
 public class NSReusableConnection implements java.sql.Connection
@@ -201,6 +202,78 @@ public class NSReusableConnection implements java.sql.Connection
   public java.sql.PreparedStatement prepareStatement(final String A, final String[] B) throws SQLException
   {
     return con.prepareStatement(A, B);
+  }
+
+  public Clob createClob() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public Blob createBlob() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public NClob createNClob() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public SQLXML createSQLXML() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public boolean isValid(int timeout) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public void setClientInfo(String name, String value) throws SQLClientInfoException {
+    throw new RuntimeException("SQLFeatureNotSupported");
+  }
+
+  public void setClientInfo(Properties properties) throws SQLClientInfoException {
+    throw new RuntimeException("SQLFeatureNotSupported");
+  }
+
+  public String getClientInfo(String name) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public Properties getClientInfo() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public void setSchema(String schema) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public String getSchema() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public void abort(Executor executor) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public int getNetworkTimeout() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public <T> T unwrap(Class<T> iface) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public boolean isWrapperFor(Class<?> iface) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
   }
 }
 

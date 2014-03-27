@@ -3,7 +3,9 @@ package ru.sibinco.lib.backend.util.conpool;
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.PooledConnection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 
 public class NSConnectionPoolDataSource implements ConnectionPoolDataSource
@@ -37,6 +39,10 @@ public class NSConnectionPoolDataSource implements ConnectionPoolDataSource
   public int getLoginTimeout() throws SQLException
   {
     return loginTimeout;
+  }
+
+  public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+    throw new SQLFeatureNotSupportedException();
   }
 
   public void setLoginTimeout(final int val) throws SQLException

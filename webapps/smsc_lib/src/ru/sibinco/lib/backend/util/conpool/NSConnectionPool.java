@@ -6,8 +6,10 @@ import javax.sql.*;
 import java.io.PrintWriter;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 
 public class NSConnectionPool implements DataSource, ConnectionEventListener
@@ -366,6 +368,10 @@ public class NSConnectionPool implements DataSource, ConnectionEventListener
     return (int) (loginTimeout / 1000);
   }
 
+  public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
   public void setLoginTimeout(int val) throws SQLException
   {
     loginTimeout = ((long) val) * 1000;
@@ -379,6 +385,14 @@ public class NSConnectionPool implements DataSource, ConnectionEventListener
   public void setLogWriter(java.io.PrintWriter lw) throws SQLException
   {
     logWriter = lw;
+  }
+
+  public <T> T unwrap(Class<T> iface) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
+
+  public boolean isWrapperFor(Class<?> iface) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
   }
 
 
