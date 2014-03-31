@@ -103,10 +103,6 @@ public class Logging extends EditBean {
             return fullName == null || fullName.length() == 0;
         }
 
-        public boolean hasChildren() {
-            return !children.isEmpty();
-        }
-
         public boolean isHasChildren() {
             return !children.isEmpty();
         }
