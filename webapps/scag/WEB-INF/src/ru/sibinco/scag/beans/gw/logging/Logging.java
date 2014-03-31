@@ -103,7 +103,7 @@ public class Logging extends EditBean {
             return fullName == null || fullName.length() == 0;
         }
 
-        public boolean isHasChildren() {
+        public boolean isHasChilds() {
             return !children.isEmpty();
         }
 
@@ -127,7 +127,7 @@ public class Logging extends EditBean {
             return priority;
         }
 
-        public Map<String,LoggerCategoryInfo> getChildren() {
+        public Map<String,LoggerCategoryInfo> getChilds() {
             return children;
         }
 
@@ -318,12 +318,12 @@ public class Logging extends EditBean {
 
     private void getLoggerCategoryInfo(LoggerCategoryInfo rootCategory, Map<String,LoggerCategoryInfo> map) {
         map.put(rootCategory.getFullName(),rootCategory);
-        if (rootCategory.isHasChildren()) {
+        if (rootCategory.isHasChilds()) {
             logger.error( "Logging.getLoggerCategoryInfo() rootCategory=" + rootCategory.getFullName() + "|" + rootCategory.getName() );
-            for (Object o : rootCategory.getChildren().values()) {
+            for (Object o : rootCategory.getChilds().values()) {
                 LoggerCategoryInfo child = (LoggerCategoryInfo) o;
                 map.put(child.getFullName(), child);
-                if (child.isHasChildren()) getLoggerCategoryInfo(child, map);
+                if (child.isHasChilds()) getLoggerCategoryInfo(child, map);
             }
         }
     }
