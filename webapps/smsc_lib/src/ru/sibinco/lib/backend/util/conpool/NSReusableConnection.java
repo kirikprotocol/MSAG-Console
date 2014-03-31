@@ -1,279 +1,206 @@
 package ru.sibinco.lib.backend.util.conpool;
 
-import java.sql.*;
-import java.util.Properties;
-import java.util.concurrent.Executor;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 
 public class NSReusableConnection implements java.sql.Connection
 {
-//  public static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance("ru.novosoft.util.conpool");
-  private Connection con = null;
-  private NSPooledConnection pcon = null;
+    //  public static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance("ru.novosoft.util.conpool");
+    private Connection con = null;
+    private NSPooledConnection pcon = null;
 
-  public NSReusableConnection(final Connection con, final NSPooledConnection pcon)
-  {
-    this.con = con;
-    this.pcon = pcon;
-  }
+    public NSReusableConnection(final Connection con, final NSPooledConnection pcon)
+    {
+        this.con = con;
+        this.pcon = pcon;
+    }
 
-  // just makes pooled connection free
-  public void close() throws SQLException
-  {
-    pcon.free();
-  }
+    // just makes pooled connection free
+    public void close() throws SQLException
+    {
+        pcon.free();
+    }
 
-  // really close DB connection
-  public void realClose() throws SQLException
-  {
-    con.close();
-  }
+    // really close DB connection
+    public void realClose() throws SQLException
+    {
+        con.close();
+    }
 
-  public java.sql.Statement createStatement() throws SQLException
-  {
-    return con.createStatement();
-  }
+    public java.sql.Statement createStatement() throws SQLException
+    {
+        return con.createStatement();
+    }
 
-  public java.sql.PreparedStatement prepareStatement(final String A) throws SQLException
-  {
-    return con.prepareStatement(A);
-  }
+    public java.sql.PreparedStatement prepareStatement(final String A) throws SQLException
+    {
+        return con.prepareStatement(A);
+    }
 
-  public boolean getAutoCommit() throws SQLException
-  {
-    return con.getAutoCommit();
-  }
+    public boolean getAutoCommit() throws SQLException
+    {
+        return con.getAutoCommit();
+    }
 
-  public java.sql.CallableStatement prepareCall(final String A) throws SQLException
-  {
-    return con.prepareCall(A);
-  }
+    public java.sql.CallableStatement prepareCall(final String A) throws SQLException
+    {
+        return con.prepareCall(A);
+    }
 
-  public String nativeSQL(final String A) throws SQLException
-  {
-    return con.nativeSQL(A);
-  }
+    public String nativeSQL(final String A) throws SQLException
+    {
+        return con.nativeSQL(A);
+    }
 
-  public void setAutoCommit(final boolean A) throws SQLException
-  {
-    con.setAutoCommit(A);
-  }
+    public void setAutoCommit(final boolean A) throws SQLException
+    {
+        con.setAutoCommit(A);
+    }
 
-  public boolean isClosed() throws SQLException
-  {
-    return con.isClosed();
-  }
+    public boolean isClosed() throws SQLException
+    {
+        return con.isClosed();
+    }
 
-  public void commit() throws SQLException
-  {
-    con.commit();
-  }
+    public void commit() throws SQLException
+    {
+        con.commit();
+    }
 
-  public void rollback() throws SQLException
-  {
-    con.rollback();
-  }
+    public void rollback() throws SQLException
+    {
+        con.rollback();
+    }
 
-  public void setCatalog(final String A) throws SQLException
-  {
-    con.setCatalog(A);
-  }
+    public void setCatalog(final String A) throws SQLException
+    {
+        con.setCatalog(A);
+    }
 
-  public java.sql.DatabaseMetaData getMetaData() throws SQLException
-  {
-    return con.getMetaData();
-  }
+    public java.sql.DatabaseMetaData getMetaData() throws SQLException
+    {
+        return con.getMetaData();
+    }
 
-  public void setReadOnly(final boolean A) throws SQLException
-  {
-    con.setReadOnly(A);
-  }
+    public void setReadOnly(final boolean A) throws SQLException
+    {
+        con.setReadOnly(A);
+    }
 
-  public boolean isReadOnly() throws SQLException
-  {
-    return con.isReadOnly();
-  }
+    public boolean isReadOnly() throws SQLException
+    {
+        return con.isReadOnly();
+    }
 
-  public java.sql.SQLWarning getWarnings() throws SQLException
-  {
-    return con.getWarnings();
-  }
+    public java.sql.SQLWarning getWarnings() throws SQLException
+    {
+        return con.getWarnings();
+    }
 
-  public String getCatalog() throws SQLException
-  {
-    return con.getCatalog();
-  }
+    public String getCatalog() throws SQLException
+    {
+        return con.getCatalog();
+    }
 
-  public void setTransactionIsolation(final int A) throws SQLException
-  {
-    con.setTransactionIsolation(A);
-  }
+    public void setTransactionIsolation(final int A) throws SQLException
+    {
+        con.setTransactionIsolation(A);
+    }
 
-  public int getTransactionIsolation() throws SQLException
-  {
-    return con.getTransactionIsolation();
-  }
+    public int getTransactionIsolation() throws SQLException
+    {
+        return con.getTransactionIsolation();
+    }
 
-  public java.sql.CallableStatement prepareCall(final String A, final int B, final int C) throws SQLException
-  {
-    return con.prepareCall(A, B, C);
-  }
+    public java.sql.CallableStatement prepareCall(final String A, final int B, final int C) throws SQLException
+    {
+        return con.prepareCall(A, B, C);
+    }
 
-  public void clearWarnings() throws SQLException
-  {
-    con.clearWarnings();
-  }
+    public void clearWarnings() throws SQLException
+    {
+        con.clearWarnings();
+    }
 
-  public java.sql.Statement createStatement(final int A, final int B) throws SQLException
-  {
-    return con.createStatement(A, B);
-  }
+    public java.sql.Statement createStatement(final int A, final int B) throws SQLException
+    {
+        return con.createStatement(A, B);
+    }
 
-  public java.sql.PreparedStatement prepareStatement(final String A, final int B, final int C) throws SQLException
-  {
-    return con.prepareStatement(A, B, C);
-  }
+    public java.sql.PreparedStatement prepareStatement(final String A, final int B, final int C) throws SQLException
+    {
+        return con.prepareStatement(A, B, C);
+    }
 
-  public int getHoldability() throws SQLException
-  {
-    return con.getHoldability();
-  }
+    public int getHoldability() throws SQLException
+    {
+        return con.getHoldability();
+    }
 
-  public java.util.Map getTypeMap() throws SQLException
-  {
-    return con.getTypeMap();
-  }
+    public java.util.Map getTypeMap() throws SQLException
+    {
+        return con.getTypeMap();
+    }
 
-  public void setTypeMap(final java.util.Map A) throws SQLException
-  {
-    con.setTypeMap(A);
-  }
+    public void setTypeMap(final java.util.Map A) throws SQLException
+    {
+        con.setTypeMap(A);
+    }
 
-  public void setHoldability(final int A) throws SQLException
-  {
-    con.setHoldability(A);
-  }
+    public void setHoldability(final int A) throws SQLException
+    {
+        con.setHoldability(A);
+    }
 
-  public java.sql.Savepoint setSavepoint() throws SQLException
-  {
-    return con.setSavepoint();
-  }
+    public java.sql.Savepoint setSavepoint() throws SQLException
+    {
+        return con.setSavepoint();
+    }
 
-  public java.sql.Savepoint setSavepoint(final String A) throws SQLException
-  {
-    return con.setSavepoint(A);
-  }
+    public java.sql.Savepoint setSavepoint(final String A) throws SQLException
+    {
+        return con.setSavepoint(A);
+    }
 
-  public void rollback(final java.sql.Savepoint A) throws SQLException
-  {
-    con.rollback(A);
-  }
+    public void rollback(final java.sql.Savepoint A) throws SQLException
+    {
+        con.rollback(A);
+    }
 
-  public void releaseSavepoint(final java.sql.Savepoint A) throws SQLException
-  {
-    con.releaseSavepoint(A);
-  }
+    public void releaseSavepoint(final java.sql.Savepoint A) throws SQLException
+    {
+        con.releaseSavepoint(A);
+    }
 
-  public java.sql.Statement createStatement(final int A, final int B, final int C) throws SQLException
-  {
-    return con.createStatement(A, B, C);
-  }
+    public java.sql.Statement createStatement(final int A, final int B, final int C) throws SQLException
+    {
+        return con.createStatement(A, B, C);
+    }
 
-  public java.sql.PreparedStatement prepareStatement(final String A, final int B, final int C, final int D) throws SQLException
-  {
-    return con.prepareStatement(A, B, C, D);
-  }
+    public java.sql.PreparedStatement prepareStatement(final String A, final int B, final int C, final int D) throws SQLException
+    {
+        return con.prepareStatement(A, B, C, D);
+    }
 
-  public java.sql.CallableStatement prepareCall(final String A, final int B, final int C, final int D) throws SQLException
-  {
-    return con.prepareCall(A, B, C, D);
-  }
+    public java.sql.CallableStatement prepareCall(final String A, final int B, final int C, final int D) throws SQLException
+    {
+        return con.prepareCall(A, B, C, D);
+    }
 
-  public java.sql.PreparedStatement prepareStatement(final String A, final int B) throws SQLException
-  {
-    return con.prepareStatement(A, B);
-  }
+    public java.sql.PreparedStatement prepareStatement(final String A, final int B) throws SQLException
+    {
+        return con.prepareStatement(A, B);
+    }
 
-  public java.sql.PreparedStatement prepareStatement(final String A, final int[] B) throws SQLException
-  {
-    return con.prepareStatement(A, B);
-  }
+    public java.sql.PreparedStatement prepareStatement(final String A, final int[] B) throws SQLException
+    {
+        return con.prepareStatement(A, B);
+    }
 
-  public java.sql.PreparedStatement prepareStatement(final String A, final String[] B) throws SQLException
-  {
-    return con.prepareStatement(A, B);
-  }
-
-  public Clob createClob() throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public Blob createBlob() throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public NClob createNClob() throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public SQLXML createSQLXML() throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public boolean isValid(int timeout) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public void setClientInfo(String name, String value) throws SQLClientInfoException {
-    throw new RuntimeException("SQLFeatureNotSupported");
-  }
-
-  public void setClientInfo(Properties properties) throws SQLClientInfoException {
-    throw new RuntimeException("SQLFeatureNotSupported");
-  }
-
-  public String getClientInfo(String name) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public Properties getClientInfo() throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public void setSchema(String schema) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public String getSchema() throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public void abort(Executor executor) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public int getNetworkTimeout() throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public <T> T unwrap(Class<T> iface) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
-
-  public boolean isWrapperFor(Class<?> iface) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
-  }
+    public java.sql.PreparedStatement prepareStatement(final String A, final String[] B) throws SQLException
+    {
+        return con.prepareStatement(A, B);
+    }
 }
 
