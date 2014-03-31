@@ -8,10 +8,7 @@
 
 <script type="text/javascript">
     function collasping_tree_showhide_section(sectionId) {
-
         var headerElem = document.getElementById("sectionHeader_" + sectionId);
-//        var valueElem = opForm.all("sectionValue_" + sectionId);
-//        alert( "sectionValue_" + sectionId );
         var valueElem = document.getElementById("sectionValue_" + sectionId);
         if (valueElem.style.display != "none") {
             headerElem.className = "collapsing_tree_closed_logging";
@@ -32,16 +29,16 @@
             <c:if test="${tree.root}">
                 <sm-l:select name="${tree.name}" fullName="${tree.name}" priority="${tree.priority}" />
             </c:if>
-            <c:if test="${tree.hasChilds}">
-                <c:set var="ch" value="${tree.childs}"/>
+            <c:if test="${tree.hasChildren}">
+                <c:set var="ch" value="${tree.children}"/>
                 <c:forEach items="${ch}" var="catItem">
-                    <c:if test="${!catItem.value.hasChilds}">
+                    <c:if test="${!catItem.value.hasChildren}">
                         <sm-l:select name="${catItem.value.name}" fullName="${catItem.value.fullName}"
                                      priority="${catItem.value.priority}"/>
                     </c:if>
                 </c:forEach>
                 <c:forEach items="${ch}" var="catItem">
-                    <c:if test="${catItem.value.hasChilds}">
+                    <c:if test="${catItem.value.hasChildren}">
                         <table cellspacing=0 border="0">
                             <tr>
                                 <td width="10%">

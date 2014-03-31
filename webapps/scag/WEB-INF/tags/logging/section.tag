@@ -8,9 +8,9 @@
     <tr>
         <th/>
         <td>
-            <c:forEach items="${catItem.childs}" var="catItem">
+            <c:forEach items="${catItem.children}" var="catItem">
             <c:choose>
-                <c:when test="${catItem.value.hasChilds}">
+                <c:when test="${catItem.value.hasChildren}">
                     <table cellspacing=0 border="0">
                         <tr>
                             <td width="10%">

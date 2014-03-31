@@ -1,33 +1,17 @@
-/*
- * Copyright (c) 2006 SibInco Inc. All Rights Reserved.
- */
-
 package ru.sibinco.scag.beans.gw.logging;
 
-//import static ru.sibinco.scag.backend.daemon.Proxy.STATUS_CONNECTED;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.util.Comparator_CaseInsensitive;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
-import java.io.*;
 
-/**
- * The <code>Logging</code> class represents
- * <p><p/>
- * Date: 21.07.2006
- * Time: 11:50:29
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
- */
 public class Logging extends EditBean {
     public static final String catParamNamePrefix = "category_";
     private LoggerCategoryInfo rootCategory;
@@ -36,14 +20,12 @@ public class Logging extends EditBean {
     private String mbSavePermanent = null;
     private String mbRead = null;
     private boolean running = true;
-    private Map fullNameToCatInfo = new TreeMap();
-
-    private Map cates= new HashMap();
+    private Map<String, LoggerCategoryInfo> fullNameToCatInfo = new TreeMap<String, LoggerCategoryInfo>();
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         logger.debug( "Logging.process() start" );
         super.process(request, response);
-//        if (getMbSave() != null) {
+
         if (getMbApply() != null) {
             logger.debug( "Logging.process() getMbApply()" );
             apply(request.getParameterMap());
@@ -59,26 +41,27 @@ public class Logging extends EditBean {
             logger.debug( "Logging.process() init()" );
             init();
         }
-//        init();
+
     }
 
     public class LoggerCategoryInfo implements Comparable {
         private String name;
         private String fullName;
         private String priority;
-        private Map childs;
+        private Map<String, LoggerCategoryInfo> children;
 
         public LoggerCategoryInfo(String name, String fullName, String priority) {
             this.name = name;
             this.fullName = fullName;
             this.priority = priority;
-            this.childs = new TreeMap(new Comparator_CaseInsensitive());
+            this.children = new TreeMap<String, LoggerCategoryInfo>();
         }
 
         public void addChild(String childFullName, String childPriority) {
-            logger.debug(new StringBuffer().append("Logging.addChild() Adding child isRoot:'" + isRoot() + "' : name=\"").append(fullName).
-                    append("\" priority=").append(priority).append(", childName=\"").append(childFullName).
-                    append("\" childPriority=").append(childPriority).toString());
+            if (logger.isDebugEnabled()) logger.debug("Logging.addChild() Adding child isRoot:'" + isRoot() +
+                    "' : name=\"" + fullName + "\", priority=" + priority + ", childName=\"" + childFullName +
+                    "\", childPriority=" + childPriority);
+
             if (isRoot()) {
                 final int dotPos = childFullName.indexOf('.');
                 if (dotPos > 0) {
@@ -86,7 +69,7 @@ public class Logging extends EditBean {
                     LoggerCategoryInfo child = getOrCreateChild(childName, childName, "NOTSET");
                     child.addChild(childFullName, childPriority);
                 } else {
-                    childs.put(childFullName, new LoggerCategoryInfo(childFullName, childFullName, childPriority));
+                    children.put(childFullName, new LoggerCategoryInfo(childFullName, childFullName, childPriority));
                 }
             } else {
                 if (childFullName.length() > fullName.length() && childFullName.startsWith(fullName) && childFullName.charAt(fullName.length()) == '.')
@@ -102,16 +85,16 @@ public class Logging extends EditBean {
                         child.priority = childPriority;
                     }
                 } else {
-                    logger.debug("Incorrect LogerCategoryInfo.addChild algorithm");
+                    logger.debug("Incorrect LoggerCategoryInfo.addChild algorithm");
                 }
             }
         }
 
         private LoggerCategoryInfo getOrCreateChild(String childName, String childFullName, String childPriority) {
-            LoggerCategoryInfo child = (LoggerCategoryInfo) childs.get(childName);
+            LoggerCategoryInfo child = children.get(childName);
             if (child == null) {
                 child = new LoggerCategoryInfo(childName, childFullName, childPriority);
-                childs.put(childName, child);
+                children.put(childName, child);
             }
             return child;
         }
@@ -120,13 +103,8 @@ public class Logging extends EditBean {
             return fullName == null || fullName.length() == 0;
         }
 
-
-        public boolean hasChilds() {
-            return !childs.isEmpty();
-        }
-
-        public boolean isHasChilds() {
-            return !childs.isEmpty();
+        public boolean isHasChildren() {
+            return !children.isEmpty();
         }
 
         public int compareTo(Object o) {
@@ -149,88 +127,41 @@ public class Logging extends EditBean {
             return priority;
         }
 
-        public Map getChilds() {
-            return childs;
+        public Map getChildren() {
+            return children;
         }
 
         public String toString() {
             return " # name : "+ name +
                    " | fullName : " + fullName +
                    " | priority : " + priority +
-                   " | childs : "+ childs.values() + "#\n";
+                   " | children : "+ children.values() + "#\n";
         }
     }
 
     protected void init() throws SCAGJspException{
-        logger.warn( "Loigging:init() start" );
+        logger.warn( "Logging:init() start" );
         Map logCategories = new HashMap();
-//        String rootPriority = null;
         try {
             logCategories = appContext.getScag().getLogCategories();
         } catch (SibincoException e) {
-            logger.warn( "Loigging.init() SibincoException" );
-//            setRunning(false);
+            logger.warn( "Logging.init() SibincoException" );
             if( e instanceof StatusDisconnectedException ){
                 setRunning(false);
-                logger.warn( "Loigging.init() StatusDisconnectedException Disconnected" );
+                logger.warn( "Logging.init() StatusDisconnectedException Disconnected" );
             }
             try{
-                logger.warn( "Loigging.init() SibincoException readFromLogFile()" );
+                logger.warn( "Logging.init() SibincoException readFromLogFile()" );
                 logCategories = appContext.getLoggingManager().readFromLogFile();
-//                parseMap( logCategories );
             }catch (SibincoException e1) {
-                logger.error( "Loigging.init() SibincoException. readFromLogFile() SibincoException: can not read loggers from file!!!" );
+                logger.error( "Logging.init() SibincoException. readFromLogFile() SibincoException: can not read loggers from file!!!" );
                 rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
             }
             throw new SCAGJspException(Constants.errors.logging.COULDNT_GET_LOGCATS, e);
         } finally{
-            logger.warn( "Loigging.init() SibincoException finally" );
+            logger.warn( "Logging.init() SibincoException finally" );
             parseMap( logCategories );
-            getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
-        }
-//        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
-    }
-
-    protected void init_() throws SCAGJspException{
-        logger.warn( "Logging.init() start" );
-        Map logCategories = null;
-        String rootPriority = null;
-        boolean exc = false;
-        try {
-            logger.debug( "Logging.init() readFromLogFile" );
-            logCategories = appContext.getLoggingManager().readFromLogFile();
-        } catch (SibincoException e) {
-            logger.warn( "Logging.init() SibincoException while readFromLogFile()" );
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-        logger.debug( "Logging.init() appContext.getScag().getStatus()=" + appContext.getScag().getStatus() );
-//        try{
-//        appContext.getScag().reconnect();
-//        }catch( SibincoException e ){
-//            e.printStackTrace();
-//        }
-//        logger.debug( "Logging.init() recon appContext.getScag().getStatus()=" + appContext.getScag().getStatus() );
-        if( appContext.getScag().getStatus() == Proxy.STATUS_CONNECTED ){
-            logger.debug( "Logging.init() CONNECTED" );
-            try {
-                logCategories = appContext.getScag().getLogCategories();
-//                parseMap( logCategories );
-            } catch (SibincoException e) {
-                logger.error( "Logging.init() SibincoException while getLogCategories()" );
-                throw new SCAGJspException(Constants.errors.logging.COULDNT_GET_LOGCATS, e);
-            }
-        }else{
-            logger.warn( "Logging,init() MSAG Disconnected" );
-            setRunning(false);
-            exc = true;
-        }
-        parseMap( logCategories );
-        logger.debug( "Loigging.init() getLoggerCategoryInfos()" );
-        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
-        if( exc ){
-            throw new SCAGJspException( Constants.errors.logging.COULDNT_GET_LOGCATS,
-                    new StatusDisconnectedException( appContext.getScag().getHost(), appContext.getScag().getPort()) );
+            getLoggerCategoryInfo(rootCategory, fullNameToCatInfo);
         }
     }
 
@@ -239,24 +170,22 @@ public class Logging extends EditBean {
     }
 
     void readFLF( boolean full ) throws SCAGJspException {
-        logger.warn( "Loigging.readFLF() start" );
-        Map logCategoriesFF = null;
-        Map logCategories = null;
-        boolean exc = false;
+        logger.warn( "Logging.readFLF() start" );
+        Map<String, String> logCategoriesFF;
+        Map<String, String> logCategories;
         try {
-            logger.warn( "Loigging.readFLF() readFromLogFile()" );
+            logger.warn( "Logging.readFLF() readFromLogFile()" );
             logCategoriesFF = appContext.getLoggingManager().readFromLogFile();
             if( !isConnected() ) setRunning( false );
             if( full && isRunning() ){
-                logger.warn( "Loigging:readFLF() getLogCategories()" );
+                logger.warn( "Logging:readFLF() getLogCategories()" );
                 logCategories = appContext.getScag().getLogCategories();
-                for( Iterator iter = logCategories.keySet().iterator(); iter.hasNext(); ){
-                    Object key = iter.next();
-                    Object valFF = logCategoriesFF.get(key);
-                    if( valFF != null ){
-                        logCategories.put( key, valFF );
-                    }else{
-                        logCategories.put( key, "NOTSET" );
+                for (String key : logCategories.keySet()) {
+                    String valFF = logCategoriesFF.get(key);
+                    if (valFF != null) {
+                        logCategories.put(key, valFF);
+                    } else {
+                        logCategories.put(key, "NOTSET");
                     }
                 }
             } else {
@@ -265,8 +194,7 @@ public class Logging extends EditBean {
 
             parseMap( logCategories );
         } catch (SibincoException e) {
-            logger.warn( "Loigging:readFLF() SibincoException" );
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.warn( "Logging:readFLF() SibincoException", e);
         }
         if( !isRunning() ){
             throw new SCAGJspException( Constants.errors.logging.COULDNT_GET_LOGCATS,
@@ -275,17 +203,18 @@ public class Logging extends EditBean {
     }
 
     public void parseMap( Map logCategories ){
-            String rootPriority = (String) logCategories.remove("");
-            if (rootPriority == null) rootPriority = "NOTSET";
-            rootCategory = new LoggerCategoryInfo("", "", rootPriority);
-            Collection keys = new SortedList(logCategories.keySet());
-            for (Iterator iterator = keys.iterator(); iterator.hasNext();) {
-                String key = (String) iterator.next();
-                String value = (String) logCategories.get(key);
-                rootCategory.addChild(key, value);
-            }
+        String rootPriority = (String) logCategories.remove("");
+        if (rootPriority == null) rootPriority = "NOTSET";
+        rootCategory = new LoggerCategoryInfo("", "", rootPriority);
+        Collection keys = new SortedList(logCategories.keySet());
+        for (Object o : keys) {
+            String key = (String) o;
+            String value = (String) logCategories.get(key);
+            rootCategory.addChild(key, value);
+        }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public LoggerCategoryInfo getRootCategory() {
         return rootCategory;
     }
@@ -300,25 +229,25 @@ public class Logging extends EditBean {
     protected void save() throws SCAGJspException {
     }
 
-    Map getLogsFromMap( Map parameters ){
-        Map cats = new HashMap();
-        for (Iterator iterator = parameters.entrySet().iterator(); iterator.hasNext();) {
-            Map.Entry entry = (Map.Entry) iterator.next();
+    private Map<String, String> getLogsFromMap(Map parameters){
+        Map<String, String> cats = new HashMap<String, String>();
+
+        for (Object o : parameters.entrySet()) {
+            Map.Entry entry = (Map.Entry) o;
             String paramName = (String) entry.getKey();
             if (paramName.startsWith(catParamNamePrefix)) {
-                cats.put( paramName.substring(catParamNamePrefix.length()), getParamValue(entry.getValue()) );
-                logger.info("Logging.getLogsFromMap() cat param: " + paramName + "=" + getParamValue(entry.getValue()) );
+                cats.put(paramName.substring(catParamNamePrefix.length()), getParamValue(entry.getValue()));
+                logger.info("Logging.getLogsFromMap() cat param: " + paramName + "=" + getParamValue(entry.getValue()));
             } else {
-                logger.info("Logging.getLogsFromMap() WRONG param: " + paramName + ":=" + getParamValue(entry.getValue()));
+                logger.warn("Logging.getLogsFromMap() WRONG param: " + paramName + ":=" + getParamValue(entry.getValue()));
             }
-
         }
         return cats;
     }
 
     protected void apply(Map parameters) throws SCAGJspException {
         logger.info( "Logging.apply() start" );
-        Map cats = getLogsFromMap( parameters );
+        Map<String, String> cats = getLogsFromMap( parameters );
         try {
             logger.info( "Logging.apply() setLogCategories" );
 
@@ -334,56 +263,15 @@ public class Logging extends EditBean {
                 readFLF( true );
             }
             throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
-        }finally{
-//            parseMap( cats );
         }
-    }
-
-    protected void apply_(Map parameters) throws SCAGJspException {
-        boolean exc = false;
-
-        logger.info( "Logging.apply() start" );
-        Map cats = new HashMap();
-        cats = getLogsFromMap( parameters );
-        logger.warn( "Loigging:apply() appContext.getScag().getStatus()=" + appContext.getScag().getStatus() );
-        if( isConnected() ){
-            try {
-                logger.warn( "Loigging.apply() Connected" );
-                logger.info( "Logging.pply() setLogCategories" );
-                appContext.getScag().setLogCategories(cats);
-                logger.info( "Logging.apply() getLogCategories" );
-                cats = appContext.getScag().getLogCategories();
-            } catch (SibincoException e) {
-                logger.error( "Logging.apply():SibincoException" );
-                if( e instanceof StatusDisconnectedException ){
-                    logger.error( "Logging.apply():Disconnected" );
-                }
-                throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
-            }finally{
-//                parseMap( cats );
-            }
-        }else{
-            logger.warn( "Loigging:apply() Disconnected" );
-            setRunning(false);
-            exc = true;
-        }
-        parseMap( cats );
-        if( exc ){
-            logger.warn( "Loigging:apply() done with Exception." );
-            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS);
-        }else{
-            logger.warn( "Loigging:apply() DONE." );
-        }
-
     }
 
     protected void savePermanent(Map parameters) throws SCAGJspException {
-        Map cats = new HashMap();
-        cats = getLogsFromMap( parameters );
+        Map<String, String> cats = getLogsFromMap(parameters);
         try {
-            logger.error( "Logging.savePermanent() storeLogConfig()" );
+            logger.info("Logging.savePermanent() storeLogConfig()");
             appContext.getScag().storeLogCategories(cats);
-            logger.error( "Logging.savePermanent() getLogCategories()" );
+            logger.info("Logging.savePermanent() getLogCategories()");
             cats = appContext.getScag().getLogCategories(); //???
         } catch (SibincoException e) {
             logger.error( "Logging.savePermanent() SibincoException:can not store Scag logging");
@@ -394,51 +282,11 @@ public class Logging extends EditBean {
                     appContext.getLoggingManager().writeToLog(cats);
                 } catch (SibincoException e1) {
                     logger.error( "Logging.savePermanent() SibincoException while writeToLog(). can not write Scag logging to file");
-                    e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
             throw new SCAGJspException(Constants.errors.logging.COULDNT_STORE_LOGCATS_FILE_WRITE, e);
         }finally{
             parseMap( cats );
-        }
-    }
-
-    protected void savePermanent_(Map parameters) throws SCAGJspException {
-        boolean exc = false;
-        Map cats = new HashMap();
-        cats = getLogsFromMap( parameters );
-        if( isConnected() ){
-            try {
-                logger.error( "Logging.savePermanent() storeLogConfig()" );
-                appContext.getScag().storeLogCategories(cats);
-//                logger.error( "Logging.savePermanent() setLogCategories()" );
-//                appContext.getScag().setLogCategories(cats);
-                logger.error( "Logging.savePermanent() getLogCategories()" );
-                cats = appContext.getScag().getLogCategories();
-            } catch (SibincoException e) {
-                logger.error( "Logging.savePermanent() SibincoException:can not store Scag logging");
-                throw new SCAGJspException(Constants.errors.logging.COULDNT_STORE_LOGCATS, e);
-            }finally{
-//                parseMap( cats );
-            }
-        }else{
-            logger.warn( "Logging.savePermanent() Disconnected writeToLog()" );
-            setRunning(false);
-            try {
-                appContext.getLoggingManager().writeToLog( cats );
-            } catch (SibincoException e) {
-                logger.error( "Logging.savePermanent() SibincoException while writeToLog(). can not write Scag logging to file");
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-            exc = true;
-        }
-        parseMap( cats );
-        if( exc ){
-            logger.warn( "Logging.savePermanent() DONE with Exception." );
-            throw new SCAGJspException(Constants.errors.logging.COULDNT_STORE_LOGCATS,
-                new StatusDisconnectedException( appContext.getScag().getHost(), appContext.getScag().getPort()) );
-        }else{
-            logger.warn( "Logging.savePermanent() DONE." );
         }
     }
 
@@ -448,9 +296,9 @@ public class Logging extends EditBean {
         else if (value instanceof String[]) {
             String result = "";
             final String[] values = (String[]) value;
-            for (int i = 0; i < values.length; i++) {
-                result += values[i];
-            }
+
+            for (String s : values) result += s;
+
             return result;
         } else
             return value.toString();
@@ -468,20 +316,19 @@ public class Logging extends EditBean {
         this.category = category;
     }
 
-    private void getLoggerCategoryInfos(LoggerCategoryInfo rootCategory, Map map) {
+    private void getLoggerCategoryInfo(LoggerCategoryInfo rootCategory, Map<String,LoggerCategoryInfo> map) {
         map.put(rootCategory.getFullName(),rootCategory);
-        if (rootCategory.hasChilds()) {
-            logger.error( "Logging.getLoggerCategoryInfos() rootCategory=" + rootCategory.getFullName() + "|" + rootCategory.getName() );
-            for (Iterator i = rootCategory.getChilds().values().iterator(); i.hasNext();) {
-                LoggerCategoryInfo child = (Logging.LoggerCategoryInfo) i.next();
-                map.put(child.getFullName(),child);
-                if (child.hasChilds()) {
-                    getLoggerCategoryInfos(child, map);
-                }
+        if (rootCategory.isHasChildren()) {
+            logger.error( "Logging.getLoggerCategoryInfo() rootCategory=" + rootCategory.getFullName() + "|" + rootCategory.getName() );
+            for (Object o : rootCategory.getChildren().values()) {
+                LoggerCategoryInfo child = (LoggerCategoryInfo) o;
+                map.put(child.getFullName(), child);
+                if (child.isHasChildren()) getLoggerCategoryInfo(child, map);
             }
         }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public Map getFullNameToCatInfo() {
       return fullNameToCatInfo;
     }
@@ -490,6 +337,7 @@ public class Logging extends EditBean {
         return mbSavePermanent;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void setMbSavePermanent(String mbSavePermanent) {
         this.mbSavePermanent = mbSavePermanent;
     }
@@ -498,6 +346,7 @@ public class Logging extends EditBean {
         return mbRead;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void setMbRead(String mbRead) {
         this.mbRead = mbRead;
     }
@@ -516,6 +365,7 @@ public class Logging extends EditBean {
         return mbApply;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void setMbApply(String mbApply) {
         this.mbApply = mbApply;
     }

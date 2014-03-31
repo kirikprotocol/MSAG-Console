@@ -384,48 +384,48 @@ public class Scag extends Proxy {
         return result;
     }
 
-    public synchronized Map getLogCategories() throws SibincoException {
-        final Map return_result = new HashMap();
+    public synchronized Map<String, String> getLogCategories() throws SibincoException {
         String err = "Couldn't get LogCategories , nested: ";
-        logger.debug( "Scag.getLogCatagories() call()" );
+        logger.info("Scag.getLogCategories() call()");
         final Object result0 = call( "getLogCategories", err, Type.Types[Type.STRING_LIST_TYPE], new HashMap() );
-        logger.debug( "Scag.getLogCatagories() result0 = " + result0.toString() );
+        if (logger.isInfoEnabled()) logger.info("Scag.getLogCategories() result0 = " + result0.toString());
+
+        final Map<String, String> return_result = new HashMap<String, String>();
         if (result0 instanceof List) {
             final List result = (List) result0;
-            for (Iterator iterator = result.iterator(); iterator.hasNext();) {
-                final String cat = (String) iterator.next();
-                final int delim_pos = cat.lastIndexOf(LOGGER_DELIMITER);
-                if (0 <= delim_pos) {
-                    final String name = cat.substring(0, delim_pos);
-                    final String value = cat.substring(delim_pos + 1);
+            for (Object o : result) {
+                final String cat = (String) o;
+                final int delimiterPosition = cat.lastIndexOf(LOGGER_DELIMITER);
+                if (0 <= delimiterPosition) {
+                    final String name = cat.substring(0, delimiterPosition);
+                    final String value = cat.substring(delimiterPosition + 1);
                     return_result.put(name, value);
                 } else
-                    logger.error("Error in response: string \"" + cat + "\" misformated.");
+                    logger.error("Error in response: string \"" + cat + "\" has wrong format.");
             }
         } else
-            throw new SibincoException("Error in response");
+            throw new SibincoException("Error in response.");
         return return_result;
     }
 
-    public synchronized void setLogCategories(final Map cats) throws SibincoException {
+    public synchronized void setLogCategories(final Map<String, String> cats) throws SibincoException {
         logger.debug( "Scag.setLogCategories()" );
-        final Map params = new HashMap();
-        final List catsList = new LinkedList();
+        final Map<String, Object> params = new HashMap<String,Object>();
+        final List<String> catsList = new LinkedList<String>();
         params.put("categories", catsList);
         String err = "Couldn't set LogCategories , nested: ";
-        for (Iterator iterator = cats.entrySet().iterator(); iterator.hasNext();) {
-            final Map.Entry entry = (Map.Entry) iterator.next();
-            final String catName = (String) entry.getKey();
-            final String catPriority = (String) entry.getValue();
+        for (Map.Entry<String, String> entry : cats.entrySet()) {
+            final String catName = entry.getKey();
+            final String catPriority = entry.getValue();
             catsList.add(catName + LOGGER_DELIMITER + catPriority);
-            params.put( catName, catPriority ); //added code
+            params.put(catName, catPriority); //added code
         }
         call("setLogCategories", err, Type.Types[Type.BOOLEAN_TYPE], params);
     }
 
-    public synchronized void storeLogCategories(final Map cats) throws SibincoException {
-        logger.debug( "Scag.storeLogCategories()" );
-        final Map params = new HashMap(cats);
+    public synchronized void storeLogCategories(final Map<String, String> cats) throws SibincoException {
+        logger.info( "Scag.storeLogCategories()" );
+        final Map<String, String> params = new HashMap<String, String>(cats);
         String err = "Couldn't set LogCategories , nested: ";
         call("storeLogCategories", err, Type.Types[Type.BOOLEAN_TYPE], params);
     }
