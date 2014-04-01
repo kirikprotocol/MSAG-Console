@@ -447,11 +447,11 @@ public class Scag extends Proxy {
         logger.debug( "Scag:invokeCommand:store file , manager '" + manager.getClass().getName() + "'" );
 
         try{
-            logger.debug("Scag.invokeCommand() store" );
+            logger.debug("Scag.invokeCommand() store()" );
             manager.store();
         } catch (Throwable e){
             Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
-            logger.error("Scag.invokeCommand() Throwable");
+            logger.error("Scag.invokeCommand() store() throws Throwable", e);
             throw new SibincoException(e);
         }
 
@@ -459,13 +459,13 @@ public class Scag extends Proxy {
         logger.debug("Scag.invokeCommand().store file hsDaemon");
         appContext.getHSDaemon().store(configFile);
 
-       //3.1 parse method used to localy validate saved config
+       //3.1 parse method used to locally validate saved config
         try {
             logger.debug("Scag.invokeCommand() parse" );
             manager.parse();
         } catch (Throwable e) {
             Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
-            logger.error("Scag.invokeCommand() Throwable" );
+            logger.error("Scag.invokeCommand() parse() throws Throwable" );
             throw new SibincoException(e);
         }
        //4.send command

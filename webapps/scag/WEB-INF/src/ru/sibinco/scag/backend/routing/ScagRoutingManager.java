@@ -24,12 +24,7 @@ import ru.sibinco.scag.Constants;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 
 
@@ -185,9 +180,10 @@ public class ScagRoutingManager extends Manager {
     }
 
     private void saveToFile(final String filename, boolean backup) throws SibincoException {
-        // Check subject.
+        // Check subjects.
         for (final Subject subject : subjects.values()) {
-            logger.error("not error, info for debug: " + subject);
+            if (logger.isInfoEnabled()) logger.info("not error, info for debug: " + subject);
+
             if (subject.getName() == null) {
                 logger.error("Couldn't save default subject to file, subject name is null:" + subject);
                 throw new SibincoException("Couldn't save default subject to file, subject name is null.");
@@ -233,29 +229,106 @@ public class ScagRoutingManager extends Manager {
                 throw new SibincoException("Couldn't save default subject with name " + subject.getName() + " to file: masks is null.");
             }
         }
+        if (logger.isDebugEnabled()) logger.debug("Subjects has been checked.");
 
         final File file = new File(scagConfFolder, filename);
         File newFile = null;
-        if (backup) newFile = Functions.createNewFilenameForSave(file);
+        try{
+            if (backup) newFile = Functions.createNewFilenameForSave(file);
+            if (logger.isDebugEnabled()) logger.debug("Successfully create backup file.");
+        } catch (Throwable e){
+            logger.error("Couldn't create new backup file.", e);
+            throw new SibincoException("Couldn't save new routes settings",e);
+        }
+
+        String localEncoding;
+        try{
+            localEncoding = Functions.getLocaleEncoding();
+            if (logger.isDebugEnabled()) logger.debug("Successfully get locale encoding.");
+        } catch (Throwable e){
+            logger.error("Couldn't get locale encoding.", e);
+            throw new SibincoException("Couldn't save new routes settings",e);
+        }
+
+        FileOutputStream fos;
         try {
-            String localEncoding = Functions.getLocaleEncoding();
-            final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream((backup)?newFile:file), localEncoding));
+            fos = new FileOutputStream((backup)?newFile:file);
+        } catch (FileNotFoundException e) {
+            logger.error("Couldn't find file: "+ ((backup)?newFile:file), e);
+            throw new SibincoException("Couldn't save new routes settings", e);
+        }
 
-            Functions.storeConfigHeader(out, "routes", "smpp_routes.dtd", localEncoding);
-            for (final Subject subject : subjects.values()) subject.store(out);
+        OutputStreamWriter osw;
+        try {
+            osw = new OutputStreamWriter(fos, localEncoding);
+        } catch (UnsupportedEncodingException e) {
+            logger.error(e);
+            throw new SibincoException("Couldn't save new routes settings",e);
+        }
 
-            for (final Route route : routes.values()) route.store(out);
+        PrintWriter out = null;
+        try {
+            out = new PrintWriter(osw);
+            try{
+                Functions.storeConfigHeader(out, "routes", "smpp_routes.dtd", localEncoding);
+            } catch (Throwable e){
+                logger.error("Couldn't store config header.", e);
+                throw new SibincoException("Couldn't save new routes settings", e);
+            }
 
-            Functions.storeConfigFooter(out, "routes");
+            for (final Subject subject : subjects.values()) {
+                if (subject != null){
+                    try{
+                         subject.store(out);
+                    } catch (Throwable e){
+                        logger.error("Couldn't store subject: "+subject, e);
+                        throw new SibincoException("Couldn't save new routes settings", e);
+                    }
+                }
+            }
+
+            for (final Route route : routes.values()) {
+                if (route != null){
+                    try{
+                         route.store(out);
+                    } catch (Throwable e){
+                        logger.error("Couldn't store route: "+route.getName(), e);
+                        throw new SibincoException("Couldn't save new routes settings", e);
+                    }
+                }
+            }
+
+            try{
+                Functions.storeConfigFooter(out, "routes");
+                if (logger.isDebugEnabled()) logger.debug("Config footer has been stored.");
+            } catch (Throwable e){
+                logger.error("Couldn't store config footer.", e);
+                throw new SibincoException("Couldn't save new routes settings", e);
+            }
             out.flush();
             out.close();
-            if (backup) Functions.renameNewSavedFileToOriginal(newFile, file);
 
-        } catch (FileNotFoundException e) {
-            throw new SibincoException("Couldn't save new routes settings: Couldn't write to destination config filename: " + e.getMessage());
-        } catch (IOException e) {
-            logger.error("Couldn't save new routes settings", e);
-            throw new SibincoException("Couldn't save new routes settings", e);
+            try{
+                if (backup) Functions.renameNewSavedFileToOriginal(newFile, file);
+                if (logger.isDebugEnabled()) logger.debug("New saved file has been renamed to original.");
+            } catch (Throwable e){
+                logger.error("Couldn't rename new saved file to original.", e);
+                throw new SibincoException("Couldn't rename new saved file to original.");
+            }
+
+        } finally {
+            if (out!=null) out.close();
+            try {
+                osw.close();
+            } catch (IOException e) {
+                logger.error(e);
+            }
+
+            try {
+                fos.close();
+            } catch (IOException e) {
+                logger.error(e);
+            }
         }
     }
 

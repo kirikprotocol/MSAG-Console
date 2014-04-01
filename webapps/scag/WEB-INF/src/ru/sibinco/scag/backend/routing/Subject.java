@@ -257,7 +257,7 @@ public class Subject {
                ", metaCenter id="+( (metaCenter != null && metaCenter.getId() != null) ? metaCenter.getId() : "N/A")+
                ", notes="+( (notes != null && notes.compareTo("") != 0) ? notes : "N/A")+
                ", masks="+( masks != null ? masks : "N/A") +
-               ", child subjects="+ (childSubjects != null ? sb.toString() : "N/A") + "}.";
+               ", child subjects="+ ( (childSubjects != null && !childSubjects.isEmpty()) ? sb.toString() : "N/A") + "}.";
     }
 
     public TreeSet<String> getChildSubjects(){
