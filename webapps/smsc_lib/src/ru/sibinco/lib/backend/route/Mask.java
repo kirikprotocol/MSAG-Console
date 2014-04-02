@@ -11,7 +11,7 @@ import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import java.io.PrintWriter;
 
 
-public class Mask implements Comparable
+public class Mask implements Comparable<Mask>
 {
   private static final String pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
   private static final String pattern1 = pattern_header + "\\d{0,20}\\?{0,20}$";
@@ -156,11 +156,13 @@ public class Mask implements Comparable
     return mask;
   }
 
-  public int compareTo(Object o) {
-    if(o == null || !(o instanceof Mask)) {
-      return 1;
-    }
-    return getMaskSimple().compareTo(((Mask)o).getMaskSimple());
+  public int compareTo(Mask o) {
+    if(tone == o.tone){
+      if(npi == o.npi){
+         return mask.compareTo(o.getMask());
+      } else if ( npi > o.npi ) return 1;
+    } else if( tone > o.tone ) return 1;
+    return -1;
   }
 
 }
