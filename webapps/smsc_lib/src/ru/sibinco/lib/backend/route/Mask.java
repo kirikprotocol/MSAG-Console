@@ -160,7 +160,7 @@ public class Mask implements Comparable<Mask>
     if(o == null) return -1;
     if(tone == o.tone){
       if(npi == o.npi){
-         return mask.compareTo(o.getMask());
+         return mask.compareTo(o.getMaskSimple());
       } else if ( npi > o.npi ) return 1;
     } else if( tone > o.tone ) return 1;
     return -1;
