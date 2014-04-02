@@ -157,7 +157,7 @@ public class Mask implements Comparable<Mask>
   }
 
   public int compareTo(Mask o) {
-    if(mask == null) return -1;
+    if(o == null) return -1;
     if(tone == o.tone){
       if(npi == o.npi){
          return mask.compareTo(o.getMask());
