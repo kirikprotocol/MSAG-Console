@@ -75,7 +75,10 @@ struct SmscSocket:SmppSocket{
     return true;
 */
   }
-
+  void getHostPort(std::string &host_,int &port_)
+  {
+	  host_=host;	port_=port;
+  }
 protected:
   std::string host;
   int port;

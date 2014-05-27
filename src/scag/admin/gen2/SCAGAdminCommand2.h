@@ -243,7 +243,7 @@ protected:
     virtual transport::smpp::SmppEntityType getEntityType() = 0;
     virtual const char * getCommandName() = 0;
     virtual void fillResultSet(Variant& result, transport::smpp::SmppEntityAdminInfoList& lst) = 0;
-    std::string getStrBindType(transport::smpp::SmppBindType bindType)
+    /*std::string getStrBindType(transport::smpp::SmppBindType bindType)
     {
         //btNone,btReceiver,btTransmitter,btRecvAndTrans,btTransceiver
         std::string str;
@@ -254,7 +254,7 @@ protected:
         else if (bindType == transport::smpp::btTransceiver) str = "TRX";
 
         return str;
-    }
+    }*/
 public:
   CommandListSmppEntity(Command::Id commandId, const xercesc::DOMDocument * doc) : AdminCommand(commandId, doc)
   {
@@ -285,7 +285,7 @@ protected:
             //if (it->host.size() == 0)
             //    snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", (it->connected) ? "yes" : "no");
             //else
-            snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
+            snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), transport::smpp::SmppBindTypeToString(it->bindType).c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
 
             result.appendValueToStringList(buff);
             smsc_log_debug(logger, "Command %s returns: %s", getCommandName(), buff);
@@ -319,7 +319,7 @@ protected:
             //if (it->host.size() == 0)
             //    snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Port, %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", "Unknown", (it->connected) ? "yes" : "no");
             //else
-            snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Port, %d, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
+            snprintf(buff, sizeof(buff), "SystemId, %s, Host, %s %s, Port, %d, Status, %s", it->systemId.c_str(), transport::smpp::SmppBindTypeToString(it->bindType).c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
 
 
             result.appendValueToStringList(buff);

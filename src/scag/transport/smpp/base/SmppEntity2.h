@@ -1,7 +1,7 @@
 #ifndef _SCAG_TRANSPORT_SMPP_SMPPENTITY2_H
 #define _SCAG_TRANSPORT_SMPP_SMPPENTITY2_H
 
-#include "SmppChannel2.h"
+#include "scag/transport/smpp/impl/SmscSocket2.h"//#include "SmppChannel2.h"
 #include "scag/transport/smpp/SmppTypes.h"
 #include "core/synchronization/RecursiveMutex.hpp"
 #include "core/buffers/IntHash.hpp"
@@ -435,8 +435,28 @@ public:
 			return false;
 		ai.systemId = getSystemId();
 		ai.bindType = bt;
-		ai.host = info.host;
-		ai.port = info.port;
+		SmscSocket *pSmscSocket(0);		std::string host;	int port(0);
+		switch(ai.bindType)
+		{
+		case btTransceiver:
+			pSmscSocket=dynamic_cast<SmscSocket *>(channel.get());
+		break;
+		case btReceiver:
+			pSmscSocket=dynamic_cast<SmscSocket *>(recvChannel.get());
+		break;
+		case btTransmitter:
+			pSmscSocket=dynamic_cast<SmscSocket *>(transChannel.get());
+		}
+		if(pSmscSocket) {
+			pSmscSocket->getHostPort(host,port);
+			ai.host = host;
+			ai.port = port;
+		}
+		else{
+			ai.host = info.host;
+			ai.port = info.port;
+		}
+
 		ai.connected = connected;
 		return true;
 	}
@@ -449,6 +469,8 @@ public:
 	/// non-empty         - failure reason static text.
 	const char* checkAndBindChannel(SmppEntityType eType, SmppBindType bindType,
 			SmppChannel* ch, int argUid, const char* password) {
+		smsc_log_debug(log_,"checkAndBindChannel SmppEntityType:%s SmppBindType:%s SmppChannel:%s Uid:%i Password:%s",
+				SmppEntityTypeToString(eType).c_str(), SmppBindTypeToString(bindType).c_str(), ch->getPeer(), argUid, ((password)?password:""));
 		MutexGuard mg(mtx);
 		if (!info.enabled) {
 			return "disabled";
