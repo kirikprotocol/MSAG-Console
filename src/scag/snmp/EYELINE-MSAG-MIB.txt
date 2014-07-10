@@ -204,5 +204,172 @@
     DESCRIPTION
     "Notify periodically about msag being alive"
     ::= { msagnotifications 12 }
-    
+
+-- sme stat table
+
+    -- 1.3.6.1.4.1.26757.2.10
+    -- smeStatTable is sent on request as SME counters stats (like in smsc)
+  smeStatTable OBJECT-TYPE
+      SYNTAX  SEQUENCE OF SmeStatEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "SME Stats table."
+      ::= { msag 10 }
+
+
+    -- 1.3.6.1.4.1.26757.2.10.1
+    -- smeStatEntry is a smeStatTable row
+  smeStatEntry OBJECT-TYPE
+      SYNTAX  SmeStatEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "A route to a particular destination."
+      INDEX   { smeStatIndex }
+      ::= { smeStatTable 1 }
+
+  SmeStatEntry ::=
+      SEQUENCE {
+    smeStatIndex INTEGER,
+    smeStatSystemId DisplayString,
+    smeStatAccepted  Counter64,
+    smeStatRejected  Counter64,
+    smeStatDelivered Counter64,
+    smeStatFailed    Counter64,
+    smeStatRecieptOk  Counter64,
+    smeStatRecieptFailed   Counter64
+      }
+
+    -- 1.3.6.1.4.1.26757.2.10.1.1
+  smeStatIndex OBJECT-TYPE
+      SYNTAX  INTEGER(0..2000)
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Index."
+      ::= { smeStatEntry 1 }
+
+    -- 1.3.6.1.4.1.26757.2.10.1.2
+  smeStatSystemId OBJECT-TYPE
+      SYNTAX  DisplayString (SIZE (0..32))
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME system Id."
+      ::= { smeStatEntry 2 }
+
+    -- 1.3.6.1.4.1.26757.2.10.1.3
+  smeStatAccepted OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Accepted"
+      ::= { smeStatEntry 3 }
+
+    -- 1.3.6.1.4.1.26757.2.10.1.4
+  smeStatRejected OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Rejected"
+      ::= { smeStatEntry 4 }
+
+    -- 1.3.6.1.4.1.26757.2.10.1.5
+  smeStatDelivered OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Delivered"
+      ::= { smeStatEntry 5 }
+
+    -- 1.3.6.1.4.1.26757.2.10.1.6
+  smeStatFailed OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Failed"
+      ::= { smeStatEntry 6 }
+
+    -- 1.3.6.1.4.1.26757.2.10.1.7
+  smeStatRecieptOk OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Temporal Errors"
+      ::= { smeStatEntry 7 }
+
+    -- 1.3.6.1.4.1.26757.2.10.1.8
+  smeStatRecieptFailed OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Temporal Errors"
+      ::= { smeStatEntry 8 }
+
+
+  -- 1.3.6.1.4.1.26757.2.11
+  smeErrTable OBJECT-TYPE
+      SYNTAX  SEQUENCE OF SmeErrEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "SME Errors table."
+      ::= { msag 11 }
+
+  smeErrEntry OBJECT-TYPE
+      SYNTAX  SmeErrEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "A route to a particular destination."
+      INDEX   { smeErrIndex,smeErrCode }
+      ::= { smeErrTable 1 }
+
+  SmeErrEntry ::=
+      SEQUENCE {
+    smeErrIndex INTEGER,
+    smeErrCode INTEGER,
+    smeErrSystemId DisplayString,
+    smeErrCount  Counter64
+      }
+
+  smeErrIndex OBJECT-TYPE
+      SYNTAX  INTEGER(0..2000)
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Index."
+      ::= { smeErrEntry 1 }
+
+  smeErrCode OBJECT-TYPE
+      SYNTAX  INTEGER(0..2000)
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Err Code."
+      ::= { smeErrEntry 2 }
+
+  smeErrSystemId OBJECT-TYPE
+      SYNTAX  DisplayString (SIZE (0..32))
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME system Id."
+      ::= { smeErrEntry 3 }
+
+  smeErrCount OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Accepted"
+      ::= { smeErrEntry 4 }
+
     END

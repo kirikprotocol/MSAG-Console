@@ -232,7 +232,13 @@ using namespace scag::stat::sacc;
         CommonStat* getStat(const char* id, bool sc);
         void deleteSockets( Mutex& mt, std::vector< Socket* >& socks );
         void deleteCommonPerfCounters( Hash< CommonPerformanceCounter* >& counters );
+
     public:
+
+        static StatisticsManager& InstanceSM();
+        Hash<CommonPerformanceCounter*>& getCounters(bool smsc=0);
+        Hash<CommonStat>& getErrors(bool smsc=0);
+
         void init( const StatManConfig& statManCfg );
 
         void Stop();                        

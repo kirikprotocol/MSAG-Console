@@ -21,15 +21,20 @@
 #include "StatisticsManager.h"
 #include "scag/config/base/ConfigManager2.h"
 
+#include "scag/util/singleton/Singleton2.h"
 // #include "scag/util/properties/Properties2.h"
 // using namespace util::properties;
 
+using namespace scag2::util::singleton;
 using namespace scag::stat::sacc;
 using namespace smsc::core::buffers;
+
+#include "StatCountersEnum.hpp"
 
 namespace scag2 {
 namespace stat {
 
+/* moved to StatCountersEnum.hpp
     namespace Counters
     {
         typedef enum 
@@ -41,7 +46,8 @@ namespace stat {
           cntFailed,
 
           cntRecieptOk,
-          cntRecieptFailed
+          cntRecieptFailed,
+          cntSmppSize
         } SmppStatCounter;
 
         typedef enum
@@ -51,9 +57,11 @@ namespace stat {
           httpResponse,
           httpResponseRejected,
           httpDelivered,
-          httpFailed
+          httpFailed,
+          cntHttpSize
         } HttpStatCounter;
     }
+*/
 
 using smsc::core::buffers::TmpBuf;
 using smsc::core::buffers::File;
@@ -66,7 +74,10 @@ const char*    SCAG_SMPP_STAT_DIR_NAME_FORMAT  = "SMPP/%04d-%02d";
 const char*    SCAG_HTTP_STAT_DIR_NAME_FORMAT = "HTTP/%04d-%02d";
 const char*    SCAG_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
-//typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
+typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
+inline unsigned GetLongevity( StatisticsManager* ) { return 249; }
+bool StatisticsManager::inited = false;
+Mutex StatisticsManager::initLock;
 
 /*
 Statistics& Statistics::Instance()
@@ -80,6 +91,26 @@ Statistics& Statistics::Instance()
     return SingleSM::Instance();
 }
 */
+
+StatisticsManager& StatisticsManager::InstanceSM()
+{
+    if ( ! inited ) {
+        MutexGuard mg(StatisticsManager::initLock);
+        if ( ! inited )
+            throw std::runtime_error("StatisticsManager not inited");
+    }
+    return SingleSM::Instance();
+}
+
+Hash<CommonPerformanceCounter*>& StatisticsManager::getCounters(bool smsc)
+{
+  return smsc ? scSmppCounters :svcSmppCounters;
+}
+
+Hash<CommonStat>& StatisticsManager::getErrors(bool smsc)
+{
+  return smsc ? statBySmeId[currentIndex] : srvStatBySmeId[currentIndex];
+}
 
 void StatisticsManager::init( const StatManConfig& statManConfig )
 {
@@ -168,7 +199,9 @@ StatisticsManager::StatisticsManager() :
 Statistics(), Thread(), ConfigListener(STATMAN_CFG),
 logger(Logger::getInstance("statman")),
 currentIndex(0), bExternalFlush(false), isStarted(false),
-genStatSmpp(PERF_CNT_COUNT), genStatHttp(PERF_HTTP_COUNT)
+genStatSmpp(Counters::cntSmppSize), genStatHttp(Counters::cntHttpSize)
+//genStatSmpp(PERF_CNT_COUNT), genStatHttp(PERF_HTTP_COUNT)
+// changes: smpp counter array dimension was wrong
 {
     memset(&smppFileTM, 0, sizeof(smppFileTM));
     memset(&httpFileTM, 0, sizeof(httpFileTM));

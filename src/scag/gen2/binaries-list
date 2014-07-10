@@ -11,7 +11,6 @@ scag/msag           gwmain2        \
   -lscag-bill-ewallet-client \
   -lscag-bill-ewallet-proto \
   -lscag-counter-impl \
-  -lscag-stat-impl \
   -lscag-re-impl \
   -lscag-re-actions-impl \
   -lscag-lcm-impl \
@@ -31,7 +30,6 @@ scag/msag           gwmain2        \
   -lscag-transport-smpp-common \
   -lscag-transport-smpp-router \
   -lscag-transport-http-base \
-  -lscag-stat-base \
   -lscag-pvss-data \
   -lscag-pvss-api-packets \
   -lscag-pvss-common \
@@ -46,9 +44,12 @@ scag/msag           gwmain2        \
   -lscag-config-base \
   \
 switch SNMP
-YES: -lscag-snmp -lscag-snmp-counters \
+YES: -lscag-snmp -lscag-snmp-counters -lscag-snmp-smeerrtable -lscag-snmp-smestattable \
 endswitch
   \
+  -lscag-stat-base \
+  -lscag-stat-impl \
+
   -lscag-util-properties \
   -lscag-util-storage \
   -lscag-util-memory \

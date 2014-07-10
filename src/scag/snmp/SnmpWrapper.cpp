@@ -5,6 +5,9 @@
 #include "SnmpWrapper.h"
 #include "scag/snmp/counters/msagCounterTable_cxxiface.h"
 
+#include "smestattable/smeStatTable_subagent.hpp"
+#include "smeerrtable/smeErrTable_subagent.hpp"
+
 namespace {
 
 const char* msagnamed = "msagd";
@@ -212,6 +215,11 @@ void SnmpWrapper::initMsag( msagCounterTable_creator_t* creator,
     ::init_msag();              // initialize mib code
     ::initMsagCounterTable( creator, destructor, cacheTimeout );
     init_snmp( ::msagname );   // read .conf files
+
+//xxx smestat register
+    snmp::smestattable::SmeStatTableSubagent::Register();
+    snmp::smeerrtable::InitSmeErrTable();
+
     smsc_log_info(log_,"msag snmp support inited");
 }
 

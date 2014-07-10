@@ -270,7 +270,7 @@ using scag::util::SerializeBuffer;
       smsc::sms::SmeSystemIdBuf dstId;
       smsc::sms::RouteId routeId;
       int  routeProviderId;
-      bool srcType, dstType;
+      bool srcType, dstType;    //false for sme; true for smsc;
 
       int event; // use constants from scag::stat::events::smpp
       int errCode;
