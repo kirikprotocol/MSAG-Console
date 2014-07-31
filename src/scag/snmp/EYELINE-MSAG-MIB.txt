@@ -28,6 +28,24 @@
     "Version string"
     ::= { msag 1 }
 
+    -- 1.3.6.1.4.1.26757.2.2
+    msagStatus OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+    "MSAG status"
+    ::= { msag 2 }
+
+    -- 1.3.6.1.4.1.26757.2.3
+    msagUptime OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+    "MSAG uptime"
+    ::= { msag 3 }
+
     -- 1.3.6.1.4.1.26757.2.4
     msagCounterTable OBJECT-TYPE
     SYNTAX  SEQUENCE OF MsagCounterEntry

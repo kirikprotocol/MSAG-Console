@@ -1,0 +1,472 @@
+-- Copyright 2003 Sibinco. All Rights Reserved
+-- HISTORY
+-- 17-09-2003  Victor Ryzhkov     created
+
+    SIBINCO-SMSC-MIB DEFINITIONS ::= BEGIN
+  IMPORTS
+      OBJECT-TYPE, enterprises, TimeTicks, Unsigned32, Counter32, Counter64,
+--      NOTIFICATION-TYPE
+      MODULE-IDENTITY, NOTIFICATION-TYPE
+    FROM SNMPv2-SMI
+      DisplayString
+    FROM SNMPv2-TC;
+--      TRAP-TYPE
+--    FROM RFC-1215;
+
+      sibinco MODULE-IDENTITY
+    LAST-UPDATED "200309171500Z"
+    ORGANIZATION
+                    "Sibinco"
+                CONTACT-INFO
+                    "Sibinco
+                    41, Russkaya Str #501
+                    630090 Novosibirsk
+                    Russia
+
+                    Phone:  +7 3832 328133 ext 25
+                    Fax:    +7 3832 328133 ext 25
+                    Web:    http://www.sibinco.com/
+                    E-Mail: sales@sibinco.com"
+                DESCRIPTION
+                    "Sibinco root MIB module"
+                ::= { enterprises 26757 }
+
+
+            -- 1.3.6.1.4.1.26757.1
+            smsc OBJECT IDENTIFIER ::= { sibinco 1 }
+      smscnotifications OBJECT IDENTIFIER ::= { smsc 0 }
+      --sme  OBJECT IDENTIFIER ::= { smsc 7 }
+
+            -- 1.3.6.1.4.1.26757.1.1
+      smscDescr OBJECT-TYPE
+      SYNTAX  DisplayString
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "Version string"
+      ::= { smsc 1 }
+
+            -- 1.3.6.1.4.1.26757.1.2
+      smscStatus OBJECT-TYPE
+      SYNTAX  INTEGER {
+      unkn(0),
+      init(1),
+      oper(2),
+      shut(3),
+      term(4)
+        }
+      MAX-ACCESS  read-write
+      STATUS      current
+      DESCRIPTION
+    "The current state of system.
+
+    The value unknown(0) is returned when the system's
+    true state is unknown; for example, when management
+    portion being started.
+
+    The value init(1) is returned when the system is in
+    process of initialization.
+
+    The value oper(2) is returned when the system
+    becomes operational.
+
+    The value shut(3) is returned when the system is in
+    process of shutting down.
+
+    Setting this variable to the value term(4) causes
+    the system to shuttting down. This action can be done
+    only in operational state."
+      ::= { smsc 2 }
+
+            -- 1.3.6.1.4.1.26757.1.3
+            smscUpTime OBJECT-TYPE
+                SYNTAX TimeTicks
+                MAX-ACCESS read-only
+                STATUS current
+    DESCRIPTION
+        "The time (in hundredths of a second) since the
+        management portion was last re-initialized."
+    ::= { smsc 3 }
+
+            smscStats OBJECT IDENTIFIER ::= { smsc 4 }
+
+      submitOK OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "submitOK"
+    ::= { smscStats 1}
+
+      submitERR OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "submitERR"
+    ::= { smscStats 2}
+
+      deliverOK OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "deliverOK"
+    ::= { smscStats 3}
+
+      deliverERR OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "deliverERR"
+    ::= { smscStats 4}
+
+      rescheduled OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "rescheduled"
+    ::= { smscStats 5}
+
+
+      deliveryTemp OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "deliveryTEMP"
+    ::= { smscStats 6}
+
+            -- 1.3.6.1.4.1.26757.1.5
+        alertMessage OBJECT-TYPE
+      SYNTAX DisplayString
+            MAX-ACCESS accessible-for-notify
+            STATUS current
+      DESCRIPTION
+    "The string object containing textual description of alert."
+      ::= { smsc 5 }
+
+  smeTable OBJECT-TYPE
+      SYNTAX  SEQUENCE OF SmeEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "SME table."
+      ::= { smsc 6 }
+
+
+  smeEntry OBJECT-TYPE
+      SYNTAX  SmeEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "A route to a particular destination."
+      INDEX   { smeIndex }
+      ::= { smeTable 1 }
+
+  SmeEntry ::=
+      SEQUENCE {
+    smeIndex INTEGER,
+    smeSystemId DisplayString,
+    smeStatus INTEGER
+      }
+
+  smeIndex OBJECT-TYPE
+      SYNTAX  INTEGER(0..2000)
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SMEIDX."
+      ::= { smeEntry 1 }
+
+  smeSystemId OBJECT-TYPE
+      SYNTAX  DisplayString (SIZE (0..32))
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME system Id."
+      ::= { smeEntry 2 }
+
+  smeStatus OBJECT-TYPE
+      SYNTAX  INTEGER
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME status."
+      ::= { smeEntry 3 }
+
+
+  smeStatTable OBJECT-TYPE
+      SYNTAX  SEQUENCE OF SmeStatEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "SME Stats table."
+      ::= { smsc 10 }
+
+
+  smeStatEntry OBJECT-TYPE
+      SYNTAX  SmeStatEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "A route to a particular destination."
+      INDEX   { smeStatIndex }
+      ::= { smeStatTable 1 }
+
+  SmeStatEntry ::=
+      SEQUENCE {
+    smeStatIndex INTEGER,
+    smeStatSystemId DisplayString,
+    smeStatAccepted  Counter64,
+    smeStatRejected  Counter64,
+    smeStatDelivered Counter64,
+    smeStatFailed    Counter64,
+    smeStatTemporal  Counter64,
+    smeStatRetried   Counter64
+      }
+
+  smeStatIndex OBJECT-TYPE
+      SYNTAX  INTEGER(0..2000)
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Index."
+      ::= { smeStatEntry 1 }
+
+  smeStatSystemId OBJECT-TYPE
+      SYNTAX  DisplayString (SIZE (0..32))
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME system Id."
+      ::= { smeStatEntry 2 }
+
+  smeStatAccepted OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Accepted"
+      ::= { smeStatEntry 3 }
+
+  smeStatRejected OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Rejected"
+      ::= { smeStatEntry 4 }
+
+  smeStatDelivered OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Delivered"
+      ::= { smeStatEntry 5 }
+
+  smeStatFailed OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Failed"
+      ::= { smeStatEntry 6 }
+
+  smeStatTemporal OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Temporal Errors"
+      ::= { smeStatEntry 7 }
+
+  smeStatRetried OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Temporal Errors"
+      ::= { smeStatEntry 8 }
+
+  -- 1.3.6.1.4.1.26757.1.11
+  smeErrTable OBJECT-TYPE
+      SYNTAX  SEQUENCE OF SmeErrEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "SME Errors table."
+      ::= { smsc 11 }
+
+  smeErrEntry OBJECT-TYPE
+      SYNTAX  SmeErrEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "A route to a particular destination."
+      INDEX   { smeErrIndex,smeErrCode }
+      ::= { smeErrTable 1 }
+
+  SmeErrEntry ::=
+      SEQUENCE {
+    smeErrIndex INTEGER,
+    smeErrCode INTEGER,
+    smeErrSystemId DisplayString,
+    smeErrCount  Counter64
+      }
+
+  smeErrIndex OBJECT-TYPE
+      SYNTAX  INTEGER(0..2000)
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Index."
+      ::= { smeErrEntry 1 }
+
+  smeErrCode OBJECT-TYPE
+      SYNTAX  INTEGER(0..2000)
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Err Code."
+      ::= { smeErrEntry 2 }
+
+  smeErrSystemId OBJECT-TYPE
+      SYNTAX  DisplayString (SIZE (0..32))
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME system Id."
+      ::= { smeErrEntry 3 }
+
+  smeErrCount OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Accepted"
+      ::= { smeErrEntry 4 }
+
+
+  -- 1.3.6.1.4.1.26757.1.7
+  alertSeverity OBJECT-TYPE
+      SYNTAX  INTEGER {
+      normal(1),
+      warning(2),
+      minor(3),
+      major(4),
+      critical(5)
+      }
+      MAX-ACCESS  read-write
+      STATUS      current
+      DESCRIPTION "Severity of alert"
+  ::= { smsc 7 }
+
+  -- 1.3.6.1.4.1.26757.1.8
+  alertId OBJECT-TYPE
+      SYNTAX  DisplayString
+      MAX-ACCESS  read-write
+      STATUS      current
+      DESCRIPTION "Identifier of alert (e.g. object id)"
+  ::= { smsc 8 }
+
+  -- 1.3.6.1.4.1.26757.1.9
+  alertObjCategory OBJECT-TYPE
+      SYNTAX  DisplayString
+      MAX-ACCESS  read-write
+      STATUS      current
+      DESCRIPTION "Object category."
+  ::= { smsc 9 }
+  
+  
+    mapDlgStats OBJECT IDENTIFIER ::= { smsc 12 }
+
+      dlgInSRI OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgInSRI"
+    ::= { mapDlgStats 1}
+  
+      dlgIn OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgIn"
+    ::= { mapDlgStats 2}
+
+      dlgOutSRI OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgOutSRI"
+    ::= { mapDlgStats 3}
+
+      dlgOut OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgOut"
+    ::= { mapDlgStats 4}
+
+      dlgUSSD OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgUSSD"
+    ::= { mapDlgStats 5}
+    
+      dlgNIUSSD OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "dlgNIUSSD"
+    ::= { mapDlgStats 6}
+    
+
+-- trap section
+
+      smscStatusNotification NOTIFICATION-TYPE
+      OBJECTS { smscStatus }
+      STATUS current
+      DESCRIPTION
+    "Notify about smsc state changing"
+      ::= { smscnotifications 1 }
+
+      smscAlert NOTIFICATION-TYPE
+      OBJECTS { alertMessage }
+      STATUS current
+      DESCRIPTION
+    "Notify about smsc events"
+      ::= { smscnotifications 2 }
+
+      smscAlertFFMR NOTIFICATION-TYPE
+      OBJECTS { alertMessage,alertSeverity,alertObjCategory,alertId }
+      STATUS current
+      DESCRIPTION
+    "Notify about smsc events"
+      ::= { smscnotifications 3 }
+
+      smscNewAlertFFMR NOTIFICATION-TYPE
+      OBJECTS { alertMessage,alertSeverity,alertObjCategory,alertId }
+      STATUS current
+      DESCRIPTION
+    "Notify about smsc events"
+      ::= { smscnotifications 4 }
+
+      smscClearAlertFFMR NOTIFICATION-TYPE
+      OBJECTS { alertMessage,alertSeverity,alertObjCategory,alertId }
+      STATUS current
+      DESCRIPTION
+    "Notify about smsc events"
+      ::= { smscnotifications 5 }
+    END
