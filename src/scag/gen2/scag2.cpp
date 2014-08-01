@@ -309,7 +309,9 @@ void Scag::init( unsigned mynode )
     //************** SNMP thread initialization **************
     try {
         const bool enabled = cfg.getConfig()->getBool("snmp.enabled");
-        if ( enabled ) {
+        if ( enabled )
+        {
+          smsc_log_debug(log, "snmp enabled in config.xml");
             std::string socket;
             try {
                 socket = cfg.getConfig()->getString("snmp.socket");
@@ -319,21 +321,27 @@ void Scag::init( unsigned mynode )
             try {
                 cacheTimeout = cfg.getConfig()->getInt("snmp.cacheTimeout");
             } catch (...) {
-                smsc_log_warn(log,"value <snmp.cacheTimeout> is missed, using %u", cacheTimeout);
+                smsc_log_warn(log, "value <snmp.cacheTimeout> is missed, using %u", cacheTimeout);
             }
             unsigned pingTimeout = 0;
             try {
                 pingTimeout = cfg.getConfig()->getInt("snmp.pingTimeout");
             } catch (...) {
-                smsc_log_warn(log,"value <snmp.pingTimeout> is missed, using %u",pingTimeout);
+                smsc_log_warn(log, "value <snmp.pingTimeout> is missed, using %u",pingTimeout);
             }
-            smsc_log_info(log,"creating snmpwrapper @ '%s'", socket.c_str());
-            snmp_.reset(new snmp::SnmpWrapper(socket));
+
+            smsc_log_info(log, "creating snmpwrapper @ '%s'", socket.c_str());
+            snmp_.reset(new snmp::SnmpWrapper(mynode, socket));
             snmp_->initMsag( counterListCtor,
                              counterListDtor,
                              cacheTimeout );
-            snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get(),pingTimeout));
+            snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get(), pingTimeout));
             snmpthread_->Start();
+
+        }
+        else
+        {
+          smsc_log_debug(log, "snmp enabled in config.xml");
         }
     } catch (std::exception& e) {
         smsc_log_warn(log, "cannot initialize snmp: %s", e.what());

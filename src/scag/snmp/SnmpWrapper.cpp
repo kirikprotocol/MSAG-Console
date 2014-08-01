@@ -47,14 +47,14 @@ void init_pvss()
 namespace scag2 {
 namespace snmp {
 
-SnmpWrapper::SnmpWrapper( const std::string& socket ) :
-log_(0), isMsag_(true)
+SnmpWrapper::SnmpWrapper( unsigned node_number, const std::string& socket ) :
+log_(0), isMsag_(true), node(node_number)
 {
     log_ = smsc::logger::Logger::getInstance( "snmp" );
+
     // FIXME: uncomment
-    // snmp_disable_stderrlog();
-    netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID,
-                            NETSNMP_DS_AGENT_ROLE, 1 ); // we are a subagent
+    snmp_disable_stderrlog();
+    netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID, NETSNMP_DS_AGENT_ROLE, 1 ); // we are a subagent
 
     // trimming the socket
     std::string theSocket(socket);
@@ -71,8 +71,7 @@ log_(0), isMsag_(true)
         }
     }
     if ( ! theSocket.empty() ) {
-        netsnmp_ds_set_string( NETSNMP_DS_APPLICATION_ID,
-                               NETSNMP_DS_AGENT_X_SOCKET, theSocket.c_str() ); // setting a connection
+        netsnmp_ds_set_string( NETSNMP_DS_APPLICATION_ID, NETSNMP_DS_AGENT_X_SOCKET, theSocket.c_str() ); // setting a connection
     }
 
 }
@@ -80,14 +79,18 @@ log_(0), isMsag_(true)
 
 SnmpWrapper::~SnmpWrapper()
 {
-    if ( isMsag() ) {
-        snmp_shutdown( ::msagname );
-        snmp_shutdown( ::msagnamed );
-    } else {
-        snmp_shutdown( ::pvssname );
-        snmp_shutdown( ::pvssnamed );
+  if ( isMsag() ) {
+    if ( snmpAgent )
+    {
+      delete snmpAgent;
     }
-    smsc_log_info(log_,"snmp wrapper shutdowned");
+    snmp_shutdown( ::msagname );
+    snmp_shutdown( ::msagnamed );
+  } else {
+    snmp_shutdown( ::pvssname );
+    snmp_shutdown( ::pvssnamed );
+  }
+  smsc_log_info(log_,"snmp wrapper shutdowned");
 }
 
 
@@ -182,8 +185,7 @@ void SnmpWrapper::sendTrap( const TrapRecord& rec )
                                       buflen );
         }
 
-        send_enterprise_trap_vars( SNMP_TRAP_ENTERPRISESPECIFIC, 1,
-                                   poid, (int)poidlen, var_list );
+        send_enterprise_trap_vars( SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, (int)poidlen, var_list );
         snmp_free_varbind(var_list);
         break;
     }
@@ -216,9 +218,13 @@ void SnmpWrapper::initMsag( msagCounterTable_creator_t* creator,
     ::initMsagCounterTable( creator, destructor, cacheTimeout );
     init_snmp( ::msagname );   // read .conf files
 
-//xxx smestat register
-    snmp::smestattable::SmeStatTableSubagent::Register();
-    snmp::smeerrtable::InitSmeErrTable();
+    smsc_log_debug(log_, "creating snmpAgent @ '%d'", node);
+    snmpAgent = new snmp::SnmpAgent(node);
+
+    if ( snmpAgent )
+      snmpAgent->statusChange(SnmpAgent::INIT);
+    else
+      smsc_log_error(log_,"msag SnmpWrapper::initMsag. can't create snmpAgent");
 
     smsc_log_info(log_,"msag snmp support inited");
 }

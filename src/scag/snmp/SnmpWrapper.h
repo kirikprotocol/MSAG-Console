@@ -5,6 +5,7 @@
 #include "logger/Logger.h"
 #include "TrapRecord.h"
 #include "MsagCounterTableElement.h"
+#include "SnmpAgent.hpp"
 
 namespace scag2 {
 namespace snmp {
@@ -15,7 +16,7 @@ namespace snmp {
 class SnmpWrapper 
 {
 public:
-    SnmpWrapper( const std::string& socket = "" );
+    SnmpWrapper( unsigned node_number, const std::string& socket = "" );
     ~SnmpWrapper();
     void sendTrap( const TrapRecord& rec );
     void initMsag( msagCounterTable_creator_t* creator,
@@ -29,6 +30,8 @@ public:
 private:
     smsc::logger::Logger* log_;
     bool                  isMsag_;
+    SnmpAgent*            snmpAgent;
+    unsigned              node;
 };
 
 }

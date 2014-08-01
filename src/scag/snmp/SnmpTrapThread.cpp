@@ -4,9 +4,11 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "SnmpTrapThread.h"
 #include "util/TimeSource.h"
+#include "SnmpAgent.hpp"
 
 namespace scag2 {
 namespace snmp {
+
 
 SnmpTrapThread::~SnmpTrapThread()
 {
@@ -47,6 +49,11 @@ int SnmpTrapThread::Execute()
     typedef smsc::util::TimeSourceSetup::AbsUSec TSource;
     typedef TSource::usec_type usec_type;
     usec_type lastping = TSource::getUSec();
+
+// from smsc snmpAgent:
+    struct timeval t;t.tv_sec=0,t.tv_usec=500000;
+    snmp_alarm_register_hr(t, SA_REPEAT, dummyAlert, 0);
+
     while ( ! stopping_ ) {
         agent_check_and_process(1);
         while ( queue_.Pop(tr) ) {
