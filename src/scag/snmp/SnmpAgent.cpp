@@ -10,7 +10,7 @@
 //#include "smsc/smsc.hpp"
 //#include "smsc/version.h"
 
-//#include "util/config/Manager.h"
+#include "scag/counter/Manager.h"
 
 #include "smestattable/smeStatTable_subagent.hpp"
 #include "smeerrtable/smeErrTable_subagent.hpp"
@@ -336,11 +336,43 @@ using scag2::snmp::SnmpAgent;
     return SNMP_ERR_NOERROR;
   }
 
+/*
+  extern "C"
+  void cntDump(smsc::logger::Logger* lg)
+  {
+    MsagCounterTableElement *list;
+
+    scag2::counter::Manager::getInstance().updateSnmpCounterList(list);
+    if (msagCounterTable_creator) head = (*msagCounterTable_creator)( head );
+
+    for ( list = head; list != NULL; list = list->next )
+    {
+
+      if ( !list->enabled ) {
+          ++msagCounterIndex;
+          continue;
+      }
+    }
+  }
+*/
+
+  extern "C"
+  void oidLogDump(smsc::logger::Logger* lg, oid* id, size_t oidlen, const char* message)
+  {
+    char buf[32];
+    const char* msg = message ? message : "";
+    std::string text = "";
+    if ( oidlen ) { snprintf(buf, 32, "%d", id[0]); text = buf; }
+
+    for( int i = 1; i < oidlen; ++i ) { snprintf(buf, 32, ".%d", id[i]); text += buf; }
+    smsc_log_debug(lg, "%s oid = [%s]", msg, text.c_str());
+  }
+
   extern "C"
   int statisticsHandler(netsnmp_mib_handler* handler, netsnmp_handler_registration* reginfo,
                         netsnmp_agent_request_info* reqinfo, netsnmp_request_info* requests)
   {
-    int i;
+//    int i;
     //netsnmp_variable_list *var = requests->requestvb;
     struct counter64 val;
     uint64_t perf[10];  //fake
@@ -353,12 +385,14 @@ using scag2::snmp::SnmpAgent;
     {
 //  case MODE_GET:
 
-      smsc_log_debug(((smsc::logger::Logger*)agentlog), "hello from stats handler");
+      oidLogDump(((smsc::logger::Logger*)agentlog), reginfo->rootoid, reginfo->rootoid_len, "hello from stats handler;");
+      scag2::counter::Manager::getInstance().dumpCounterList();
+/*
       for( i = 0; i <= reginfo->rootoid_len; i++ )
       {
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "oid[%d] = %d", i, reginfo->rootoid[i]);
       }
-
+*/
 #define requestedOidIs(x) (snmp_oid_compare(x, OID_LENGTH(x), reginfo->rootoid, reginfo->rootoid_len) == 0)
 
       if ( requestedOidIs(sumbitOkOid) )
@@ -416,18 +450,18 @@ using scag2::snmp::SnmpAgent;
         netsnmp_set_request_error(reqinfo, requests, SNMP_NOSUCHINSTANCE);
       }
     }
+/*
     else
     {
-/*
- *    case MODE_SET_RESERVE1:
+      case MODE_SET_RESERVE1:
       case MODE_SET_RESERVE2:
       case MODE_SET_ACTION:
       case MODE_SET_COMMIT:
       case MODE_SET_UNDO:
       case MODE_SET_FREE:
       case MODE_GETNEXT: do nothing
- */
     }
+ */
 #undef requestedOidIs
 
     if (handler->next && handler->next->access_method)

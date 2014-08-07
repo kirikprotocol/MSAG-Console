@@ -49,6 +49,7 @@ public:
 
     /// this method is used for counter reporting via snmp
     virtual MsagCounterTableElement* updateSnmpCounterList( MsagCounterTableElement* list );
+    virtual void dumpCounterList( void );
 
 protected:
     /// retrieve the counter of type T with name 'name'

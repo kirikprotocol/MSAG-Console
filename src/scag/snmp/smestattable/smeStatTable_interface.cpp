@@ -43,6 +43,8 @@
 
 #include <ctype.h>
 
+#include "logger/Logger.h"
+
 namespace scag2 {
 namespace snmp {
 namespace smestattable {
@@ -185,10 +187,15 @@ void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  
                                                   HANDLER_CAN_BABY_STEP |
                                                   HANDLER_CAN_RONLY
                                                   );
+
     if(NULL == reginfo) {
-        snmp_log(LOG_ERR,"error registering table smeStatTable\n");
-        return;
+      snmp_log(LOG_ERR,"error registering table smeStatTable\n");
+      smsc_log_error(smsc::logger::Logger::getInstance("snmp.stbl"), "error registering table smeStatTable");
+      return;
     }
+    snmp_log(LOG_INFO,"register table smeStatTable, success\n");
+    smsc_log_debug(smsc::logger::Logger::getInstance("snmp.stbl"), "register table smeStatTable, success");
+
     reginfo->my_reg_void = &smeStatTable_if_ctx;
 
     /*************************************************

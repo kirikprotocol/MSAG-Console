@@ -40,6 +40,8 @@
 
 #include "smeErrTable_interface.hpp"
 
+#include "logger/Logger.h"
+
 namespace scag2{
 namespace snmp{
 namespace smeerrtable{
@@ -159,10 +161,14 @@ _smeErrTable_initialize_interface(smeErrTable_registration_ptr reg_ptr,  u_long 
                                                   HANDLER_CAN_BABY_STEP |
                                                   HANDLER_CAN_RONLY
                                                   );
-    if(NULL == reginfo) {
-        snmp_log(LOG_ERR,"error registering table smeErrTable\n");
-        return;
+    if (NULL == reginfo) {
+      snmp_log(LOG_ERR,"error registering table smeErrTable\n");
+      smsc_log_error(smsc::logger::Logger::getInstance("snmp.etbl"), "error registering table smeErrTable");
+      return;
     }
+    snmp_log(LOG_INFO,"register table smeErrTable, success\n");
+    smsc_log_debug(smsc::logger::Logger::getInstance("snmp.etbl"), "register table smeErrTable, success");
+
     reginfo->my_reg_void = &smeErrTable_if_ctx;
 
     /*************************************************

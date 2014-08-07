@@ -25,6 +25,8 @@
 #include "core/buffers/IntHash.hpp"
 
 #include "scag/config/base/ConfigManager2.h"
+#include "scag/gen2/scag2.h"
+#include "logger/Logger.h"
 
 /** @defgroup data_access data_access: Routines to access data
  *
@@ -46,9 +48,13 @@
  * OID: .1.3.6.1.4.1.26757.2.11, length: 9
 */
 
+scag2::Scag *getApp();
+
 namespace scag2{
 namespace snmp{
 namespace smeerrtable{
+
+smsc::logger::Logger* log;
 
 
 /**
@@ -63,8 +69,7 @@ namespace smeerrtable{
  * @retval MFD_SUCCESS : success.
  * @retval MFD_ERROR   : unrecoverable error.
  */
-int
-smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg)
+int smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg)
 {
     DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_init_data","called\n"));
 
@@ -87,6 +92,7 @@ smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg)
     ***              END  EXAMPLE CODE              ***
     ***************************************************/
 
+    log = smsc::logger::Logger::getInstance("snmp.etbl");
     return MFD_SUCCESS;
 } /* smeErrTable_init_data */
 
@@ -126,8 +132,7 @@ smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg)
  *  for you data source. For example, opening a connection to another
  *  process that will supply the data, opening a database, etc.
  */
-void
-smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
+void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
                         netsnmp_cache *cache)
 {
     DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_container_init","called\n"));
@@ -200,24 +205,29 @@ void uint64_to_U64(uint64_t val1,U64& val2)
   val2.low=val1&0xffffffffUL;
 }
 
-int
-smeErrTable_cache_load(netsnmp_container *container)
+std::string oid2str(netsnmp_index oid_idx)
 {
-  DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_cache_load","called\n"));
-
-  stat::StatisticsManager* sm = 0;
-  try
+  std::string result = "";
+  char buf[32];
+  oid* ptr = oid_idx.oids;
+  if ( 0 == oid_idx.len )
+    result = "empty";
+  else
   {
-    sm = &stat::StatisticsManager::InstanceSM();
+    snprintf(buf, 32, "%d", *ptr++);
+    result += buf;
   }
-  catch(...)
+  for ( size_t i=1; i<oid_idx.len; ++i )
   {
-    snmp_log(LOG_ERR, "MFD_RESOURCE_UNAVAILABLE (Statistics Manager)\n");
-    return MFD_RESOURCE_UNAVAILABLE;
+    snprintf(buf, 32, ".%d", *ptr++);
+    result += buf;
   }
-  if (!sm) return MFD_RESOURCE_UNAVAILABLE;
+  return result;
+}
 
-  smsc::core::buffers::Hash<stat::CommonStat>& h = sm->getErrors(1);
+int smeErrTable_cache_load(netsnmp_container *container)
+{
+  smsc_log_debug(log, "smeErrTable_cache_load");
 
   U64   smeErrCount;
   long  smeErrIndex = 0;
@@ -230,22 +240,53 @@ smeErrTable_cache_load(netsnmp_container *container)
   char* sysId = 0;
   stat::CommonStat cs;
 
+  stat::StatisticsManager* sm = 0;
+  try
+  {
+    sm = getApp()->getStatisticsManager();
+  }
+  catch(...)
+  {
+    smsc_log_debug(log, "smeErrTable_cache_load: Statistics Manager exception");
+    snmp_log(LOG_ERR, "smeErrTable_cache_load: Statistics Manager exception\n");
+    return MFD_RESOURCE_UNAVAILABLE;
+  }
+  if (!sm) return MFD_RESOURCE_UNAVAILABLE;
+  smsc_log_debug(log, "smeErrTable_cache_load: Statistics Manager OK");
+
+  smsc::core::buffers::Hash<stat::CommonStat>& h = sm->getErrors(1);
+
+#ifdef DEBUG
+  if ( h.GetCount() == 0 )
+  {
+    smsc_log_debug(log, "smeErrTable_cache_load: no records, make 2 fake counters");
+    cs.Reset();
+    cs.errors.Insert(1,11);
+    h.Insert("sme1", cs);
+    cs.errors.Insert(2,22);
+    h.Insert("sme2", cs);
+  }
+#endif
+
+  rec = smeErrTable_allocate_rowreq_ctx(NULL);
+  if (NULL == rec)
+  {
+    smsc_log_debug(log, "smeErrTable_cache_load: memory allocation failed");
+    snmp_log(LOG_ERR, "memory allocation failed\n");
+    return MFD_RESOURCE_UNAVAILABLE;
+  }
+
   h.First();
   while ( h.Next(sysId, cs) )
   {
-    rec = smeErrTable_allocate_rowreq_ctx(NULL);
-    if (NULL == rec)
-    {
-      snmp_log(LOG_ERR, "memory allocation failed\n");
-      return MFD_RESOURCE_UNAVAILABLE;
-    }
-
     for(smsc::core::buffers::IntHash<int>::Iterator iter = cs.errors.First(); iter.Next(smeErrCode, errCount); )
     {
-      if (!errCount) continue;
-      ++smeErrIndex;
+      smsc_log_debug(log, "smeErrTable_cache_load: %s Next %d %d", sysId, smeErrCode, errCount);
 
-      uint64_to_U64(errCount, smeErrCount);
+      if (!errCount) continue;
+
+      uint64_t tmp = errCount;
+      uint64_to_U64(tmp, smeErrCount);
 
       if( MFD_SUCCESS != smeErrTable_indexes_set(rec, smeErrIndex, smeErrCode) )
       {
@@ -253,12 +294,17 @@ smeErrTable_cache_load(netsnmp_container *container)
         smeErrTable_release_rowreq_ctx(rec);
         continue;
       }
-
+      std::string oidStr = oid2str(rec->oid_idx);
+      smsc_log_debug(log, "smeErrTable_cache_load: smeErrTable_indexes_set(%d)=%s %d %d",
+        smeErrIndex, oidStr.c_str(), rec->oid_tmp, rec->tbl_idx.smeErrIndex);
+/*
       if ((NULL == rec->data.smeErrSystemId) || strlen(sysId) > sizeof(rec->data.smeErrSystemId))
       {
+        smsc_log_debug(log, "smeErrTable_cache_load: not enough space for value");
         snmp_log(LOG_ERR,"not enough space for value\n");
         return MFD_ERROR;
       }
+*/
       rec->data.smeErrSystemId_len = strlen(sysId);
       memcpy( rec->data.smeErrSystemId, sysId, rec->data.smeErrSystemId_len+1 );
 
@@ -268,10 +314,12 @@ smeErrTable_cache_load(netsnmp_container *container)
       CONTAINER_INSERT(container, rec);
       ++recCount;
     }
+    ++smeErrIndex;
     cs.Reset();
   }
 
   DEBUGMSGT(("verbose:smeErrTable:smeErrTable_cache_load", "inserted %d records\n", (int)recCount));
+  smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : "empty");
 
   return MFD_SUCCESS;
 
@@ -359,8 +407,7 @@ smeErrTable_cache_load(netsnmp_container *container)
  *  The MFD helper will take care of releasing all the row contexts.
  *
  */
-void
-smeErrTable_cache_free(netsnmp_container *container)
+void smeErrTable_cache_free(netsnmp_container *container)
 {
     DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_cache_free","called\n"));
 

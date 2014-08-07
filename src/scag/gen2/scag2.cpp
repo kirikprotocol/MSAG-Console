@@ -15,7 +15,6 @@
 #include "scag/re/base/XMLHandlers2.h" // for StrX
 #include "scag/re/impl/RuleEngine2.h"
 #include "scag/sessions/impl/SessionManager2.h"
-#include "scag/stat/impl/StatisticsManager.h"
 #include "scag/transport/http/impl/HttpRouter.h"
 #include "scag/transport/http/impl/HttpProcessor.h"
 #include "scag/transport/http/impl/Managers.h"
@@ -266,10 +265,10 @@ void Scag::init( unsigned mynode )
     //********** Statistics manager initialization ***********
     try{
 
-        stat::StatisticsManager* sm = new stat::StatisticsManager;
-        sm->init( cfg.getStatManConfig() );
-        statInited_ = true;
-        smsc_log_info(log, "Statistics manager inited" );
+      statMan = new stat::StatisticsManager;
+      statMan->init( cfg.getStatManConfig() );
+      statInited_ = true;
+      smsc_log_info(log, "Statistics manager inited" );
 
     } catch(exception& e){
       smsc_log_warn(log, "Smsc.init exception: %s", e.what());
@@ -331,11 +330,11 @@ void Scag::init( unsigned mynode )
             }
 
             smsc_log_info(log, "creating snmpwrapper @ '%s'", socket.c_str());
-            snmp_.reset(new snmp::SnmpWrapper(mynode, socket));
+            snmp_.reset( new snmp::SnmpWrapper(mynode, socket) );
             snmp_->initMsag( counterListCtor,
                              counterListDtor,
                              cacheTimeout );
-            snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get(), pingTimeout));
+            snmpthread_.reset( new snmp::SnmpTrapThread(snmp_.get(), pingTimeout) );
             snmpthread_->Start();
 
         }

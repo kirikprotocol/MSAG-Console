@@ -254,6 +254,7 @@
     smeStatAccepted  Counter64,
     smeStatRejected  Counter64,
     smeStatDelivered Counter64,
+    smeStatGwRejected  Counter64,
     smeStatFailed    Counter64,
     smeStatRecieptOk  Counter64,
     smeStatRecieptFailed   Counter64
@@ -305,31 +306,40 @@
       ::= { smeStatEntry 5 }
 
     -- 1.3.6.1.4.1.26757.2.10.1.6
+  smeStatRejected OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Rejected"
+      ::= { smeStatEntry 6 }
+
+    -- 1.3.6.1.4.1.26757.2.10.1.7
   smeStatFailed OBJECT-TYPE
       SYNTAX  Counter64
       MAX-ACCESS  read-only
       STATUS  current
       DESCRIPTION
     "SME Counter Failed"
-      ::= { smeStatEntry 6 }
+      ::= { smeStatEntry 7 }
 
-    -- 1.3.6.1.4.1.26757.2.10.1.7
+    -- 1.3.6.1.4.1.26757.2.10.1.8
   smeStatReceiptOk OBJECT-TYPE
       SYNTAX  Counter64
       MAX-ACCESS  read-only
       STATUS  current
       DESCRIPTION
     "SME Counter Receipt Ok"
-      ::= { smeStatEntry 7 }
+      ::= { smeStatEntry 8 }
 
-    -- 1.3.6.1.4.1.26757.2.10.1.8
+    -- 1.3.6.1.4.1.26757.2.10.1.9
   smeStatReceiptFailed OBJECT-TYPE
       SYNTAX  Counter64
       MAX-ACCESS  read-only
       STATUS  current
       DESCRIPTION
     "SME Counter Receipt Failed"
-      ::= { smeStatEntry 8 }
+      ::= { smeStatEntry 9 }
 
 
   -- 1.3.6.1.4.1.26757.2.11

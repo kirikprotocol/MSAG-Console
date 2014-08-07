@@ -9,6 +9,7 @@
 #include "logger/Logger.h"
 #include "scag/config/route/RouteConfig.h"
 #include "scag/stat/base/Statistics2.h"
+#include "scag/stat/impl/StatisticsManager.h"
 // #include "transport/http/Managers.h"
 // #include "transport/http/HttpProcessor.h"
 #include "scag/transport/smpp/router/route_manager.h"
@@ -124,10 +125,15 @@ public:
   void reloadTestRoutes(const RouteConfig& rcfg);
      */
 
-    transport::smpp::SmppManagerAdmin* getSmppManagerAdmin()
-    {
-        return & transport::smpp::SmppManager::Instance();
-    }
+  transport::smpp::SmppManagerAdmin* getSmppManagerAdmin()
+  {
+      return & transport::smpp::SmppManager::Instance();
+  }
+
+  stat::StatisticsManager* getStatisticsManager()
+  {
+    return statMan;
+  }
 
 protected:
 
@@ -163,6 +169,7 @@ protected:
 
   friend class StatusSme;
 
+  stat::StatisticsManager* statMan;
 #ifdef SNMP
     // std::auto_ptr< sessions::SessionManager >  sessman_;
     std::auto_ptr< snmp::SnmpWrapper > snmp_;

@@ -74,10 +74,10 @@ const char*    SCAG_SMPP_STAT_DIR_NAME_FORMAT  = "SMPP/%04d-%02d";
 const char*    SCAG_HTTP_STAT_DIR_NAME_FORMAT = "HTTP/%04d-%02d";
 const char*    SCAG_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
-typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
-inline unsigned GetLongevity( StatisticsManager* ) { return 249; }
-bool StatisticsManager::inited = false;
-Mutex StatisticsManager::initLock;
+//typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
+//inline unsigned GetLongevity( StatisticsManager* ) { return 249; }
+//bool StatisticsManager::inited = false;
+//Mutex StatisticsManager::initLock;
 
 /*
 Statistics& Statistics::Instance()
@@ -92,19 +92,21 @@ Statistics& Statistics::Instance()
 }
 */
 
-StatisticsManager& StatisticsManager::InstanceSM()
+/*
+StatisticsManager* StatisticsManager::InstanceSM()
 {
     if ( ! inited ) {
         MutexGuard mg(StatisticsManager::initLock);
         if ( ! inited )
             throw std::runtime_error("StatisticsManager not inited");
     }
-    return SingleSM::Instance();
+    return this;
 }
+*/
 
 Hash<CommonPerformanceCounter*>& StatisticsManager::getCounters(bool smsc)
 {
-  return smsc ? scSmppCounters :svcSmppCounters;
+  return smsc ? scSmppCounters : svcSmppCounters;
 }
 
 Hash<CommonStat>& StatisticsManager::getErrors(bool smsc)

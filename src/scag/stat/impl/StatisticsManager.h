@@ -115,8 +115,8 @@ using namespace scag::stat::sacc;
     friend class Statistics;
     private:
 
-        static bool  inited;
-        static Mutex initLock;
+//        static bool  inited;
+//        static Mutex initLock;
 
         void configure(const StatManConfig& statManCfg);
 
@@ -235,7 +235,7 @@ using namespace scag::stat::sacc;
 
     public:
 
-        static StatisticsManager& InstanceSM();
+        StatisticsManager* InstanceSM();
         Hash<CommonPerformanceCounter*>& getCounters(bool smsc=0);
         Hash<CommonStat>& getErrors(bool smsc=0);
 
