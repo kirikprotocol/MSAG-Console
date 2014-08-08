@@ -9,7 +9,7 @@
  * \warning This code should not be modified, called directly,
  *          or used to interpret functionality. It is subject to
  *          change at any time.
- * 
+ *
  * @{
  */
 /*
@@ -36,31 +36,23 @@
 #ifndef SMESTATTABLE_INTERFACE_H
 #define SMESTATTABLE_INTERFACE_H
 
-namespace scag2 {
-namespace snmp {
-namespace smestattable {
-
 
 #include "smeStatTable.hpp"
-
 
 /* ********************************************************************
  * Table declarations
  */
 
+namespace scag2 {
+namespace snmp {
+namespace smestattable {
+
+
 /* PUBLIC interface initialization routine */
 void _smeStatTable_initialize_interface(smeStatTable_registration_ptr user_ctx, u_long flags);
-void _smeStatTable_shutdown_interface(smeStatTable_registration_ptr user_ctx);
 
-smeStatTable_registration_ptr smeStatTable_registration_get( void );
-
-smeStatTable_registration_ptr smeStatTable_registration_set( smeStatTable_registration_ptr newreg );
-
-netsnmp_container *smeStatTable_container_get( void );
-int smeStatTable_container_size( void );
-
-smeStatTable_rowreq_ctx* smeStatTable_allocate_rowreq_ctx(void *);
-void smeStatTable_release_rowreq_ctx(smeStatTable_rowreq_ctx *rowreq_ctx);
+smeStatTable_rowreq_ctx* smeStatTable_allocate_rowreq_ctx(void);
+void smeStatTable_release_rowreq_ctx(smeStatTable_rowreq_ctx* rowreq_ctx);
 
 int smeStatTable_index_to_oid(netsnmp_index *oid_idx, smeStatTable_mib_index *mib_idx);
 int smeStatTable_index_from_oid(netsnmp_index *oid_idx, smeStatTable_mib_index *mib_idx);
@@ -70,8 +62,6 @@ int smeStatTable_index_from_oid(netsnmp_index *oid_idx, smeStatTable_mib_index *
  */
 void smeStatTable_valid_columns_set(netsnmp_column_info *vc);
 
-
 }}}
 
 #endif /* SMESTATTABLE_INTERFACE_H */
-/** @} */

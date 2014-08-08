@@ -31,6 +31,8 @@
 #include "scag/counter/impl/HashCountManager.h"
 #include "scag/counter/impl/TemplateManagerImpl.h"
 #include "scag/counter/impl/ConfigReader.h"
+#include "scag/stat/impl/StatisticsManager.h"
+#include "scag/snmp/smestattable/smeStatTable_subagent.hpp"
 
 namespace {
 
@@ -255,7 +257,7 @@ void Scag::init( unsigned mynode )
         smsc_log_info(log, "Session Manager is created" );
     }catch(exception& e){
       smsc_log_error(log, "Scag.init exception: %s", e.what());
-      __warning__("Sessioan Manager is not created.");
+      __warning__("Session Manager is not created.");
         ::abort();
     }catch(...){
       __warning__("Session Manager is not created.");
@@ -329,6 +331,7 @@ void Scag::init( unsigned mynode )
                 smsc_log_warn(log, "value <snmp.pingTimeout> is missed, using %u",pingTimeout);
             }
 
+            scag2::snmp::smestattable::SmeStatTableSubagent::Init(statMan);
             smsc_log_info(log, "creating snmpwrapper @ '%s'", socket.c_str());
             snmp_.reset( new snmp::SnmpWrapper(mynode, socket) );
             snmp_->initMsag( counterListCtor,

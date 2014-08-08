@@ -17,28 +17,17 @@ namespace scag2{
 namespace snmp{
 namespace smestattable{
 
-/*
+static scag2::stat::StatisticsManager* statManPtr = 0;
 
-static smsc::smeman50::SmeManager* smeManPtr=0;
-static smsc::stat::SmeStats* smeStatsPtr=0;
-
-
-smsc::smeman50::SmeManager* getSmeMan()
+scag2::stat::StatisticsManager* SmeStatTableSubagent::getStatMan()
 {
-  return smeManPtr;
+  return statManPtr;
 }
 
-smsc::stat::SmeStats* getSmeStats()
+void SmeStatTableSubagent::Init(scag2::stat::StatisticsManager* statman)
 {
-  return smeStatsPtr;
+  statManPtr = statman;
 }
-
-void SmeStatTableSubagent::Init(smsc::smeman50::SmeManager* smeman,smsc::stat::SmeStats* smestats)
-{
-  smeManPtr=smeman;
-  smeStatsPtr=smestats;
-}
-*/
 
 void SmeStatTableSubagent::Register()
 {

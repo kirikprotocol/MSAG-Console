@@ -169,7 +169,7 @@ protected:
 
   friend class StatusSme;
 
-  stat::StatisticsManager* statMan;
+  scag2::stat::StatisticsManager* statMan;
 #ifdef SNMP
     // std::auto_ptr< sessions::SessionManager >  sessman_;
     std::auto_ptr< snmp::SnmpWrapper > snmp_;

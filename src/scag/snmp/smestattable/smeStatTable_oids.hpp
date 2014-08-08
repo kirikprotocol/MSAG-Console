@@ -11,7 +11,6 @@ namespace scag2 {
 namespace snmp {
 namespace smestattable {
 
-
 /* column number definitions for table smeStatTable */
 #define SMESTATTABLE_OID              1,3,6,1,4,1,26757,2,10
 
@@ -28,8 +27,6 @@ namespace smestattable {
 #define SMESTATTABLE_MIN_COL   COLUMN_SMESTATINDEX
 #define SMESTATTABLE_MAX_COL   COLUMN_SMESTATRECEIPTFAILED
     
-
-
 }}}
 
 #endif /* SMESTATTABLE_OIDS_H */

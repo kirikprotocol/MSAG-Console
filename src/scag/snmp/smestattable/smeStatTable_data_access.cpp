@@ -12,6 +12,7 @@
 /* include our parent header */
 #include "smeStatTable.hpp"
 #include "smeStatTable_data_access.hpp"
+#include "smeStatTable_subagent.hpp"
 #include "util/int.h"
 
 #include "scag/stat/impl/StatisticsManager.h"
@@ -22,7 +23,6 @@
 #include "scag/stat/impl/Performance.h"
 
 #include "scag/config/base/ConfigManager2.h"
-#include "scag/gen2/scag2.h"
 
 
 /** @ingroup interface
@@ -45,8 +45,6 @@
  * Its status is Current.
  * OID: .1.3.6.1.4.1.26757.2.10, length: 9
 */
-
-scag2::Scag *getApp();
 
 namespace scag2 {
 namespace snmp {
@@ -157,6 +155,18 @@ int smeStatTable_init_data(smeStatTable_registration_ptr smeStatTable_reg)
     ***************************************************/
 
     log = smsc::logger::Logger::getInstance("snmp.stbl");
+
+    try
+    {
+      scag2::stat::StatisticsManager* statMan = SmeStatTableSubagent::getStatMan();
+    }
+    catch(...)
+    {
+      smsc_log_error(log, "smeStatTable_cache_load: getStatisticsManager exception");
+      snmp_log(LOG_ERR, "smeStatTable_cache_load: Statistics Manager exception\n");
+      return MFD_RESOURCE_UNAVAILABLE;
+    }
+    smsc_log_debug(log, "smeStatTable_cache_load: Statistics Manager OK");
     return MFD_SUCCESS;
 } /* smeStatTable_init_data */
 
@@ -191,8 +201,7 @@ int smeStatTable_init_data(smeStatTable_registration_ptr smeStatTable_reg)
  *  for you data source. For example, opening a connection to another
  *  process that will supply the data, opening a database, etc.
  */
-void smeStatTable_container_init(netsnmp_container **container_ptr_ptr,
-                             netsnmp_cache *cache)
+void smeStatTable_container_init(netsnmp_container **container_ptr_ptr, netsnmp_cache *cache)
 {
     DEBUGMSGTL(("verbose:smeStatTable:smeStatTable_container_init","called\n"));
     
@@ -226,7 +235,6 @@ void smeStatTable_container_init(netsnmp_container **container_ptr_ptr,
       __warning2__("Config parameter snmp.cacheTimeout not found, using default=%d", cacheTimeout);
       snmp_log(LOG_ERR, "Config parameter snmp.cacheTimeout not found, using default=%d\n", cacheTimeout);
     }
-
     cache->timeout = cacheTimeout; /* seconds */
 } /* smeStatTable_container_init */
 
@@ -280,27 +288,13 @@ int smeStatTable_cache_load(netsnmp_container *container)
 {
   smsc_log_debug(log, "smeStatTable_cache_load");
 
-  stat::StatisticsManager* sm = 0;
-  try
-  {
-    sm = getApp()->getStatisticsManager();
-  }
-  catch(...)
-  {
-    smsc_log_debug(log, "smeStatTable_cache_load: getStatisticsManager exception");
-    snmp_log(LOG_ERR, "smeStatTable_cache_load: Statistics Manager exception\n");
-    return MFD_RESOURCE_UNAVAILABLE;
-  }
-  if (!sm) return MFD_RESOURCE_UNAVAILABLE;
-  smsc_log_debug(log, "smeStatTable_cache_load: Statistics Manager OK");
-
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h = sm->getCounters(0);
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h = SmeStatTableSubagent::getStatMan()->getCounters(0);
   smsc_log_debug(log, "smeStatTable_cache_load: getCounters(0) ok");
 
   long   smeStatIndex = 0;
   size_t recCount = 0;
   smeStatTable_rowreq_ctx *rec = 0;
-  rec = smeStatTable_allocate_rowreq_ctx(NULL);
+  rec = smeStatTable_allocate_rowreq_ctx();
   if (NULL == rec)
   {
     smsc_log_debug(log, "smeStatTable_cache_load: memory allocation failed");
@@ -312,9 +306,9 @@ int smeStatTable_cache_load(netsnmp_container *container)
   stat::CommonPerformanceCounter* counter = 0;
 
   smeStatIndex = 0;  //ToDo
-#ifdef DEBUG
+//#ifdef DEBUG
   fakeFillHashIfEmpty(h);
-#endif
+//#endif
   h.First();
   while ( h.Next(sysId, counter) )
   {
@@ -349,12 +343,10 @@ int smeStatTable_cache_load(netsnmp_container *container)
   smsc_log_debug(log, "smeStatTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : "empty");
 
   return MFD_SUCCESS;
-} /* smeStatTable_container_load */
-
-
+}
 
 /**
- * container clean up
+ * cache clean up
  *
  * @param container container with all current items
  *
@@ -366,14 +358,15 @@ int smeStatTable_cache_load(netsnmp_container *container)
  *  The MFD helper will take care of releasing all the row contexts.
  *
  */
-void smeStatTable_container_free(netsnmp_container *container)
+void smeStatTable_cache_free(netsnmp_container *container)
 {
-    DEBUGMSGTL(("verbose:smeStatTable:smeStatTable_container_free","called\n"));
+  smsc_log_debug(log, "smeStatTable_cache_free called");
 
     /*
-     * TODO:380:M: Free smeStatTable container data.
+     * TODO:380:M: Free smeStatTable cache.
      */
-} /* smeStatTable_container_free */
+} /* smeStatTable_cache_free */
+
 
 /**
  * prepare row for processing.

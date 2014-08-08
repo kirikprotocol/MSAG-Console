@@ -25,7 +25,8 @@
 #include "core/buffers/IntHash.hpp"
 
 #include "scag/config/base/ConfigManager2.h"
-#include "scag/gen2/scag2.h"
+#include "scag/snmp/smestattable/smeStatTable_subagent.hpp"
+
 #include "logger/Logger.h"
 
 /** @defgroup data_access data_access: Routines to access data
@@ -48,7 +49,7 @@
  * OID: .1.3.6.1.4.1.26757.2.11, length: 9
 */
 
-scag2::Scag *getApp();
+//scag2::Scag *getApp();
 
 namespace scag2{
 namespace snmp{
@@ -240,23 +241,9 @@ int smeErrTable_cache_load(netsnmp_container *container)
   char* sysId = 0;
   stat::CommonStat cs;
 
-  stat::StatisticsManager* sm = 0;
-  try
-  {
-    sm = getApp()->getStatisticsManager();
-  }
-  catch(...)
-  {
-    smsc_log_debug(log, "smeErrTable_cache_load: Statistics Manager exception");
-    snmp_log(LOG_ERR, "smeErrTable_cache_load: Statistics Manager exception\n");
-    return MFD_RESOURCE_UNAVAILABLE;
-  }
-  if (!sm) return MFD_RESOURCE_UNAVAILABLE;
-  smsc_log_debug(log, "smeErrTable_cache_load: Statistics Manager OK");
+  smsc::core::buffers::Hash<stat::CommonStat>& h = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getErrors(1);
 
-  smsc::core::buffers::Hash<stat::CommonStat>& h = sm->getErrors(1);
-
-#ifdef DEBUG
+//#ifdef DEBUG
   if ( h.GetCount() == 0 )
   {
     smsc_log_debug(log, "smeErrTable_cache_load: no records, make 2 fake counters");
@@ -264,9 +251,10 @@ int smeErrTable_cache_load(netsnmp_container *container)
     cs.errors.Insert(1,11);
     h.Insert("sme1", cs);
     cs.errors.Insert(2,22);
+    cs.errors.Insert(3,33);
     h.Insert("sme2", cs);
   }
-#endif
+//#endif
 
   rec = smeErrTable_allocate_rowreq_ctx(NULL);
   if (NULL == rec)

@@ -173,7 +173,7 @@ int smeStatTable_pre_request(smeStatTable_registration_ptr user_context)
  * @retval MFD_SUCCESS : success.
  * @retval MFD_ERROR   : other error (ignored)
  */
-int smeStatTable_post_request(smeStatTable_registration_ptr user_context, int rc)
+int smeStatTable_post_request(smeStatTable_registration_ptr user_context)
 {
     DEBUGMSGTL(("verbose:smeStatTable:smeStatTable_post_request","called\n"));
 

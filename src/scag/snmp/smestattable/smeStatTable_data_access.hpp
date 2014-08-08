@@ -45,15 +45,11 @@ namespace smestattable {
  */
 //#define SMESTATTABLE_CACHE_TIMEOUT   60
 
-void smeStatTable_container_init(netsnmp_container **container_ptr_ptr,
-                             netsnmp_cache *cache);
-void smeStatTable_container_shutdown(netsnmp_container *container_ptr);
+void smeStatTable_container_init(netsnmp_container* *container_ptr_ptr, netsnmp_cache* cache);
+void smeStatTable_container_shutdown(netsnmp_container* container_ptr);
 
-int smeStatTable_container_load(netsnmp_container *container);
-void smeStatTable_container_free(netsnmp_container *container);
-
-int smeStatTable_cache_load(netsnmp_container *container);
-void smeStatTable_cache_free(netsnmp_container *container);
+int smeStatTable_cache_load(netsnmp_container* container);
+void smeStatTable_cache_free(netsnmp_container* container);
 
     /*
     ***************************************************

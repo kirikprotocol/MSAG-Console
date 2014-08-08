@@ -17,6 +17,7 @@
 
 /* other required module components */
     /* *INDENT-OFF*  */
+
 /*
 config_add_mib(EYELINE-MSAG-MIB)
 config_require(EYELINE-MSAG-MIB/smeStatTable/smeStatTable_interface)
@@ -24,7 +25,8 @@ config_require(EYELINE-MSAG-MIB/smeStatTable/smeStatTable_data_access)
 config_require(EYELINE-MSAG-MIB/smeStatTable/smeStatTable_data_get)
 config_require(EYELINE-MSAG-MIB/smeStatTable/smeStatTable_data_set)
 */
-    /* *INDENT-ON*  */
+
+/* *INDENT-ON*  */
 
 /* OID and column number definitions for smeStatTable */
 #include "smeStatTable_oids.hpp"
@@ -170,6 +172,11 @@ typedef struct smeStatTable_rowreq_ctx_s {
     u_int                       rowreq_flags;
 
     /*
+     * implementor's context pointer (provided during registration)
+     */
+    smeStatTable_registration_ptr smeStatTable_reg;
+
+    /*
      * TODO:131:o: |   |-> Add useful data to smeStatTable rowreq context.
      */
     
@@ -188,7 +195,7 @@ typedef struct smeStatTable_ref_rowreq_ctx_s {
  * function prototypes
  */
     int smeStatTable_pre_request(smeStatTable_registration_ptr user_context);
-    int smeStatTable_post_request(smeStatTable_registration_ptr user_context, int rc);
+    int smeStatTable_post_request(smeStatTable_registration_ptr user_context);
 
 //    int smeStatTable_rowreq_ctx_init(smeStatTable_rowreq_ctx *rowreq_ctx, void *user_init_ctx);
 //    void smeStatTable_rowreq_ctx_cleanup(smeStatTable_rowreq_ctx *rowreq_ctx);
