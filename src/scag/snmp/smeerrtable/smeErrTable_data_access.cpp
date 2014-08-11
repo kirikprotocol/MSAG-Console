@@ -228,7 +228,17 @@ std::string oid2str(netsnmp_index oid_idx)
 
 int smeErrTable_cache_load(netsnmp_container *container)
 {
-  smsc_log_debug(log, "smeErrTable_cache_load");
+  if (container)
+  {
+    if ( !container->container_name )
+      container->container_name = "smeErrTableContainer";
+    smsc_log_debug(log, "smeErrTable_cache_load container %s", container->container_name);
+  }
+  else
+  {
+    smsc_log_error(log, "smeErrTable_cache_load error: container is NULL");
+    return MFD_RESOURCE_UNAVAILABLE;
+  }
 
   U64   smeErrCount;
   long  smeErrIndex = 0;
@@ -256,14 +266,6 @@ int smeErrTable_cache_load(netsnmp_container *container)
   }
 //#endif
 
-  rec = smeErrTable_allocate_rowreq_ctx(NULL);
-  if (NULL == rec)
-  {
-    smsc_log_debug(log, "smeErrTable_cache_load: memory allocation failed");
-    snmp_log(LOG_ERR, "memory allocation failed\n");
-    return MFD_RESOURCE_UNAVAILABLE;
-  }
-
   h.First();
   while ( h.Next(sysId, cs) )
   {
@@ -276,9 +278,19 @@ int smeErrTable_cache_load(netsnmp_container *container)
       uint64_t tmp = errCount;
       uint64_to_U64(tmp, smeErrCount);
 
+      rec = smeErrTable_allocate_rowreq_ctx(NULL);
+      if (NULL == rec)
+      {
+        smsc_log_error(log, "smeErrTable_cache_load: memory allocation failed");
+//        snmp_log(LOG_ERR, "memory allocation failed\n");
+        continue;
+//        return MFD_RESOURCE_UNAVAILABLE;
+      }
+
       if( MFD_SUCCESS != smeErrTable_indexes_set(rec, smeErrIndex, smeErrCode) )
       {
-        snmp_log(LOG_ERR, "error setting index while loading smeErrTable data.\n");
+        smsc_log_error(log, "smeErrTable_cache_load: error setting index while loading smeErrTable data");
+//        snmp_log(LOG_ERR, "error setting index while loading smeErrTable data.\n");
         smeErrTable_release_rowreq_ctx(rec);
         continue;
       }
@@ -299,87 +311,26 @@ int smeErrTable_cache_load(netsnmp_container *container)
       rec->data.smeErrCount.high = smeErrCount.high;
       rec->data.smeErrCount.low = smeErrCount.low;
 
-      CONTAINER_INSERT(container, rec);
-      ++recCount;
+      int rc = CONTAINER_INSERT(container, rec);
+      if ( 0 == rc )
+      {
+  //      smsc_log_debug(log, "smeErrTable_cache_load CONTAINER_INSERT returns 0");
+        ++recCount;
+      }
+      else
+      {
+        smsc_log_error(log, "smeErrTable_cache_load CONTAINER_INSERT returns(%d)", rc);
+      }
     }
     ++smeErrIndex;
     cs.Reset();
   }
 
-  DEBUGMSGT(("verbose:smeErrTable:smeErrTable_cache_load", "inserted %d records\n", (int)recCount));
+//  DEBUGMSGT(("verbose:smeErrTable:smeErrTable_cache_load", "inserted %d records\n", (int)recCount));
   smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : "empty");
 
   return MFD_SUCCESS;
 
-/*
-    smeErrTable_rowreq_ctx *rowreq_ctx;
-    size_t                 count = 0;
-
-    U64    smeErrCount;
-    long   smeErrIndex = 0;
-    long   smeErrCode;
-
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_cache_load","called\n"));
-
-    smsc::smeman50::SmeManager* smeman = smsc::snmp::smestattable::getSmeMan();
-    smsc::stat::SmeStats* smestat = smsc::snmp::smestattable::getSmeStats();
-
-    char* key = 0;
-    smsc::smeman50::SmeRecord* record = 0;
-    smeman->First();
-    while ( smeman->Next(key, record) )
-    {
-      record->idx = smeErrIndex++;
-      smsc::smeman50::SmeInfo& info = record->info;
-      if ( !info.enabled )
-        continue;
-      smsc::stat::SmeStats::ErrCntVector errors;
-      smestat->getErrors(info.systemId.c_str(), errors);
-      for(smeErrCode=0; smeErrCode<errors.size(); smeErrCode++)
-      {
-        if(errors[smeErrCode]==0) continue;
-+        uint64_to_U64(errors[smeErrCode], smeErrCount);
-
-        rowreq_ctx = smeErrTable_allocate_rowreq_ctx(NULL);
-        if (NULL == rowreq_ctx)
-        {
-          snmp_log(LOG_ERR, "memory allocation failed\n");
-          return MFD_RESOURCE_UNAVAILABLE;
-        }
-+        if (MFD_SUCCESS != smeErrTable_indexes_set(rowreq_ctx
-                                                   , record->idx
-                                                   , smeErrCode
-                                                  ))
-        {
-          snmp_log(LOG_ERR,"error setting index while loading "
-                   "smeErrTable cache.\n");
-          smeErrTable_release_rowreq_ctx(rowreq_ctx);
-          continue;
-        }
-
-        if ((NULL == rowreq_ctx->data.smeErrSystemId) ||
-             info.systemId.length()>sizeof(rowreq_ctx->data.smeErrSystemId))
-        {
-          snmp_log(LOG_ERR,"not enough space for value\n");
-          return MFD_ERROR;
-        }
-        rowreq_ctx->data.smeErrSystemId_len=info.systemId.length();
-        memcpy( rowreq_ctx->data.smeErrSystemId, info.systemId.c_str(), rowreq_ctx->data.smeErrSystemId_len+1 );
-
-        rowreq_ctx->data.smeErrCount.high = smeErrCount.high;
-        rowreq_ctx->data.smeErrCount.low = smeErrCount.low;
-
-        CONTAINER_INSERT(container, rowreq_ctx);
-        ++count;
-      }
-    }
-
-
-    DEBUGMSGT(("verbose:smeErrTable:smeErrTable_cache_load",
-               "inserted %d records\n", (int)count));
-
-    return MFD_SUCCESS;
-*/
 } /* smeErrTable_cache_load */
 
 /**

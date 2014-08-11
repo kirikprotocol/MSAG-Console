@@ -155,7 +155,7 @@ int smeStatTable_init_data(smeStatTable_registration_ptr smeStatTable_reg)
     ***************************************************/
 
     log = smsc::logger::Logger::getInstance("snmp.stbl");
-
+/*
     try
     {
       scag2::stat::StatisticsManager* statMan = SmeStatTableSubagent::getStatMan();
@@ -167,6 +167,7 @@ int smeStatTable_init_data(smeStatTable_registration_ptr smeStatTable_reg)
       return MFD_RESOURCE_UNAVAILABLE;
     }
     smsc_log_debug(log, "smeStatTable_cache_load: Statistics Manager OK");
+*/
     return MFD_SUCCESS;
 } /* smeStatTable_init_data */
 
@@ -247,24 +248,29 @@ void smeStatTable_container_shutdown(netsnmp_container *container_ptr)
   }
 } /* smeStatTable_container_shutdown */
 
-std::string oid2str(netsnmp_index oid_idx)
+std::string oid2str(oid* oids, size_t len)
 {
   std::string result = "";
   char buf[32];
-  oid* ptr = oid_idx.oids;
-  if ( 0 == oid_idx.len )
+  oid* ptr = oids;
+  if ( 0 == len )
     result = "empty";
   else
   {
     snprintf(buf, 32, "%d", *ptr++);
     result += buf;
   }
-  for ( size_t i=1; i<oid_idx.len; ++i )
+  for ( size_t i=1; i<len; ++i )
   {
     snprintf(buf, 32, ".%d", *ptr++);
     result += buf;
   }
   return result;
+}
+
+std::string netsnmp_index2str(netsnmp_index oid_idx)
+{
+  return oid2str(oid_idx.oids, oid_idx.len);
 }
 
 void fakeFillHashIfEmpty(smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h)
@@ -284,24 +290,25 @@ void fakeFillHashIfEmpty(smsc::core::buffers::Hash<stat::CommonPerformanceCounte
 }
 
 
-int smeStatTable_cache_load(netsnmp_container *container)
+int smeStatTable_cache_load(netsnmp_container* container)
 {
-  smsc_log_debug(log, "smeStatTable_cache_load");
-
+  if (container)
+  {
+    if ( !container->container_name )
+      container->container_name = "smeStatTableContainer";
+    smsc_log_debug(log, "smeStatTable_cache_load container %s", container->container_name);
+  }
+  else
+  {
+    smsc_log_error(log, "smeStatTable_cache_load error: container is NULL");
+    return MFD_RESOURCE_UNAVAILABLE;
+  }
   smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h = SmeStatTableSubagent::getStatMan()->getCounters(0);
   smsc_log_debug(log, "smeStatTable_cache_load: getCounters(0) ok");
 
   long   smeStatIndex = 0;
   size_t recCount = 0;
   smeStatTable_rowreq_ctx *rec = 0;
-  rec = smeStatTable_allocate_rowreq_ctx();
-  if (NULL == rec)
-  {
-    smsc_log_debug(log, "smeStatTable_cache_load: memory allocation failed");
-    snmp_log(LOG_ERR, "memory allocation failed\n");
-    return MFD_RESOURCE_UNAVAILABLE;
-  }
-
   char* sysId = 0;
   stat::CommonPerformanceCounter* counter = 0;
 
@@ -313,33 +320,57 @@ int smeStatTable_cache_load(netsnmp_container *container)
   while ( h.Next(sysId, counter) )
   {
     smsc_log_debug(log, "smeStatTable_cache_load: h.Next %s", sysId ? sysId : "empty");
+    rec = smeStatTable_allocate_rowreq_ctx();
+    if (NULL == rec)
+    {
+      smsc_log_error(log, "smeStatTable_cache_load: memory allocation failed");
+//      snmp_log(LOG_ERR, "memory allocation failed\n");
+      continue;
+//      return MFD_RESOURCE_UNAVAILABLE;
+    }
+
     if( MFD_SUCCESS != smeStatTable_indexes_set(rec, smeStatIndex) )
     {
-      smsc_log_debug(log, "smeStatTable_cache_load: error setting index while loading smeStatTable data");
-      snmp_log(LOG_ERR, "error setting index while loading smeStatTable data.\n");
+      smsc_log_error(log, "smeStatTable_cache_load: error setting index while loading smeStatTable data");
+//      snmp_log(LOG_ERR, "error setting index while loading smeStatTable data.\n");
       smeStatTable_release_rowreq_ctx(rec);
       continue;
     }
-    std::string oidStr = oid2str(rec->oid_idx);
-    smsc_log_debug(log, "smeStatTable_cache_load: smeStatTable_indexes_set(%d)=%s %d %d",
-      smeStatIndex, oidStr.c_str(), rec->oid_tmp, rec->tbl_idx.smeStatIndex);
-
-//    rec->oid_idx = smeStatIndex;
-//    rec->oid_tmp[0] = (oid)smeStatIndex;
-//    rec->tbl_idx.smeStatIndex = smeStatIndex;
+    std::string idxStr = netsnmp_index2str(rec->oid_idx);
+    std::string oidStr = oid2str(rec->oid_tmp, MAX_smeStatTable_IDX_LEN);
+    smsc_log_debug(log, "smeStatTable_cache_load: smeStatTable_indexes_set(%d)=%s %s %d",
+      smeStatIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.smeStatIndex);
 
     ++smeStatIndex;  //ToDo
 
     if ( !fillRecord(rec, sysId, counter) )
     {
-      return MFD_ERROR;
+      smsc_log_error(log, "smeStatTable_cache_load fillRecord error");
+      continue;
     }
-    CONTAINER_INSERT(container, rec);
-    ++recCount;
+    if ( container->insert_filter )
+    {
+      smsc_log_debug(log, "smeStatTable_cache_load: container insert_filter (%p)=%d",
+        container->insert_filter, container->insert_filter(container, rec));
+    }
+    else
+      smsc_log_debug(log, "smeStatTable_cache_load: container: NO insert_filter");
+
+    int rc = CONTAINER_INSERT(container, rec);
+    if ( 0 == rc )
+    {
+//      smsc_log_debug(log, "smeStatTable_cache_load CONTAINER_INSERT returns 0");
+      ++recCount;
+    }
+    else
+    {
+      smsc_log_error(log, "smeStatTable_cache_load CONTAINER_INSERT returns(%d)", rc);
+    }
+    if (sysId) sysId = 0;
     if (counter) counter->clear();
   }
 
-  DEBUGMSGT(("verbose:smeStatTable:smeStatTable_cache_load", "inserted %d records\n", (int)recCount));
+//  DEBUGMSGT(("verbose:smeStatTable:smeStatTable_cache_load", "inserted %d records\n", (int)recCount));
   smsc_log_debug(log, "smeStatTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : "empty");
 
   return MFD_SUCCESS;
