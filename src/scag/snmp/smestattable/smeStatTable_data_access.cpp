@@ -71,13 +71,11 @@ void fill64(U64& counter, uint16_t value)
 
 bool fillRecord(smeStatTable_rowreq_ctx* rec, char* sysId, stat::CommonPerformanceCounter* counter)
 {
-  smsc_log_debug(log, "fillRecord() sysId %s counter %p count %d(%d)",
-      sysId?sysId:"empty", counter, counter?counter->count:0, stat::Counters::cntSmppSize);
+  smsc_log_debug(log, "fillRecord() sysId %s counter %p count %d",
+      sysId?sysId:"empty", counter, counter?counter->count:0);
   if (!sysId)
     return false;
   if (!counter)
-    return false;
-  if (counter->count < stat::Counters::cntSmppSize)
     return false;
 
   char smeStatSystemId[34];
@@ -103,8 +101,8 @@ bool fillRecord(smeStatTable_rowreq_ctx* rec, char* sysId, stat::CommonPerforman
   fill64(rec->data.smeStatDelivered, counter->counters[stat::Counters::cntDelivered]);
   fill64(rec->data.smeStatGwRejected, counter->counters[stat::Counters::cntGw_Rejected]);
   fill64(rec->data.smeStatFailed, counter->counters[stat::Counters::cntFailed]);
-  fill64(rec->data.smeStatRecieptOk, counter->counters[stat::Counters::cntRecieptOk]);
-  fill64(rec->data.smeStatRecieptFailed, counter->counters[stat::Counters::cntRecieptFailed]);
+//  fill64(rec->data.smeStatRecieptOk, counter->counters[stat::Counters::cntRecieptOk]);
+//  fill64(rec->data.smeStatRecieptFailed, counter->counters[stat::Counters::cntRecieptFailed]);
 
 /*
   for (uint32_t i = 0; i < counter->count; i++)
@@ -275,17 +273,18 @@ std::string netsnmp_index2str(netsnmp_index oid_idx)
 
 void fakeFillHashIfEmpty(smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h)
 {
+#define LOCAL_COUNTERS 5
   if ( h.GetCount() > 0 ) return;
   stat::CommonPerformanceCounter* counter = 0;
   smsc_log_debug(log, "smeStatTable_cache_load: no records, make 1 fake counter");
-  counter = new stat::CommonPerformanceCounter(7);
-  for ( int i=0; i<7; ++i ) counter->counters[i] = i+1;
+  counter = new stat::CommonPerformanceCounter(LOCAL_COUNTERS);
+  for ( int i=0; i<LOCAL_COUNTERS; ++i ) counter->counters[i] = i+1;
   h.Insert("fakeRecord1", counter);
-  counter = new stat::CommonPerformanceCounter(7);
-  for ( int i=0; i<7; ++i ) counter->counters[i] = i+10;
+  counter = new stat::CommonPerformanceCounter(LOCAL_COUNTERS);
+  for ( int i=0; i<LOCAL_COUNTERS; ++i ) counter->counters[i] = i+10;
   h.Insert("fakeRecord2", counter);
-  counter = new stat::CommonPerformanceCounter(7);
-  for ( int i=0; i<7; ++i ) counter->counters[i] = i+100;
+  counter = new stat::CommonPerformanceCounter(LOCAL_COUNTERS);
+  for ( int i=0; i<LOCAL_COUNTERS; ++i ) counter->counters[i] = i+100;
   h.Insert("fakeRecord3", counter);
 }
 

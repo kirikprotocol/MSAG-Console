@@ -39,6 +39,7 @@ struct SmppEntityInfo
     bool enabled;
     bool snmpTracking;    // watch on this sme via snmp
     bool defaultLatin1;   //11443 : flag to change dc 0->3
+    uint32_t uniqueId;
 
     SmppEntityInfo()
     {
@@ -54,6 +55,33 @@ struct SmppEntityInfo
         enabled=false;
         snmpTracking=true;
         defaultLatin1=false;
+        uniqueId = 0;
+    }
+    SmppEntityInfo& operator =(const SmppEntityInfo& info)
+    {
+      type = info.type;
+      systemId = info.systemId;
+      password = info.password;
+      bindSystemId = info.bindSystemId;
+      bindPassword = info.bindPassword;
+      addressRange = info.addressRange;
+      systemType = info.systemType;
+      metaGroupId = info.metaGroupId;
+      timeOut = info.timeOut;
+      bindType = info.bindType;
+      host = info.host;
+      port = info.port;
+      altHost = info.altHost;
+      altPort = info.altPort;
+      uid = info.uid;
+      sendLimit = info.sendLimit;
+      inQueueLimit = info.inQueueLimit;
+      outQueueLimit = info.outQueueLimit;
+      enabled = info.enabled;
+      snmpTracking = info.snmpTracking;
+      defaultLatin1 = info.defaultLatin1;
+      uniqueId = info.uniqueId;
+      return *this;
     }
 };
 

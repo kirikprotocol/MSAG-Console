@@ -64,6 +64,11 @@ public:
     virtual void reloadTestRoutes(const RouteConfig& rcfg,
                         std::vector< std::string >* traceit );
     virtual util::RefferGuard<router::RouteManager> getTestRouterInstance();
+protected:
+    void addRegistryItem(SmppEntityInfo& info);
+    uint32_t systemId2smeIndex(const char* systemId);
+    const char* smeIndex2systemId(uint32_t smeIndex);
+
 private:
     void ResetTestRouteManager(router::RouteManager* manager);
 public:
@@ -436,6 +441,9 @@ protected:
     snmp::TrapRecordQueue* snmpqueue_;    // not owned
 
     counter::CounterPtrAny queueCount;
+    static const char* emptySystemId;       // first element: systemIdArray[0]
+    static uint32_t smeUniqueId;            // smeIndex enumerator
+    std::vector<const char*> systemIdArray; // contains all systemIds with index=smeIndex, 0-contains invalid entry
 };
 
 }//smpp

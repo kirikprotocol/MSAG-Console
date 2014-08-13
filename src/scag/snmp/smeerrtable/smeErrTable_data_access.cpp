@@ -72,7 +72,7 @@ smsc::logger::Logger* log;
  */
 int smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg)
 {
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_init_data","called\n"));
+//    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_init_data","called\n"));
 
     /*
      * TODO:303:o: Initialize smeErrTable data.
@@ -136,11 +136,12 @@ int smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg)
 void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
                         netsnmp_cache *cache)
 {
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_container_init","called\n"));
+//    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_container_init","called\n"));
 
     if((NULL == cache) || (NULL == container_ptr_ptr)) {
-        snmp_log(LOG_ERR,"bad params to smeErrTable_container_init\n");
-        return;
+      smsc_log_error(log, "bad params to smeErrTable_container_init");
+//      snmp_log(LOG_ERR,"bad params to smeErrTable_container_init\n");
+      return;
     }
 
     /*
@@ -206,24 +207,29 @@ void uint64_to_U64(uint64_t val1,U64& val2)
   val2.low=val1&0xffffffffUL;
 }
 
-std::string oid2str(netsnmp_index oid_idx)
+std::string oid2str(oid* oids, size_t len)
 {
   std::string result = "";
   char buf[32];
-  oid* ptr = oid_idx.oids;
-  if ( 0 == oid_idx.len )
+  oid* ptr = oids;
+  if ( 0 == len )
     result = "empty";
   else
   {
     snprintf(buf, 32, "%d", *ptr++);
     result += buf;
   }
-  for ( size_t i=1; i<oid_idx.len; ++i )
+  for ( size_t i=1; i<len; ++i )
   {
     snprintf(buf, 32, ".%d", *ptr++);
     result += buf;
   }
   return result;
+}
+
+std::string netsnmp_index2str(netsnmp_index oid_idx)
+{
+  return oid2str(oid_idx.oids, oid_idx.len);
 }
 
 int smeErrTable_cache_load(netsnmp_container *container)
@@ -294,17 +300,19 @@ int smeErrTable_cache_load(netsnmp_container *container)
         smeErrTable_release_rowreq_ctx(rec);
         continue;
       }
-      std::string oidStr = oid2str(rec->oid_idx);
-      smsc_log_debug(log, "smeErrTable_cache_load: smeErrTable_indexes_set(%d)=%s %d %d",
-        smeErrIndex, oidStr.c_str(), rec->oid_tmp, rec->tbl_idx.smeErrIndex);
-/*
+
+      std::string idxStr = netsnmp_index2str(rec->oid_idx);
+      std::string oidStr = oid2str(rec->oid_tmp, MAX_smeErrTable_IDX_LEN);
+      smsc_log_debug(log, "smeErrTable_cache_load: smeErrTable_indexes_set(%d)=%s %s %d",
+          smeErrIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.smeErrIndex);
+
       if ((NULL == rec->data.smeErrSystemId) || strlen(sysId) > sizeof(rec->data.smeErrSystemId))
       {
-        smsc_log_debug(log, "smeErrTable_cache_load: not enough space for value");
+        smsc_log_error(log, "smeErrTable_cache_load: not enough space for value");
         snmp_log(LOG_ERR,"not enough space for value\n");
         return MFD_ERROR;
       }
-*/
+
       rec->data.smeErrSystemId_len = strlen(sysId);
       memcpy( rec->data.smeErrSystemId, sysId, rec->data.smeErrSystemId_len+1 );
 

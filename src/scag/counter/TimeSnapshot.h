@@ -31,11 +31,11 @@ public:
     nseconds_(nseconds),
     group_(0)
     {
-        smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
+//        smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
     }
 
     virtual ~TimeSnapshot() {
-        smsc_log_debug(loga_,"dtor %p %s '%s'",this,getTypeName(),getName().c_str());
+//        smsc_log_debug(loga_,"dtor %p %s '%s'",this,getTypeName(),getName().c_str());
     }
 
     virtual TimeSnapshot* clone( const std::string& name,
@@ -53,7 +53,7 @@ public:
     }
 
     virtual void advanceTime( usec_type curtime ) {
-        smsc_log_debug(log_,"'%s' advancing",getName().c_str());
+//        smsc_log_debug(log_,"'%s' advancing",getName().c_str());
         const int64_t bin = int64_t(curtime/resol_);
         Snapshot::advanceTo(bin);
     }

@@ -33,6 +33,9 @@ using namespace config;
 using namespace sessions;
 
 time_t SmppManagerImpl::MetaEntity::expirationTimeout=300;
+uint32_t SmppManagerImpl::smeUniqueId = 0;
+const char* SmppManagerImpl::emptySystemId = "";
+
 
 void SmppManagerImpl::shutdown()
 {
@@ -379,8 +382,14 @@ SmppManagerImpl::~SmppManagerImpl()
 
 void SmppManagerImpl::Init(const char* cfgFile)
 {
-    if ( !licenseCounter.get() )
-        throw SCAGException("license counter %s cannot be created",::smppCounterName);
+  if ( !licenseCounter.get() )
+    throw SCAGException("license counter %s cannot be created",::smppCounterName);
+
+  smeUniqueId = 0;
+  systemIdArray.erase(systemIdArray.begin(), systemIdArray.end());
+  if (systemIdArray.capacity() < 500)
+    systemIdArray.reserve(500);
+  systemIdArray.push_back(emptySystemId);
 
   cfgFileName=cfgFile;
   using namespace smsc::util::xml;
@@ -656,6 +665,30 @@ void SmppManagerImpl::ReloadRoutes()
   }
 }
 
+void SmppManagerImpl::addRegistryItem(SmppEntityInfo& info)
+{
+  info.uniqueId = ++smeUniqueId;
+  registry.Insert(info.systemId.c_str(), new SmppEntity(info));
+  systemIdArray.push_back(info.systemId.c_str());
+}
+
+uint32_t SmppManagerImpl::systemId2smeIndex(const char* systemId)
+{
+  uint32_t result = 0;
+  SmppEntity** ptr = registry.GetPtr(systemId);
+  if (ptr)
+  {
+    result = (*ptr)->info.uniqueId;
+  }
+  return result;
+}
+
+const char* SmppManagerImpl::smeIndex2systemId(uint32_t smeIndex)
+{
+  int ndx = ( smeIndex > systemIdArray.size()-1 ) ? 0 : smeIndex;
+  return systemIdArray[ndx];
+}
+
 void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
 {
   smsc_log_debug(log,"addSmppEntity:%s",info.systemId.c_str());
@@ -670,7 +703,7 @@ void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
     (**ptr).info=info;
   }else
   {
-    registry.Insert(info.systemId.c_str(),new SmppEntity(info));
+    addRegistryItem((SmppEntityInfo&)info);
   }
   if(info.type==etSmsc && info.enabled)
   {

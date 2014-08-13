@@ -52,8 +52,8 @@ extern "C" {
   static oid deliverOkOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 5, 0 };
   static oid deliverGwErrOid[] =       { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 6, 0 };
   static oid deliverErrOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 7, 0 };
-  static oid receiptOkOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 8, 0 };
-  static oid receiptErrOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 9, 0 };
+//  static oid receiptOkOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 8, 0 };
+//  static oid receiptErrOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 9, 0 };
 };
 
   namespace scag2 {
@@ -175,14 +175,14 @@ extern "C" {
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("deliverOk"," handler inited\n"));
 
-    reginfo = netsnmp_create_handler_registration("deliverERR", statisticsHandler, deliverGwErrOid, OID_LENGTH(deliverGwErrOid), HANDLER_CAN_RONLY);
+    reginfo = netsnmp_create_handler_registration("deliverGwERR", statisticsHandler, deliverGwErrOid, OID_LENGTH(deliverGwErrOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("deliverGwErr"," handler inited\n"));
 
     reginfo = netsnmp_create_handler_registration("deliverERR", statisticsHandler, deliverErrOid, OID_LENGTH(deliverErrOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("deliverERR"," handler inited\n"));
-
+/*
     reginfo = netsnmp_create_handler_registration("receiptOk", statisticsHandler, receiptOkOid, OID_LENGTH(receiptOkOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("receiptOk"," handler inited\n"));
@@ -190,7 +190,7 @@ extern "C" {
     reginfo = netsnmp_create_handler_registration("receiptErr", statisticsHandler, receiptErrOid, OID_LENGTH(receiptErrOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("receiptErr"," handler inited\n"));
-
+*/
 
     reginfo = netsnmp_create_handler_registration("status", statusHandler, status_oid, OID_LENGTH(status_oid), HANDLER_CAN_RWRITE);
     netsnmp_register_instance(reginfo);
@@ -430,6 +430,7 @@ using scag2::snmp::SnmpAgent;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverERR req");
       }
+/*
       else if ( requestedOidIs(receiptOkOid) )
       {
         val.high = perf[perfBase+5] >> 32;
@@ -444,6 +445,7 @@ using scag2::snmp::SnmpAgent;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverTEMP req");
       }
+*/
       else
       {
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "OID compare: found nothing");

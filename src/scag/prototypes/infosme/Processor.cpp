@@ -119,7 +119,7 @@ int Processor::doExecute()
             continue;
         }
 
-        smsc_log_debug(log_,"new pass at %u, notified=%u",deltaTime,notified_);
+//        smsc_log_debug(log_,"new pass at %u, notified=%u",deltaTime,notified_);
 
         // 1. dumping statistics
         if ( log_->isInfoEnabled() && ( currentTime - lastStatTime > 10000 ) ) {

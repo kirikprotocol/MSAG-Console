@@ -314,7 +314,7 @@ int HashCountManager::Execute()
     while ( ! stopping_ ) {
 
         const counttime_type now = getCurrentTime();
-        smsc_log_debug(log_,"new pass at %u",unsigned(now));
+//        smsc_log_debug(log_,"new pass at %u",unsigned(now));
         {
             MutexGuard mg(disposeMon_);
             if ( stopping_ ) break;

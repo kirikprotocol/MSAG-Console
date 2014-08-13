@@ -68,7 +68,7 @@ int TimeSliceManagerImpl::Execute()
             MutexGuard mg(mon_);
             if ( stopping_ ) break;
             curTime = TSource::getUSec();
-            smsc_log_debug(log_,"new pass at %llu", curTime );
+//            smsc_log_debug(log_,"new pass at %llu", curTime );
 
             // adding incoming groups
             if ( !groupVector_.empty() ) {

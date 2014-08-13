@@ -537,21 +537,6 @@ NETSNMP_STATIC_INLINE int _smeStatTable_get_column( smeStatTable_rowreq_ctx *row
     rc = smeStatFailed_get(rowreq_ctx, (U64 *)var->val.string );
     break;
 
-    /* smeStatRecieptOk(8)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
-    case COLUMN_SMESTATRECEIPTOK:
-    var->val_len = sizeof(U64);
-    var->type = ASN_COUNTER64;
-    rc = smeStatRecieptOk_get(rowreq_ctx, (U64 *)var->val.string );
-    break;
-
-    /* smeStatRecieptFailed(9)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
-    case COLUMN_SMESTATRECEIPTFAILED:
-    var->val_len = sizeof(U64);
-    var->type = ASN_COUNTER64;
-    rc = smeStatRecieptFailed_get(rowreq_ctx, (U64 *)var->val.string );
-    break;
-
-
     default:
       smsc_log_debug(logitf, "unknown column %d in _smeStatTable_get_column", column);
       snmp_log(LOG_ERR,"unknown column %d in _smeStatTable_get_column\n", column);
