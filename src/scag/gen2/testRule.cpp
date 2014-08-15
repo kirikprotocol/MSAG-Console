@@ -1119,6 +1119,8 @@ public:
         smsc_log_debug(log_,"a new command is taken, incrementing -> %u",cmdInProcCounter_);
         return true;
     }
+    uint32_t getSmeIndex(const char* smeSystemId) { return 0; }
+    const char* getSmeSystemId(uint32_t smeIndex) { return 0; }
 /*
 private:
     std::auto_ptr<SmppCommand> mkErrResp( int cmdId, int dlgId, int errCode )

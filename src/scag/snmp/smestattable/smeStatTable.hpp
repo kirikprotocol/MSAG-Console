@@ -116,14 +116,14 @@ size_t      smeStatSystemId_len; /* # of char elements, not bytes */
    U64   smeStatFailed;
     
         /*
-         * smeStatRecieptOk(8)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         * smeStatReceiptOk(8)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
          */
-   U64   smeStatRecieptOk;
+   U64   smeStatReceiptOk;
     
         /*
-         * smeStatRecieptFailed(9)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
+         * smeStatReceiptFailed(9)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h
          */
-   U64   smeStatRecieptFailed;
+   U64   smeStatReceiptFailed;
     
 } smeStatTable_data;
 

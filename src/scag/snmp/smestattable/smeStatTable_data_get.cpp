@@ -434,6 +434,101 @@ smeStatFailed_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatFailed_val_
     return MFD_SUCCESS;
 } /* smeStatFailed_get */
 
+/*---------------------------------------------------------------------
+ * EYELINE-MSAG-MIB::smeStatEntry.smeStatReceiptOk
+ * smeStatReceiptOk is subid 8 of smeStatEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.26757.2.10.1.8
+ * Description:
+SME Counter Temporal Errors
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the smeStatReceiptOk data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param smeStatReceiptOk_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+smeStatReceiptOk_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatReceiptOk_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != smeStatReceiptOk_val_ptr );
+
+/*
+ * TODO:231:o: |-> copy smeStatReceiptOk data.
+ * get (* smeStatReceiptOk_val_ptr ).low and (* smeStatReceiptOk_val_ptr ).high from rowreq_ctx->data
+ */
+    (* smeStatReceiptOk_val_ptr ).high = rowreq_ctx->data.smeStatReceiptOk.high;
+    (* smeStatReceiptOk_val_ptr ).low = rowreq_ctx->data.smeStatReceiptOk.low;
+
+
+    return MFD_SUCCESS;
+} /* smeStatReceiptOk_get */
+
+/*---------------------------------------------------------------------
+ * EYELINE-MSAG-MIB::smeStatEntry.smeStatReceiptFailed
+ * smeStatReceiptFailed is subid 9 of smeStatEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.26757.2.10.1.9
+ * Description:
+SME Counter Temporal Errors
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 0      hashint   0
+ *   settable   0
+ *
+ *
+ * Its syntax is COUNTER64 (based on perltype COUNTER64)
+ * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
+ */
+/**
+ * Extract the current value of the smeStatReceiptFailed data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param smeStatReceiptFailed_val_ptr
+ *        Pointer to storage for a U64 variable
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+ */
+int
+smeStatReceiptFailed_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatReceiptFailed_val_ptr )
+{
+   /** we should have a non-NULL pointer */
+   netsnmp_assert( NULL != smeStatReceiptFailed_val_ptr );
+
+/*
+ * TODO:231:o: |-> copy smeStatReceiptFailed data.
+ * get (* smeStatReceiptFailed_val_ptr ).low and (* smeStatReceiptFailed_val_ptr ).high from rowreq_ctx->data
+ */
+    (* smeStatReceiptFailed_val_ptr ).high = rowreq_ctx->data.smeStatReceiptFailed.high;
+    (* smeStatReceiptFailed_val_ptr ).low = rowreq_ctx->data.smeStatReceiptFailed.low;
+
+
+    return MFD_SUCCESS;
+} /* smeStatReceiptFailed_get */
 
 /*---------------------------------------------------------------------
  * SIBINCO-SMSC-MIB::smeStatEntry.smeStatIndex

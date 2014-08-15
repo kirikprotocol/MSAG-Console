@@ -39,6 +39,8 @@ public:
   virtual void disconnectSmppEntity(const char* sysId);
   virtual void deleteSmppEntity(const char* sysId);
   virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType);
+  virtual uint32_t getSmeIndex(const char* smeSystemId);
+  virtual const char* getSmeSystemId(uint32_t smeIndex);
 
   //registragor
   virtual int registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch);
@@ -66,8 +68,6 @@ public:
     virtual util::RefferGuard<router::RouteManager> getTestRouterInstance();
 protected:
     void addRegistryItem(SmppEntityInfo& info);
-    uint32_t systemId2smeIndex(const char* systemId);
-    const char* smeIndex2systemId(uint32_t smeIndex);
 
 private:
     void ResetTestRouteManager(router::RouteManager* manager);

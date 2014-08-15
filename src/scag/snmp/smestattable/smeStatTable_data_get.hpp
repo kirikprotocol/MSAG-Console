@@ -48,8 +48,8 @@ namespace smestattable {
     int smeStatDelivered_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatDelivered_val_ptr );
     int smeStatGwRejected_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatGwRejected_val_ptr );
     int smeStatFailed_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatFailed_val_ptr );
-    int smeStatRecieptOk_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatRecieptOk_val_ptr );
-    int smeStatRecieptFailed_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatRecieptFailed_val_ptr );
+    int smeStatReceiptOk_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatReceiptOk_val_ptr );
+    int smeStatReceiptFailed_get( smeStatTable_rowreq_ctx *rowreq_ctx, U64 * smeStatReceiptFailed_val_ptr );
 
 
   int smeStatTable_indexes_set_tbl_idx(smeStatTable_mib_index *tbl_idx, long smeStatIndex_val);

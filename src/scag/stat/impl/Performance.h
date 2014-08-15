@@ -55,17 +55,24 @@ typedef struct {
 struct CommonPerformanceCounter
 {
     uint32_t count;
+#ifdef SNMP
+    uint64_t*                cntSnmp;
+#endif
     uint16_t*                counters;
     TimeSlotCounter<int>**   slots;
 
     CommonPerformanceCounter(uint32_t cnt) { 
         count = cnt;
-
         counters = new uint16_t[cnt];
-        slots = new TimeSlotCounter<int>*[cnt];
-
         memset(counters, 0, sizeof(uint16_t) * cnt);
+
+        slots = new TimeSlotCounter<int>*[cnt];
         memset(slots, 0, sizeof(TimeSlotCounter<int>*) * cnt);
+
+#ifdef SNMP
+        cntSnmp = new uint64_t[cnt];
+        memset(cntSnmp, 0, sizeof(uint64_t) * cnt);
+#endif
     };
 
     virtual ~CommonPerformanceCounter() {
@@ -73,6 +80,9 @@ struct CommonPerformanceCounter
         for (uint32_t i = 0; i < count; i++) 
             if (slots[i]) delete slots[i];
 
+#ifdef SNMP
+        delete cntSnmp;
+#endif
         delete counters;
         delete slots;
     };

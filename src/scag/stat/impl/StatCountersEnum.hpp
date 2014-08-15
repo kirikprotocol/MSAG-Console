@@ -21,7 +21,6 @@ namespace stat {
       cntDelivered,
       cntGw_Rejected,
       cntFailed,
-
       cntRecieptOk,
       cntRecieptFailed,
       cntSmppSize

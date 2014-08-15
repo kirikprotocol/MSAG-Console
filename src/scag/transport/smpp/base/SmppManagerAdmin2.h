@@ -28,6 +28,10 @@ struct SmppManagerAdmin{
 
   virtual void addMetaEndPoint(const char* metaId,const char* sysId)=0;
   virtual void removeMetaEndPoint(const char* metaId,const char* sysId)=0;
+
+  virtual uint32_t getSmeIndex(const char* smeSystemId)=0;
+  virtual const char* getSmeSystemId(uint32_t smeIndex)=0;
+
 };
 
 }//smpp

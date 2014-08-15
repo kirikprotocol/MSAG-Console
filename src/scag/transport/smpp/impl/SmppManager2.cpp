@@ -378,6 +378,11 @@ SmppManagerImpl::~SmppManagerImpl()
         }
         metaRegistry.Empty();
     }
+    for (std::vector<const char*>::iterator i=systemIdArray.begin(); i!=systemIdArray.end(); ++i)
+    {
+      if (*i) delete *i;
+    }
+    systemIdArray.clear();
 }
 
 void SmppManagerImpl::Init(const char* cfgFile)
@@ -667,23 +672,31 @@ void SmppManagerImpl::ReloadRoutes()
 
 void SmppManagerImpl::addRegistryItem(SmppEntityInfo& info)
 {
+  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem1: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
   info.uniqueId = ++smeUniqueId;
-  registry.Insert(info.systemId.c_str(), new SmppEntity(info));
-  systemIdArray.push_back(info.systemId.c_str());
+  const char* tmp = new char[34];
+  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem2: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
+  strncpy((char*)tmp, info.systemId.c_str(), 34);
+  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem3: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
+  registry.Insert(tmp, new SmppEntity(info));
+  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem4: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
+  systemIdArray.push_back(tmp);
+  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem5: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
 }
 
-uint32_t SmppManagerImpl::systemId2smeIndex(const char* systemId)
+uint32_t SmppManagerImpl::getSmeIndex(const char* smeSystemId)
 {
   uint32_t result = 0;
-  SmppEntity** ptr = registry.GetPtr(systemId);
+  SmppEntity** ptr = registry.GetPtr(smeSystemId);
   if (ptr)
   {
     result = (*ptr)->info.uniqueId;
+    smsc_log_debug(log,"SmppManagerImpl::getSmeIndex: %s=(%d) [%d]", smeSystemId, result, registry.GetCount());
   }
   return result;
 }
 
-const char* SmppManagerImpl::smeIndex2systemId(uint32_t smeIndex)
+const char* SmppManagerImpl::getSmeSystemId(uint32_t smeIndex)
 {
   int ndx = ( smeIndex > systemIdArray.size()-1 ) ? 0 : smeIndex;
   return systemIdArray[ndx];

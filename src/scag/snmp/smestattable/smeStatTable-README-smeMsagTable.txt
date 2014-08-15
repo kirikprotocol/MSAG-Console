@@ -251,12 +251,12 @@ File: smeStatTable_data_get.c
   Get data for column
   -------------------
   TODO : retrieve column data from raw data
-  FUNC : smeStatRecieptOk_get
+  FUNC : smeStatReceiptOk_get
 
   Get data for column
   -------------------
   TODO : retrieve column data from raw data
-  FUNC : smeStatRecieptFailed_get
+  FUNC : smeStatReceiptFailed_get
 
 
 
@@ -582,8 +582,8 @@ SME Counter Failed
  * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
  */
 /*---------------------------------------------------------------------
- * EYELINE-MSAG-MIB::smeStatEntry.smeStatRecieptOk
- * smeStatRecieptOk is subid 8 of smeStatEntry.
+ * EYELINE-MSAG-MIB::smeStatEntry.smeStatReceiptOk
+ * smeStatReceiptOk is subid 8 of smeStatEntry.
  * Its status is Current, and its access level is ReadOnly.
  * OID: .1.3.6.1.4.1.26757.2.10.1.8
  * Description:
@@ -599,8 +599,8 @@ SME Counter Temporal Errors
  * The net-snmp type is ASN_COUNTER64. The C type decl is U64 (U64)
  */
 /*---------------------------------------------------------------------
- * EYELINE-MSAG-MIB::smeStatEntry.smeStatRecieptFailed
- * smeStatRecieptFailed is subid 9 of smeStatEntry.
+ * EYELINE-MSAG-MIB::smeStatEntry.smeStatReceiptFailed
+ * smeStatReceiptFailed is subid 9 of smeStatEntry.
  * Its status is Current, and its access level is ReadOnly.
  * OID: .1.3.6.1.4.1.26757.2.10.1.9
  * Description:

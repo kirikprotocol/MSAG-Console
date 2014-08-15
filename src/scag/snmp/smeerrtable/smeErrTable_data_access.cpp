@@ -19,6 +19,7 @@
 
 #include "util/int.h"
 
+#include "scag/transport/smpp/base/SmppManager2.h"
 #include "scag/stat/impl/StatisticsManager.h"
 #include "scag/stat/impl/StatCountersEnum.hpp"
 #include "core/buffers/Hash.hpp"
@@ -265,10 +266,11 @@ int smeErrTable_cache_load(netsnmp_container *container)
     smsc_log_debug(log, "smeErrTable_cache_load: no records, make 2 fake counters");
     cs.Reset();
     cs.errors.Insert(1,11);
-    h.Insert("sme1", cs);
+    h.Insert("1", cs);
     cs.errors.Insert(2,22);
+    h.Insert("2", cs);
     cs.errors.Insert(3,33);
-    h.Insert("sme2", cs);
+    h.Insert("SMSC", cs);
   }
 //#endif
 
@@ -277,7 +279,8 @@ int smeErrTable_cache_load(netsnmp_container *container)
   {
     for(smsc::core::buffers::IntHash<int>::Iterator iter = cs.errors.First(); iter.Next(smeErrCode, errCount); )
     {
-      smsc_log_debug(log, "smeErrTable_cache_load: %s Next %d %d", sysId, smeErrCode, errCount);
+      smeErrIndex = scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId);
+      smsc_log_debug(log, "smeErrTable_cache_load: %s(%d) Next %d %d", sysId, smeErrIndex, smeErrCode, errCount);
 
       if (!errCount) continue;
 
@@ -330,7 +333,6 @@ int smeErrTable_cache_load(netsnmp_container *container)
         smsc_log_error(log, "smeErrTable_cache_load CONTAINER_INSERT returns(%d)", rc);
       }
     }
-    ++smeErrIndex;
     cs.Reset();
   }
 
