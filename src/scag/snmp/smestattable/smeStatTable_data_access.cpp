@@ -380,11 +380,11 @@ int smeStatTable_cache_load(netsnmp_container* container)
   if ( result != MFD_SUCCESS )
     return result;
 
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = SmeStatTableSubagent::getStatMan()->getCounters(0);
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = SmeStatTableSubagent::getStatMan()->getCounters(1);
   smsc_log_debug(log, "smeStatTable_cache_load: getCounters(1) ok");
   return loadHashToContainer(container, h1);
 
-  return MFD_SUCCESS;
+//  return MFD_SUCCESS;
 }
 
 /**

@@ -233,6 +233,20 @@ void StatisticsManager::incError(IntHash<int>& hash, int errcode)
     else (*counter)++;
 }
 
+void StatisticsManager::incError(ErrorsHash& hash, int errcode)
+{
+    if(errcode == -1) return;
+
+    ErrorData* counter = hash.GetPtr(errcode);
+    if (!counter) {
+      ErrorData ed;
+      ed.temporal = 1;
+      ed.permanent = 1;
+      hash.Insert(errcode, ed);
+    }
+    else ++(*counter);
+}
+
 CommonStat* StatisticsManager::getStat(const char* id, bool sc)
 {
     CommonStat* st = NULL;
@@ -398,8 +412,8 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
 #undef STAT_LOG_EVENT  
   //thrSaccSender.Put(se.sacc_stat);
 
-  if(srcSt) incError(srcSt->errors, se.errCode);
-  if(dstSt) incError(dstSt->errors, se.errCode);
+  if(srcSt)   incError(srcSt->errors, se.errCode);
+  if(dstSt)   incError(dstSt->errors, se.errCode);
   if(routeSt) incError(routeSt->errors, se.errCode);
 
 }
@@ -615,12 +629,13 @@ void StatisticsManager::SerializeSmppStat(Hash<CommonStat>& smppStat, Serializat
 
         buf.WriteNetInt32(st->errors.Count());
 
-        IntHash<int>::Iterator sit = st->errors.First();
-        int secError, seCounter;
-        while (sit.Next(secError, seCounter))
+        ErrorsHash::Iterator sit = st->errors.First();
+        int secError; //, seCounter;
+        ErrorData ed;
+        while (sit.Next(secError, ed))
         {
             buf.WriteNetInt32(secError);
-            buf.WriteNetInt32(seCounter);
+            buf.WriteNetInt32(ed.temporal);
         }
         st = 0;
     }

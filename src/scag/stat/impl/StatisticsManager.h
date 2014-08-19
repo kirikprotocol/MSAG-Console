@@ -49,6 +49,21 @@ namespace stat {
 
 using namespace scag::stat::sacc;
 
+  struct ErrorData
+  {
+    int         temporal;   // periodically cleared
+    uint64_t    permanent;  // never cleared
+    ErrorData() : temporal(0), permanent(0) {}
+    ErrorData(int t, uint64_t p) : temporal(t), permanent(p) {}
+    ErrorData& operator++()
+    {
+      ++temporal;
+      ++permanent;
+      return *this;
+    }
+  };
+  typedef IntHash<ErrorData> ErrorsHash;
+
     struct CommonStat
     {
       int providerId;
@@ -60,11 +75,20 @@ using namespace scag::stat::sacc;
       int recieptOk;
       int recieptFailed;
 
-      IntHash<int> errors;
+      ErrorsHash errors;
+//      IntHash<int> errors;
 
       CommonStat()
       {
         Reset();
+      }
+
+      void EmptyErrors()
+      {
+        int c=0;
+        ErrorData e;
+        ErrorsHash::Iterator i = errors.First();
+        while ( i.Next(c, e) ) { e.temporal = 0; }
       }
 
       void Reset()
@@ -77,7 +101,8 @@ using namespace scag::stat::sacc;
         recieptOk = 0;
         recieptFailed = 0;
         providerId=-1;
-        errors.Empty();
+        EmptyErrors();
+//        errors.Empty();
       }
     };
 
@@ -164,6 +189,7 @@ using namespace scag::stat::sacc;
         int   calculateToSleep();
 
         void  incError(IntHash<int>& hash, int errcode);
+        void  incError(ErrorsHash& hash, int errcode);
 
         Sender sender;
 

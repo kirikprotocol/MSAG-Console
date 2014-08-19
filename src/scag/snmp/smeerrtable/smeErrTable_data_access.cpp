@@ -233,73 +233,61 @@ std::string netsnmp_index2str(netsnmp_index oid_idx)
   return oid2str(oid_idx.oids, oid_idx.len);
 }
 
-int smeErrTable_cache_load(netsnmp_container *container)
+void fakeFillHashIfEmpty(smsc::core::buffers::Hash<stat::CommonStat>& h)
 {
-  if (container)
-  {
-    if ( !container->container_name )
-      container->container_name = "smeErrTableContainer";
-    smsc_log_debug(log, "smeErrTable_cache_load container %s", container->container_name);
-  }
-  else
-  {
-    smsc_log_error(log, "smeErrTable_cache_load error: container is NULL");
-    return MFD_RESOURCE_UNAVAILABLE;
-  }
-
-  U64   smeErrCount;
-  long  smeErrIndex = 0;
-  int   smeErrCode;
-  int   errCount;
-
-  size_t recCount = 0;
-  smeErrTable_rowreq_ctx* rec = 0;
-
-  char* sysId = 0;
   stat::CommonStat cs;
-
-  smsc::core::buffers::Hash<stat::CommonStat>& h = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getErrors(1);
-
-//#ifdef DEBUG
   if ( h.GetCount() == 0 )
   {
     smsc_log_debug(log, "smeErrTable_cache_load: no records, make 2 fake counters");
     cs.Reset();
-    cs.errors.Insert(1,11);
+    scag2::stat::ErrorData ed1(1, 11);
+    cs.errors.Insert(1, ed1);
     h.Insert("1", cs);
-    cs.errors.Insert(2,22);
+    scag2::stat::ErrorData ed2(2, 22);
+    cs.errors.Insert(2, ed2);
     h.Insert("2", cs);
-    cs.errors.Insert(3,33);
+    scag2::stat::ErrorData ed3(3, 33);
+    cs.errors.Insert(3, ed3);
     h.Insert("SMSC", cs);
   }
-//#endif
+}
+
+int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<stat::CommonStat>& h)
+{
+  U64   smeErrCount;
+  long  smeErrIndex = 0;
+  int   smeErrCode;
+//  uint64_t   errCount;
+
+  size_t recCount = 0;
+  smeErrTable_rowreq_ctx* rec = 0;
+  char* sysId = 0;
+  stat::CommonStat cs;
 
   h.First();
   while ( h.Next(sysId, cs) )
   {
-    for(smsc::core::buffers::IntHash<int>::Iterator iter = cs.errors.First(); iter.Next(smeErrCode, errCount); )
+    scag2::stat::ErrorData ed;
+    for(scag2::stat::ErrorsHash::Iterator iter = cs.errors.First(); iter.Next(smeErrCode, ed); )
     {
       smeErrIndex = scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId);
-      smsc_log_debug(log, "smeErrTable_cache_load: %s(%d) Next %d %d", sysId, smeErrIndex, smeErrCode, errCount);
+      smsc_log_debug(log, "smeErrTable_cache_load: %s(%d) Next %d %lld", sysId, smeErrIndex, smeErrCode, ed.permanent);
 
-      if (!errCount) continue;
+      if (!ed.permanent) continue;
 
-      uint64_t tmp = errCount;
-      uint64_to_U64(tmp, smeErrCount);
+//      uint64_to_U64(ed.permanent, smeErrCount);
 
       rec = smeErrTable_allocate_rowreq_ctx(NULL);
       if (NULL == rec)
       {
         smsc_log_error(log, "smeErrTable_cache_load: memory allocation failed");
-//        snmp_log(LOG_ERR, "memory allocation failed\n");
-        continue;
-//        return MFD_RESOURCE_UNAVAILABLE;
+//        continue;
+        return MFD_RESOURCE_UNAVAILABLE;
       }
 
       if( MFD_SUCCESS != smeErrTable_indexes_set(rec, smeErrIndex, smeErrCode) )
       {
         smsc_log_error(log, "smeErrTable_cache_load: error setting index while loading smeErrTable data");
-//        snmp_log(LOG_ERR, "error setting index while loading smeErrTable data.\n");
         smeErrTable_release_rowreq_ctx(rec);
         continue;
       }
@@ -319,29 +307,53 @@ int smeErrTable_cache_load(netsnmp_container *container)
       rec->data.smeErrSystemId_len = strlen(sysId);
       memcpy( rec->data.smeErrSystemId, sysId, rec->data.smeErrSystemId_len+1 );
 
-      rec->data.smeErrCount.high = smeErrCount.high;
-      rec->data.smeErrCount.low = smeErrCount.low;
+      uint64_to_U64(ed.permanent, rec->data.smeErrCount);
+//      rec->data.smeErrCount.high = smeErrCount.high;
+//      rec->data.smeErrCount.low = smeErrCount.low;
 
       int rc = CONTAINER_INSERT(container, rec);
       if ( 0 == rc )
-      {
-  //      smsc_log_debug(log, "smeErrTable_cache_load CONTAINER_INSERT returns 0");
         ++recCount;
-      }
       else
-      {
         smsc_log_error(log, "smeErrTable_cache_load CONTAINER_INSERT returns(%d)", rc);
-      }
     }
     cs.Reset();
   }
-
-//  DEBUGMSGT(("verbose:smeErrTable:smeErrTable_cache_load", "inserted %d records\n", (int)recCount));
   smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : "empty");
-
   return MFD_SUCCESS;
+}
 
+int smeErrTable_cache_load(netsnmp_container* container)
+{
+  if (container)
+  {
+    if ( !container->container_name )
+      container->container_name = "smeErrTableContainer";
+    smsc_log_debug(log, "smeErrTable_cache_load container %s", container->container_name);
+  }
+  else
+  {
+    smsc_log_error(log, "smeErrTable_cache_load error: container is NULL");
+    return MFD_RESOURCE_UNAVAILABLE;
+  }
+
+  smsc::core::buffers::Hash<stat::CommonStat>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getErrors(0);
+
+//#ifdef DEBUG
+  fakeFillHashIfEmpty(h0);
+//#endif
+  int result = loadHashToContainer(container, h0);
+
+  if ( result != MFD_SUCCESS )
+    return result;
+
+  smsc::core::buffers::Hash<stat::CommonStat>& h1 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getErrors(1);
+  smsc_log_debug(log, "smeStatTable_cache_load: getCounters(1) ok");
+  return loadHashToContainer(container, h1);
+
+//  return MFD_SUCCESS;
 } /* smeErrTable_cache_load */
+
 
 /**
  * cache clean up
