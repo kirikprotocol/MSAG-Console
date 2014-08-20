@@ -56,7 +56,7 @@ typedef struct {
 struct CommonPerformanceCounter
 {
     uint32_t count;
-//#ifdef SNMP
+#ifdef SNMP
     uint64_t* cntEvent;
     smsc::core::buffers::IntHash<uint64_t> cntErrors;
     void incError(int errcode)
@@ -67,7 +67,7 @@ struct CommonPerformanceCounter
       if (!counter) cntErrors.Insert(errcode, 1);
       else ++(*counter);
     }
-//#endif
+#endif
     uint16_t*               counters;
     TimeSlotCounter<int>**  slots;
 

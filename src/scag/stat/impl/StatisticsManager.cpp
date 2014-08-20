@@ -21,11 +21,11 @@
 #include "StatisticsManager.h"
 #include "scag/config/base/ConfigManager2.h"
 
-#include "scag/util/singleton/Singleton2.h"
+//#include "scag/util/singleton/Singleton2.h"
 // #include "scag/util/properties/Properties2.h"
 // using namespace util::properties;
 
-using namespace scag2::util::singleton;
+//using namespace scag2::util::singleton;
 using namespace scag::stat::sacc;
 using namespace smsc::core::buffers;
 
@@ -189,9 +189,8 @@ StatisticsManager::StatisticsManager() :
 Statistics(), Thread(), ConfigListener(STATMAN_CFG),
 logger(Logger::getInstance("statman")),
 currentIndex(0), bExternalFlush(false), isStarted(false),
-genStatSmpp(Counters::cntSmppSize), genStatHttp(Counters::cntHttpSize)
-//genStatSmpp(PERF_CNT_COUNT), genStatHttp(PERF_HTTP_COUNT)
-// changes: smpp counter array dimension was wrong
+//genStatSmpp(Counters::cntSmppSize), genStatHttp(Counters::cntHttpSize)
+genStatSmpp(PERF_CNT_COUNT), genStatHttp(PERF_HTTP_COUNT)
 {
     memset(&smppFileTM, 0, sizeof(smppFileTM));
     memset(&httpFileTM, 0, sizeof(httpFileTM));
