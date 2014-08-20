@@ -3,6 +3,7 @@
 
 #include "core/network/Socket.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include <core/buffers/IntHash.hpp>
 #include "util/timeslotcounter.hpp"
 #include "scag/stat/base/Statistics2.h"
 #include <string.h>
@@ -55,11 +56,20 @@ typedef struct {
 struct CommonPerformanceCounter
 {
     uint32_t count;
-#ifdef SNMP
-    uint64_t*                cntSnmp;
-#endif
-    uint16_t*                counters;
-    TimeSlotCounter<int>**   slots;
+//#ifdef SNMP
+    uint64_t* cntEvent;
+    smsc::core::buffers::IntHash<uint64_t> cntErrors;
+    void incError(int errcode)
+    {
+      if(errcode == -1) return;
+
+      uint64_t* counter = cntErrors.GetPtr(errcode);
+      if (!counter) cntErrors.Insert(errcode, 1);
+      else ++(*counter);
+    }
+//#endif
+    uint16_t*               counters;
+    TimeSlotCounter<int>**  slots;
 
     CommonPerformanceCounter(uint32_t cnt) { 
         count = cnt;
@@ -70,8 +80,8 @@ struct CommonPerformanceCounter
         memset(slots, 0, sizeof(TimeSlotCounter<int>*) * cnt);
 
 #ifdef SNMP
-        cntSnmp = new uint64_t[cnt];
-        memset(cntSnmp, 0, sizeof(uint64_t) * cnt);
+        cntEvent = new uint64_t[cnt];
+        memset(cntEvent, 0, sizeof(uint64_t) * cnt);
 #endif
     };
 
@@ -81,7 +91,7 @@ struct CommonPerformanceCounter
             if (slots[i]) delete slots[i];
 
 #ifdef SNMP
-        delete cntSnmp;
+        delete cntEvent;
 #endif
         delete counters;
         delete slots;

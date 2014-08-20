@@ -49,21 +49,6 @@ namespace stat {
 
 using namespace scag::stat::sacc;
 
-  struct ErrorData
-  {
-    int         temporal;   // periodically cleared
-    uint64_t    permanent;  // never cleared
-    ErrorData() : temporal(0), permanent(0) {}
-    ErrorData(int t, uint64_t p) : temporal(t), permanent(p) {}
-    ErrorData& operator++()
-    {
-      ++temporal;
-      ++permanent;
-      return *this;
-    }
-  };
-  typedef IntHash<ErrorData> ErrorsHash;
-
     struct CommonStat
     {
       int providerId;
@@ -75,20 +60,11 @@ using namespace scag::stat::sacc;
       int recieptOk;
       int recieptFailed;
 
-      ErrorsHash errors;
-//      IntHash<int> errors;
+      IntHash<int> errors;
 
       CommonStat()
       {
         Reset();
-      }
-
-      void EmptyErrors()
-      {
-        int c=0;
-        ErrorData e;
-        ErrorsHash::Iterator i = errors.First();
-        while ( i.Next(c, e) ) { e.temporal = 0; }
       }
 
       void Reset()
@@ -101,8 +77,7 @@ using namespace scag::stat::sacc;
         recieptOk = 0;
         recieptFailed = 0;
         providerId=-1;
-        EmptyErrors();
-//        errors.Empty();
+        errors.Empty();
       }
     };
 
@@ -189,7 +164,6 @@ using namespace scag::stat::sacc;
         int   calculateToSleep();
 
         void  incError(IntHash<int>& hash, int errcode);
-        void  incError(ErrorsHash& hash, int errcode);
 
         Sender sender;
 
@@ -234,7 +208,7 @@ using namespace scag::stat::sacc;
         inline TimeSlotCounter<int>* newSlotCounter() {
             return new TimeSlotCounter<int>(3600, 1000);
         }
-        void incSmppCounter(const char* systemId, bool sc, int index);
+        void incSmppCounter(const char* systemId, bool sc, int index, int errcode);
 //        void incSvcSmppCounter(const char* systemId, int index);
         void incSvcWapCounter(const char*  systemId, int index);
         void incSvcMmsCounter(const char*  systemId, int index);
@@ -250,7 +224,7 @@ using namespace scag::stat::sacc;
 
         void SerializeSmppStat(Hash<CommonStat>& smppStat, SerializationBuffer& buf, bool add);
         void SerializeHttpStat(Hash<HttpStat>& httpStat, SerializationBuffer& buf);
-        void incSvcScCounter(const char* systemId, int index, int max_cnt, Hash<CommonPerformanceCounter*>& svcCounters, Mutex& mt);
+        void incSvcScCounter(const char* systemId, int index, int max_cnt, Hash<CommonPerformanceCounter*>& svcCounters, Mutex& mt, int errcode=-1);
         void dumpPerfCounters(SerializationBuffer& buf, Hash<CommonPerformanceCounter*>& h);
         void reportPerformance(bool t, Mutex& mt, std::vector<Socket*>& socks);
         void incRouteTraffic(Hash<TrafficRecord>& h,  const char* routeId);
@@ -263,7 +237,7 @@ using namespace scag::stat::sacc;
 
         StatisticsManager* InstanceSM();
         Hash<CommonPerformanceCounter*>& getCounters(bool smsc=0);
-        Hash<CommonStat>& getErrors(bool smsc=0);
+//        Hash<CommonStat>& getErrors(bool smsc=0);
 
         void init( const StatManConfig& statManCfg );
 

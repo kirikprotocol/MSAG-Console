@@ -98,13 +98,13 @@ bool fillRecord(smeStatTable_rowreq_ctx* rec, char* sysId, stat::CommonPerforman
   rec->data.smeStatSystemId_len = smeStatSystemId_len * sizeof(smeStatSystemId[0]);
   memcpy( rec->data.smeStatSystemId, smeStatSystemId, smeStatSystemId_len * sizeof(smeStatSystemId[0]) );
 
-  uint64_to_U64(counter->cntSnmp[stat::Counters::cntAccepted],      rec->data.smeStatAccepted);
-  uint64_to_U64(counter->cntSnmp[stat::Counters::cntRejected],      rec->data.smeStatRejected);
-  uint64_to_U64(counter->cntSnmp[stat::Counters::cntDelivered],     rec->data.smeStatDelivered);
-  uint64_to_U64(counter->cntSnmp[stat::Counters::cntGw_Rejected],   rec->data.smeStatGwRejected);
-  uint64_to_U64(counter->cntSnmp[stat::Counters::cntFailed],        rec->data.smeStatFailed);
-  uint64_to_U64(counter->cntSnmp[stat::Counters::cntRecieptOk],     rec->data.smeStatReceiptOk);
-  uint64_to_U64(counter->cntSnmp[stat::Counters::cntRecieptFailed], rec->data.smeStatReceiptFailed);
+  uint64_to_U64(counter->cntEvent[stat::Counters::cntAccepted],      rec->data.smeStatAccepted);
+  uint64_to_U64(counter->cntEvent[stat::Counters::cntRejected],      rec->data.smeStatRejected);
+  uint64_to_U64(counter->cntEvent[stat::Counters::cntDelivered],     rec->data.smeStatDelivered);
+  uint64_to_U64(counter->cntEvent[stat::Counters::cntGw_Rejected],   rec->data.smeStatGwRejected);
+  uint64_to_U64(counter->cntEvent[stat::Counters::cntFailed],        rec->data.smeStatFailed);
+  uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptOk],     rec->data.smeStatReceiptOk);
+  uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptFailed], rec->data.smeStatReceiptFailed);
 
 /*
   for (uint32_t i = 0; i < counter->count; i++)
@@ -277,15 +277,23 @@ void fakeFillHashIfEmpty(smsc::core::buffers::Hash<stat::CommonPerformanceCounte
 {
   if ( h.GetCount() > 0 ) return;
   stat::CommonPerformanceCounter* counter = 0;
-  smsc_log_debug(log, "smeStatTable_cache_load: no records, make 1 fake counter");
+  smsc_log_debug(log, "smeStatTable_cache_load: no records, make some fake counters");
   counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
-  for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->counters[i] = i+1;
+  for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = i+1;
+  counter->cntErrors.Insert(11,1);
   h.Insert("1", counter);
+
   counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
-  for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->counters[i] = i+10;
+  for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = i+10;
+  counter->cntErrors.Insert(21,2);
+  counter->cntErrors.Insert(22,2);
   h.Insert("2", counter);
+
   counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
-  for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->counters[i] = i+100;
+  for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = i+100;
+  counter->cntErrors.Insert(31,3);
+  counter->cntErrors.Insert(32,3);
+  counter->cntErrors.Insert(33,3);
   h.Insert("SMSC", counter);
 }
 
@@ -322,8 +330,6 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
     smsc_log_debug(log, "smeStatTable_cache_load: smeStatTable_indexes_set(%d)=%s %s %d",
       smeStatIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.smeStatIndex);
 
-//    ++smeStatIndex;  //ToDo
-
     if ( !fillRecord(rec, sysId, counter) )
     {
       smsc_log_error(log, "smeStatTable_cache_load fillRecord error");
@@ -339,19 +345,13 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
 
     int rc = CONTAINER_INSERT(container, rec);
     if ( 0 == rc )
-    {
-//      smsc_log_debug(log, "smeStatTable_cache_load CONTAINER_INSERT returns 0");
       ++recCount;
-    }
     else
-    {
       smsc_log_error(log, "smeStatTable_cache_load CONTAINER_INSERT returns(%d)", rc);
-    }
     if (sysId) sysId = 0;
     if (counter) counter->clear();
   }
 
-//  DEBUGMSGT(("verbose:smeStatTable:smeStatTable_cache_load", "inserted %d records\n", (int)recCount));
   smsc_log_debug(log, "smeStatTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : "empty");
   return MFD_SUCCESS;
 }
