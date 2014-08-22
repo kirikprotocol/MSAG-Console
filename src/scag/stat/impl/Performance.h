@@ -92,6 +92,7 @@ struct CommonPerformanceCounter
 
 #ifdef SNMP
         delete cntEvent;
+        cntErrors.Empty();
 #endif
         delete counters;
         delete slots;

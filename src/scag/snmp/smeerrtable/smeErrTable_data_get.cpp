@@ -35,7 +35,7 @@ namespace smeerrtable{
  **********************************************************************
  **********************************************************************/
 /*
- * smeErrTable is subid 11 of smsc.
+ * smeErrTable is subid 11 of msag.
  * Its status is Current.
  * OID: .1.3.6.1.4.1.26757.2.11, length: 9
 */

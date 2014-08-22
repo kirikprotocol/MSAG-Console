@@ -14,7 +14,7 @@ namespace stat {
 
   namespace Counters
   {
-    typedef enum
+    typedef enum SmppStatCounterType
     {
       cntAccepted,
       cntRejected,

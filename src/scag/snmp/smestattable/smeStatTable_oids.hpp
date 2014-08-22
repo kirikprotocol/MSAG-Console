@@ -12,7 +12,7 @@ namespace snmp {
 namespace smestattable {
 
 /* column number definitions for table smeStatTable */
-#define SMESTATTABLE_OID              1,3,6,1,4,1,26757,2,10
+#define SMESTATTABLE_OID            1,3,6,1,4,1,26757,2,10
 
 #define COLUMN_SMESTATINDEX         1
 #define COLUMN_SMESTATSYSTEMID      2

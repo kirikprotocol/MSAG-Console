@@ -10,10 +10,10 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 
 /* include our parent header */
-#include "smeErrTable.hpp"
+#include "routeErrTable.hpp"
 
 
-#include "smeErrTable_data_access.hpp"
+#include "routeErrTable_data_access.hpp"
 
 #include "util/debug.h"
 
@@ -40,41 +40,42 @@
 /**********************************************************************
  **********************************************************************
  ***
- *** Table smeErrTable
+ *** Table routeErrTable
  ***
  **********************************************************************
  **********************************************************************/
 /*
- * smeErrTable is subid 11 of msag.
+ * routeErrTable is subid 13 of msag.
  * Its status is Current.
- * OID: .1.3.6.1.4.1.26757.2.11, length: 9
+ * OID: .1.3.6.1.4.1.26757.2.13, length: 9
 */
 
-namespace scag2{
-namespace snmp{
-namespace smeerrtable{
+
+namespace scag2 {
+namespace snmp {
+namespace routeerrtable {
 
 smsc::logger::Logger* log;
 
 
 /**
- * initialization for smeErrTable data access
+ * initialization for routeErrTable data access
  *
  * This function is called during startup to allow you to
  * allocate any resources you need for the data table.
  *
- * @param smeErrTable_reg
- *        Pointer to smeErrTable_registration
+ * @param routeErrTable_reg
+ *        Pointer to routeErrTable_registration
  *
  * @retval MFD_SUCCESS : success.
  * @retval MFD_ERROR   : unrecoverable error.
  */
-int smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg)
+int routeErrTable_init_data(routeErrTable_registration_ptr routeErrTable_reg)
 {
-//    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_init_data","called\n"));
+//    DEBUGMSGTL(("verbose:routeErrTable:routeErrTable_init_data","called\n"));
 
     /*
-     * TODO:303:o: Initialize smeErrTable data.
+     * TODO:303:o: Initialize routeErrTable data.
      */
     /*
     ***************************************************
@@ -92,9 +93,9 @@ int smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg)
     ***              END  EXAMPLE CODE              ***
     ***************************************************/
 
-    log = smsc::logger::Logger::getInstance("snmp.etbl");
+    log = smsc::logger::Logger::getInstance("snmp.retbl");
     return MFD_SUCCESS;
-} /* smeErrTable_init_data */
+} /* routeErrTable_init_data */
 
 /**
  * container-cached overview
@@ -132,14 +133,14 @@ int smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg)
  *  for you data source. For example, opening a connection to another
  *  process that will supply the data, opening a database, etc.
  */
-void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
+void routeErrTable_container_init(netsnmp_container **container_ptr_ptr,
                         netsnmp_cache *cache)
 {
-//    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_container_init","called\n"));
+//    DEBUGMSGTL(("verbose:routeErrTable:routeErrTable_container_init","called\n"));
 
     if((NULL == cache) || (NULL == container_ptr_ptr)) {
-      smsc_log_error(log, "bad params to smeErrTable_container_init");
-//      snmp_log(LOG_ERR,"bad params to smeErrTable_container_init\n");
+      smsc_log_error(log, "bad params to routeErrTable_container_init");
+//      snmp_log(LOG_ERR,"bad params to routeErrTable_container_init\n");
       return;
     }
 
@@ -150,7 +151,7 @@ void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
     *container_ptr_ptr = NULL;
 
     /*
-     * TODO:345:A: Set up smeErrTable cache properties.
+     * TODO:345:A: Set up routeErrTable cache properties.
      *
      * Also for advanced users, you can set parameters for the
      * cache. Do not change the magic pointer, as it is used
@@ -166,12 +167,12 @@ void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
       __warning2__("Config parameter snmp.cacheTimeout not found, using default=%d", cacheTimeout);
     }
     cache->timeout = cacheTimeout; /* seconds */
-} /* smeErrTable_container_init */
+} /* routeErrTable_container_init */
 
 /**
  * load cache data
  *
- * TODO:350:M: Implement smeErrTable cache load
+ * TODO:350:M: Implement routeErrTable cache load
  *
  * @param container container to which items should be inserted
  *
@@ -190,7 +191,7 @@ void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
  *  some other existing data, or peforming calculations to derive the data),
  *  then you can limit yourself to setting the indexes and saving any
  *  information you will need later. Then use the saved information in
- *  smeErrTable_row_prep() for populating data.
+ *  routeErrTable_row_prep() for populating data.
  *
  * @note
  *  If you need consistency between rows (like you want statistics
@@ -235,7 +236,7 @@ void fakeFillHashIfEmpty(smsc::core::buffers::Hash<stat::CommonPerformanceCounte
 {
   if ( h.GetCount() > 0 ) return;
   stat::CommonPerformanceCounter* counter = 0;
-  smsc_log_debug(log, "smeErrTable_cache_load: no records, make some fake counters");
+  smsc_log_debug(log, "routeErrTable_cache_load: no records, make some fake counters");
   counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
   for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = i+1;
   counter->cntErrors.Insert(11,1);
@@ -257,101 +258,101 @@ void fakeFillHashIfEmpty(smsc::core::buffers::Hash<stat::CommonPerformanceCounte
 
 int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h)
 {
-  long      smeErrIndex = 0;
-  int       smeErrCode;
+  long      errIndex = 0;
+  int       errCode;
   uint64_t  errCount;
 
   size_t recCount = 0;
-  smeErrTable_rowreq_ctx* rec = 0;
-  char* sysId = 0;
+  routeErrTable_rowreq_ctx* rec = 0;
+  char* routeId = 0;
   stat::CommonPerformanceCounter* cs;
 
   h.First();
-  while ( h.Next(sysId, cs) )
+  while ( h.Next(routeId, cs) )
   {
-//    scag2::stat::ErrorData ed;
-    for(scag2::stat::IntHash<uint64_t>::Iterator iter = cs->cntErrors.First(); iter.Next(smeErrCode, errCount); )
+    for(scag2::stat::IntHash<uint64_t>::Iterator iter = cs->cntErrors.First(); iter.Next(errCode, errCount); )
     {
-      smeErrIndex = scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId);
-      smsc_log_debug(log, "smeErrTable_cache_load: %s(%d) Next %d %lld", sysId, smeErrIndex, smeErrCode, errCount);
+//      errIndex = scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId);
+      ++errIndex;
+      smsc_log_debug(log, "routeErrTable_cache_load: %s(%d) Next %d %lld", routeId, errIndex, errCode, errCount);
 
       if (!errCount) continue;
 
-      rec = smeErrTable_allocate_rowreq_ctx(NULL);
+      rec = routeErrTable_allocate_rowreq_ctx(NULL);
       if (NULL == rec)
       {
-        smsc_log_error(log, "smeErrTable_cache_load: memory allocation failed");
+        smsc_log_error(log, "routeErrTable_cache_load: memory allocation failed");
 //        continue;
         return MFD_RESOURCE_UNAVAILABLE;
       }
 
-      if( MFD_SUCCESS != smeErrTable_indexes_set(rec, smeErrIndex, smeErrCode) )
+      if( MFD_SUCCESS != routeErrTable_indexes_set(rec, errIndex, errCode) )
       {
-        smsc_log_error(log, "smeErrTable_cache_load: error setting index while loading smeErrTable data");
-        smeErrTable_release_rowreq_ctx(rec);
+        smsc_log_error(log, "routeErrTable_cache_load: error setting index while loading routeErrTable data");
+        routeErrTable_release_rowreq_ctx(rec);
         continue;
       }
 
       std::string idxStr = netsnmp_index2str(rec->oid_idx);
-      std::string oidStr = oid2str(rec->oid_tmp, MAX_smeErrTable_IDX_LEN);
-      smsc_log_debug(log, "smeErrTable_cache_load: smeErrTable_indexes_set(%d)=%s %s %d",
-          smeErrIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.smeErrIndex);
+      std::string oidStr = oid2str(rec->oid_tmp, MAX_routeErrTable_IDX_LEN);
+      smsc_log_debug(log, "routeErrTable_cache_load: routeErrTable_indexes_set(%d)=%s %s %d",
+          errIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.routeErrIndex);
 
-      if ((NULL == rec->data.smeErrSystemId) || strlen(sysId) > sizeof(rec->data.smeErrSystemId))
+      if ((NULL == rec->data.routeErrId) || strlen(routeId) > sizeof(rec->data.routeErrId))
       {
-        smsc_log_error(log, "smeErrTable_cache_load: not enough space for value");
+        smsc_log_error(log, "routeErrTable_cache_load: not enough space for value");
         snmp_log(LOG_ERR,"not enough space for value\n");
         return MFD_ERROR;
       }
 
-      rec->data.smeErrSystemId_len = strlen(sysId);
-      memcpy( rec->data.smeErrSystemId, sysId, rec->data.smeErrSystemId_len+1 );
+      rec->data.routeErrId_len = strlen(routeId);
+      memcpy( rec->data.routeErrId, routeId, rec->data.routeErrId_len+1 );
 
-      uint64_to_U64(errCount, rec->data.smeErrCount);
-//      rec->data.smeErrCount.high = smeErrCount.high;
-//      rec->data.smeErrCount.low = smeErrCount.low;
+      uint64_to_U64(errCount, rec->data.routeErrCount);
 
       int rc = CONTAINER_INSERT(container, rec);
       if ( 0 == rc )
         ++recCount;
       else
-        smsc_log_error(log, "smeErrTable_cache_load CONTAINER_INSERT returns(%d)", rc);
+        smsc_log_error(log, "routeErrTable_cache_load CONTAINER_INSERT returns(%d)", rc);
     }
   }
-  smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : "empty");
+  smsc_log_debug(log, "routeErrTable_cache_load: inserted %d records, last [%s]", (int)recCount, routeId ? routeId : "empty");
   return MFD_SUCCESS;
 }
 
-int smeErrTable_cache_load(netsnmp_container* container)
+int routeErrTable_cache_load(netsnmp_container* container)
 {
   if (container)
   {
     if ( !container->container_name )
-      container->container_name = "smeErrTableContainer";
-    smsc_log_debug(log, "smeErrTable_cache_load container %s", container->container_name);
+      container->container_name = "routeErrTableContainer";
+    smsc_log_debug(log, "routeErrTable_cache_load container %s", container->container_name);
   }
   else
   {
-    smsc_log_error(log, "smeErrTable_cache_load error: container is NULL");
+    smsc_log_error(log, "routeErrTable_cache_load error: container is NULL");
     return MFD_RESOURCE_UNAVAILABLE;
   }
 
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(0);
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getRouteCounters();
 
 //#ifdef DEBUG
   fakeFillHashIfEmpty(h0);
 //#endif
+
+  return loadHashToContainer(container, h0);
+/*
   int result = loadHashToContainer(container, h0);
 
   if ( result != MFD_SUCCESS )
     return result;
 
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(1);
-  smsc_log_debug(log, "smeStatTable_cache_load: getCounters(1) ok");
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = scag2::snmp::routestattable::SmeStatTableSubagent::getStatMan()->getCounters(1);
+  smsc_log_debug(log, "routeStatTable_cache_load: getCounters(1) ok");
   return loadHashToContainer(container, h1);
-
-//  return MFD_SUCCESS;
-} /* smeErrTable_cache_load */
+*/
+} /* routeErrTable_cache_load */
 
 
 /**
@@ -367,14 +368,14 @@ int smeErrTable_cache_load(netsnmp_container* container)
  *  The MFD helper will take care of releasing all the row contexts.
  *
  */
-void smeErrTable_cache_free(netsnmp_container *container)
+void routeErrTable_cache_free(netsnmp_container *container)
 {
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_cache_free","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrTable_cache_free","called\n"));
 
     /*
-     * TODO:380:M: Free smeErrTable cache.
+     * TODO:380:M: Free routeErrTable cache.
      */
-} /* smeErrTable_cache_free */
+} /* routeErrTable_cache_free */
 
 /**
  * prepare row for processing.
@@ -389,9 +390,9 @@ void smeErrTable_cache_free(netsnmp_container *container)
  * @retval MFD_SUCCESS     : success.
  * @retval MFD_ERROR       : other error.
  */
-int smeErrTable_row_prep( smeErrTable_rowreq_ctx *rowreq_ctx)
+int routeErrTable_row_prep( routeErrTable_rowreq_ctx *rowreq_ctx)
 {
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_row_prep","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrTable_row_prep","called\n"));
 
     netsnmp_assert(NULL != rowreq_ctx);
 
@@ -402,11 +403,9 @@ int smeErrTable_row_prep( smeErrTable_rowreq_ctx *rowreq_ctx)
      */
 
     return MFD_SUCCESS;
-} /* smeErrTable_row_prep */
+} /* routeErrTable_row_prep */
 
 
-}//smeerrtable
-}//snmp
-}//smsc
+}}}
 
 /** @} */

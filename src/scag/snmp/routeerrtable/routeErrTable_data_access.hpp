@@ -4,12 +4,12 @@
  *
  * $Id$
  */
-#ifndef SMEERRTABLE_DATA_ACCESS_H
-#define SMEERRTABLE_DATA_ACCESS_H
+#ifndef ROUTEERRTABLE_DATA_ACCESS_H
+#define ROUTEERRTABLE_DATA_ACCESS_H
 
-namespace smsc{
-namespace snmp{
-namespace smeerrtable{
+namespace scag2 {
+namespace snmp {
+namespace routeerrtable {
 
 
 /* *********************************************************************
@@ -22,34 +22,32 @@ namespace smeerrtable{
 /**********************************************************************
  **********************************************************************
  ***
- *** Table smeErrTable
+ *** Table routeErrTable
  ***
  **********************************************************************
  **********************************************************************/
 /*
- * smeErrTable is subid 11 of msag.
+ * routeErrTable is subid 11 of msag.
  * Its status is Current.
- * OID: .1.3.6.1.4.1.26757.1.11, length: 9
+ * OID: .1.3.6.1.4.1.26757.2.13, length: 9
 */
 
 
-    int smeErrTable_init_data(smeErrTable_registration_ptr smeErrTable_reg);
+    int routeErrTable_init_data(routeErrTable_registration_ptr routeErrTable_reg);
 
 
 /*
- * TODO:180:o: Review smeErrTable cache timeout.
+ * TODO:180:o: Review routeErrTable cache timeout.
  * The number of seconds before the cache times out
  */
 
-void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
+void routeErrTable_container_init(netsnmp_container **container_ptr_ptr,
                              netsnmp_cache *cache);
-int smeErrTable_cache_load(netsnmp_container *container);
-void smeErrTable_cache_free(netsnmp_container *container);
-int smeErrTable_row_prep( smeErrTable_rowreq_ctx *rowreq_ctx);
+int routeErrTable_cache_load(netsnmp_container *container);
+void routeErrTable_cache_free(netsnmp_container *container);
+int routeErrTable_row_prep( routeErrTable_rowreq_ctx *rowreq_ctx);
 
 
-}//smeerrtable
-}//snmp
-}//smsc
+}}}
 
-#endif /* SMEERRTABLE_DATA_ACCESS_H */
+#endif

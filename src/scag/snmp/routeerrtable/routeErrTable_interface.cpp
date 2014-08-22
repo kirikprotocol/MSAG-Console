@@ -33,143 +33,143 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 
 /* include our parent header */
-#include "smeErrTable.hpp"
+#include "routeErrTable.hpp"
 
 
 #include <net-snmp/library/container.h>
 
-#include "smeErrTable_interface.hpp"
+#include "routeErrTable_interface.hpp"
 
 #include "logger/Logger.h"
 
-namespace scag2{
-namespace snmp{
-namespace smeerrtable{
+namespace scag2 {
+namespace snmp {
+namespace routeerrtable {
 
 /**********************************************************************
  **********************************************************************
  ***
- *** Table smeErrTable
+ *** Table routeErrTable
  ***
  **********************************************************************
  **********************************************************************/
 /*
- * smeErrTable is subid 11 of msag.
+ * routeErrTable is subid 13 of msag.
  * Its status is Current.
- * OID: .1.3.6.1.4.1.26757.2.11, length: 9
+ * OID: .1.3.6.1.4.1.26757.2.13, length: 9
 */
-typedef struct smeErrTable_interface_ctx_s {
+typedef struct routeErrTable_interface_ctx_s {
 
    netsnmp_container              *container;
    netsnmp_cache                  *cache; /* optional cache */
 
-   smeErrTable_registration_ptr      user_ctx;
+   routeErrTable_registration_ptr      user_ctx;
 
    netsnmp_table_registration_info  tbl_info;
 
    netsnmp_baby_steps_access_methods access_multiplexer;
 
-} smeErrTable_interface_ctx;
+} routeErrTable_interface_ctx;
 
-static smeErrTable_interface_ctx smeErrTable_if_ctx;
+static routeErrTable_interface_ctx routeErrTable_if_ctx;
 
-static void _smeErrTable_container_init(
-    smeErrTable_interface_ctx *if_ctx);
+static void _routeErrTable_container_init(
+    routeErrTable_interface_ctx *if_ctx);
 
 
-static Netsnmp_Node_Handler _mfd_smeErrTable_pre_request;
-static Netsnmp_Node_Handler _mfd_smeErrTable_post_request;
-static Netsnmp_Node_Handler _mfd_smeErrTable_object_lookup;
-static Netsnmp_Node_Handler _mfd_smeErrTable_get_values;
+static Netsnmp_Node_Handler _mfd_routeErrTable_pre_request;
+static Netsnmp_Node_Handler _mfd_routeErrTable_post_request;
+static Netsnmp_Node_Handler _mfd_routeErrTable_object_lookup;
+static Netsnmp_Node_Handler _mfd_routeErrTable_get_values;
 /**
  * @internal
- * Initialize the table smeErrTable
+ * Initialize the table routeErrTable
  *    (Define its contents and how it's structured)
  */
 void
-_smeErrTable_initialize_interface(smeErrTable_registration_ptr reg_ptr,  u_long flags)
+_routeErrTable_initialize_interface(routeErrTable_registration_ptr reg_ptr,  u_long flags)
 {
     netsnmp_baby_steps_access_methods *access_multiplexer =
-        &smeErrTable_if_ctx.access_multiplexer;
-    netsnmp_table_registration_info *tbl_info = &smeErrTable_if_ctx.tbl_info;
+        &routeErrTable_if_ctx.access_multiplexer;
+    netsnmp_table_registration_info *tbl_info = &routeErrTable_if_ctx.tbl_info;
     netsnmp_handler_registration *reginfo;
     netsnmp_mib_handler *handler;
     int    mfd_modes = 0;
 
-    DEBUGMSGTL(("internal:smeErrTable:_smeErrTable_initialize_interface","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:_routeErrTable_initialize_interface","called\n"));
 
 
     /*************************************************
      *
-     * save interface context for smeErrTable
+     * save interface context for routeErrTable
      */
     /*
      * Setting up the table's definition
      */
     netsnmp_table_helper_add_indexes(tbl_info,
-                                  ASN_INTEGER, /** index: smeErrIndex */
-                                  ASN_INTEGER, /** index: smeErrCode */
+                                  ASN_INTEGER, /** index: routeErrIndex */
+                                  ASN_INTEGER, /** index: routeErrCode */
                              0);
 
     /*  Define the minimum and maximum accessible columns.  This
         optimizes retrival. */
-    tbl_info->min_column = SMEERRTABLE_MIN_COL;
-    tbl_info->max_column = SMEERRTABLE_MAX_COL;
+    tbl_info->min_column = ROUTEERRTABLE_MIN_COL;
+    tbl_info->max_column = ROUTEERRTABLE_MAX_COL;
 
     /*
      * save users context
      */
-    smeErrTable_if_ctx.user_ctx = reg_ptr;
+    routeErrTable_if_ctx.user_ctx = reg_ptr;
 
     /*
      * call data access initialization code
      */
-    smeErrTable_init_data(reg_ptr);
+    routeErrTable_init_data(reg_ptr);
 
     /*
      * set up the container
      */
-    _smeErrTable_container_init(&smeErrTable_if_ctx);
-    if (NULL == smeErrTable_if_ctx.container) {
-        snmp_log(LOG_ERR,"could not initialize container for smeErrTable\n");
+    _routeErrTable_container_init(&routeErrTable_if_ctx);
+    if (NULL == routeErrTable_if_ctx.container) {
+        snmp_log(LOG_ERR,"could not initialize container for routeErrTable\n");
         return;
     }
 
     /*
      * access_multiplexer: REQUIRED wrapper for get request handling
      */
-    access_multiplexer->object_lookup = _mfd_smeErrTable_object_lookup;
-    access_multiplexer->get_values = _mfd_smeErrTable_get_values;
+    access_multiplexer->object_lookup = _mfd_routeErrTable_object_lookup;
+    access_multiplexer->get_values = _mfd_routeErrTable_get_values;
 
     /*
      * no wrappers yet
      */
-    access_multiplexer->pre_request = _mfd_smeErrTable_pre_request;
-    access_multiplexer->post_request = _mfd_smeErrTable_post_request;
+    access_multiplexer->pre_request = _mfd_routeErrTable_pre_request;
+    access_multiplexer->post_request = _mfd_routeErrTable_post_request;
 
 
     /*************************************************
      *
      * Create a registration, save our reg data, register table.
      */
-    DEBUGMSGTL(("smeErrTable:init_smeErrTable",
-                "Registering smeErrTable as a mibs-for-dummies table.\n"));
+    DEBUGMSGTL(("routeErrTable:init_routeErrTable",
+                "Registering routeErrTable as a mibs-for-dummies table.\n"));
     handler = netsnmp_baby_steps_access_multiplexer_get(access_multiplexer);
-    reginfo = netsnmp_handler_registration_create("smeErrTable", handler,
-                                                  smeErrTable_oid,
-                                                  smeErrTable_oid_size,
+    reginfo = netsnmp_handler_registration_create("routeErrTable", handler,
+                                                  routeErrTable_oid,
+                                                  routeErrTable_oid_size,
                                                   HANDLER_CAN_BABY_STEP |
                                                   HANDLER_CAN_RONLY
                                                   );
     if (NULL == reginfo) {
-      snmp_log(LOG_ERR,"error registering table smeErrTable\n");
-      smsc_log_error(smsc::logger::Logger::getInstance("snmp.etbl"), "error registering table smeErrTable");
+      snmp_log(LOG_ERR,"error registering table routeErrTable\n");
+      smsc_log_error(smsc::logger::Logger::getInstance("snmp.etbl"), "error registering table routeErrTable");
       return;
     }
-    snmp_log(LOG_INFO,"register table smeErrTable, success\n");
-    smsc_log_debug(smsc::logger::Logger::getInstance("snmp.etbl"), "register table smeErrTable, success");
+    snmp_log(LOG_INFO,"register table routeErrTable, success\n");
+    smsc_log_debug(smsc::logger::Logger::getInstance("snmp.etbl"), "register table routeErrTable, success");
 
-    reginfo->my_reg_void = &smeErrTable_if_ctx;
+    reginfo->my_reg_void = &routeErrTable_if_ctx;
 
     /*************************************************
      *
@@ -221,7 +221,7 @@ _smeErrTable_initialize_interface(smeErrTable_registration_ptr reg_ptr,  u_long 
      */
     handler =
         netsnmp_container_table_handler_get(tbl_info,
-                                            smeErrTable_if_ctx.container,
+                                            routeErrTable_if_ctx.container,
                                             TABLE_CONTAINER_KEY_NETSNMP_INDEX);
     netsnmp_inject_handler( reginfo, handler );
 
@@ -229,8 +229,8 @@ _smeErrTable_initialize_interface(smeErrTable_registration_ptr reg_ptr,  u_long 
      *
      * inject cache helper
      */
-    if(NULL != smeErrTable_if_ctx.cache) {
-        handler = netsnmp_cache_handler_get(smeErrTable_if_ctx.cache);
+    if(NULL != routeErrTable_if_ctx.cache) {
+        handler = netsnmp_cache_handler_get(routeErrTable_if_ctx.cache);
         netsnmp_inject_handler( reginfo, handler );
     }
 
@@ -238,21 +238,21 @@ _smeErrTable_initialize_interface(smeErrTable_registration_ptr reg_ptr,  u_long 
      * register table
      */
     netsnmp_register_table(reginfo, tbl_info);
-} /* _smeErrTable_initialize_interface */
+} /* _routeErrTable_initialize_interface */
 
 void
-smeErrTable_valid_columns_set(netsnmp_column_info *vc)
+routeErrTable_valid_columns_set(netsnmp_column_info *vc)
 {
-    smeErrTable_if_ctx.tbl_info.valid_columns = vc;
-} /* smeErrTable_valid_columns_set */
+    routeErrTable_if_ctx.tbl_info.valid_columns = vc;
+} /* routeErrTable_valid_columns_set */
 
 /**
  * @internal
  * convert the index component stored in the context to an oid
  */
 int
-smeErrTable_index_to_oid(netsnmp_index *oid_idx,
-                         smeErrTable_mib_index *mib_idx)
+routeErrTable_index_to_oid(netsnmp_index *oid_idx,
+                         routeErrTable_mib_index *mib_idx)
 {
     int err = SNMP_ERR_NOERROR;
 
@@ -260,41 +260,41 @@ smeErrTable_index_to_oid(netsnmp_index *oid_idx,
      * temp storage for parsing indexes
      */
     /*
-     * smeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
+     * routeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
      */
-    netsnmp_variable_list var_smeErrIndex;
+    netsnmp_variable_list var_routeErrIndex;
     /*
-     * smeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
+     * routeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
      */
-    netsnmp_variable_list var_smeErrCode;
+    netsnmp_variable_list var_routeErrCode;
 
     /*
      * set up varbinds
      */
-    memset( &var_smeErrIndex, 0x00, sizeof(var_smeErrIndex) );
-    var_smeErrIndex.type = ASN_INTEGER;
-    memset( &var_smeErrCode, 0x00, sizeof(var_smeErrCode) );
-    var_smeErrCode.type = ASN_INTEGER;
+    memset( &var_routeErrIndex, 0x00, sizeof(var_routeErrIndex) );
+    var_routeErrIndex.type = ASN_INTEGER;
+    memset( &var_routeErrCode, 0x00, sizeof(var_routeErrCode) );
+    var_routeErrCode.type = ASN_INTEGER;
 
     /*
      * chain temp index varbinds together
      */
-    var_smeErrIndex.next_variable =  &var_smeErrCode; var_smeErrCode.next_variable =  NULL;
+    var_routeErrIndex.next_variable =  &var_routeErrCode; var_routeErrCode.next_variable =  NULL;
 
 
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_index_to_oid","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrTable_index_to_oid","called\n"));
 
-        /* smeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
-    snmp_set_var_value(&var_smeErrIndex, (u_char*)&mib_idx->smeErrIndex,
-                       sizeof(mib_idx->smeErrIndex));
+        /* routeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
+    snmp_set_var_value(&var_routeErrIndex, (u_char*)&mib_idx->routeErrIndex,
+                       sizeof(mib_idx->routeErrIndex));
 
-        /* smeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
-    snmp_set_var_value(&var_smeErrCode, (u_char*)&mib_idx->smeErrCode,
-                       sizeof(mib_idx->smeErrCode));
+        /* routeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
+    snmp_set_var_value(&var_routeErrCode, (u_char*)&mib_idx->routeErrCode,
+                       sizeof(mib_idx->routeErrCode));
 
     unsigned long oidLen;
     err = build_oid_noalloc(oid_idx->oids, oid_idx->len, &oidLen,
-                           NULL, 0, &var_smeErrIndex);
+                           NULL, 0, &var_routeErrIndex);
     oid_idx->len=(int)oidLen;
     if(err)
         snmp_log(LOG_ERR,"error %d converting index to oid\n", err);
@@ -302,20 +302,20 @@ smeErrTable_index_to_oid(netsnmp_index *oid_idx,
     /*
      * parsing may have allocated memory. free it.
      */
-    snmp_reset_var_buffers( &var_smeErrIndex );
+    snmp_reset_var_buffers( &var_routeErrIndex );
 
     return err;
-} /* smeErrTable_index_to_oid */
+} /* routeErrTable_index_to_oid */
 
 /**
- * extract smeErrTable indexes from a netsnmp_index
+ * extract routeErrTable indexes from a netsnmp_index
  *
  * @retval SNMP_ERR_NOERROR  : no error
  * @retval SNMP_ERR_GENERR   : error
  */
 int
-smeErrTable_index_from_oid(netsnmp_index *oid_idx,
-                         smeErrTable_mib_index *mib_idx)
+routeErrTable_index_from_oid(netsnmp_index *oid_idx,
+                         routeErrTable_mib_index *mib_idx)
 {
     int err = SNMP_ERR_NOERROR;
 
@@ -323,41 +323,41 @@ smeErrTable_index_from_oid(netsnmp_index *oid_idx,
      * temp storage for parsing indexes
      */
     /*
-     * smeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
+     * routeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
      */
-    netsnmp_variable_list var_smeErrIndex;
+    netsnmp_variable_list var_routeErrIndex;
     /*
-     * smeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
+     * routeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h
      */
-    netsnmp_variable_list var_smeErrCode;
+    netsnmp_variable_list var_routeErrCode;
 
     /*
      * set up varbinds
      */
-    memset( &var_smeErrIndex, 0x00, sizeof(var_smeErrIndex) );
-    var_smeErrIndex.type = ASN_INTEGER;
-    memset( &var_smeErrCode, 0x00, sizeof(var_smeErrCode) );
-    var_smeErrCode.type = ASN_INTEGER;
+    memset( &var_routeErrIndex, 0x00, sizeof(var_routeErrIndex) );
+    var_routeErrIndex.type = ASN_INTEGER;
+    memset( &var_routeErrCode, 0x00, sizeof(var_routeErrCode) );
+    var_routeErrCode.type = ASN_INTEGER;
 
     /*
      * chain temp index varbinds together
      */
-    var_smeErrIndex.next_variable =  &var_smeErrCode; var_smeErrCode.next_variable =  NULL;
+    var_routeErrIndex.next_variable =  &var_routeErrCode; var_routeErrCode.next_variable =  NULL;
 
 
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_index_from_oid","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrTable_index_from_oid","called\n"));
 
     /*
      * parse the oid into the individual index components
      */
     err = parse_oid_indexes( oid_idx->oids, oid_idx->len,
-                             &var_smeErrIndex );
+                             &var_routeErrIndex );
     if (err == SNMP_ERR_NOERROR) {
         /*
          * copy out values
          */
-    mib_idx->smeErrIndex = *((long *)var_smeErrIndex.val.string);
-    mib_idx->smeErrCode = *((long *)var_smeErrCode.val.string);
+    mib_idx->routeErrIndex = *((long *)var_routeErrIndex.val.string);
+    mib_idx->routeErrCode = *((long *)var_routeErrCode.val.string);
 
 
     }
@@ -365,55 +365,55 @@ smeErrTable_index_from_oid(netsnmp_index *oid_idx,
     /*
      * parsing may have allocated memory. free it.
      */
-    snmp_reset_var_buffers( &var_smeErrIndex );
+    snmp_reset_var_buffers( &var_routeErrIndex );
 
     return err;
-} /* smeErrTable_index_from_oid */
+} /* routeErrTable_index_from_oid */
 
 
 /* *********************************************************************
  * @internal
- * allocate resources for a smeErrTable_rowreq_ctx
+ * allocate resources for a routeErrTable_rowreq_ctx
  */
-smeErrTable_rowreq_ctx *
-smeErrTable_allocate_rowreq_ctx(void *user_init_ctx)
+routeErrTable_rowreq_ctx *
+routeErrTable_allocate_rowreq_ctx(void *user_init_ctx)
 {
-    smeErrTable_rowreq_ctx *rowreq_ctx =
-                  SNMP_MALLOC_TYPEDEF(smeErrTable_rowreq_ctx);
+    routeErrTable_rowreq_ctx *rowreq_ctx =
+                  SNMP_MALLOC_TYPEDEF(routeErrTable_rowreq_ctx);
 
-    DEBUGMSGTL(("internal:smeErrTable:smeErrTable_allocate_rowreq_ctx","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:routeErrTable_allocate_rowreq_ctx","called\n"));
 
     if(NULL == rowreq_ctx) {
         snmp_log(LOG_ERR,"Couldn't allocate memory for a "
-                 "smeErrTable_rowreq_ctx.\n");
+                 "routeErrTable_rowreq_ctx.\n");
     }
 
     rowreq_ctx->oid_idx.oids = rowreq_ctx->oid_tmp;
 
-    rowreq_ctx->smeErrTable_data_list = NULL;
-    rowreq_ctx->smeErrTable_reg = smeErrTable_if_ctx.user_ctx;
+    rowreq_ctx->routeErrTable_data_list = NULL;
+    rowreq_ctx->routeErrTable_reg = routeErrTable_if_ctx.user_ctx;
 
     if(SNMPERR_SUCCESS !=
-        smeErrTable_rowreq_ctx_init(rowreq_ctx)) {
-       smeErrTable_release_rowreq_ctx(rowreq_ctx);
+        routeErrTable_rowreq_ctx_init(rowreq_ctx)) {
+       routeErrTable_release_rowreq_ctx(rowreq_ctx);
        rowreq_ctx = NULL;
     }
 
     return rowreq_ctx;
-} /* smeErrTable_allocate_rowreq_ctx */
+} /* routeErrTable_allocate_rowreq_ctx */
 
 /*
  * @internal
- * release resources for a smeErrTable_rowreq_ctx
+ * release resources for a routeErrTable_rowreq_ctx
  */
 void
-smeErrTable_release_rowreq_ctx(smeErrTable_rowreq_ctx *rowreq_ctx)
+routeErrTable_release_rowreq_ctx(routeErrTable_rowreq_ctx *rowreq_ctx)
 {
-    DEBUGMSGTL(("internal:smeErrTable:smeErrTable_release_rowreq_ctx","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:routeErrTable_release_rowreq_ctx","called\n"));
 
     netsnmp_assert(NULL != rowreq_ctx);
 
-    smeErrTable_rowreq_ctx_cleanup(rowreq_ctx);
+    routeErrTable_rowreq_ctx_cleanup(rowreq_ctx);
 
     /*
      * free index oid pointer
@@ -422,49 +422,49 @@ smeErrTable_release_rowreq_ctx(smeErrTable_rowreq_ctx *rowreq_ctx)
         free(rowreq_ctx->oid_idx.oids);
 
     SNMP_FREE(rowreq_ctx);
-} /* smeErrTable_release_rowreq_ctx */
+} /* routeErrTable_release_rowreq_ctx */
 
 /**
  * @internal
  * wrapper
  */
 static int
-_mfd_smeErrTable_pre_request(netsnmp_mib_handler *handler,
+_mfd_routeErrTable_pre_request(netsnmp_mib_handler *handler,
                             netsnmp_handler_registration *reginfo,
                             netsnmp_agent_request_info *agtreq_info,
                             netsnmp_request_info *requests)
 {
-    int rc = smeErrTable_pre_request(smeErrTable_if_ctx.user_ctx);
+    int rc = routeErrTable_pre_request(routeErrTable_if_ctx.user_ctx);
     if (MFD_SUCCESS != rc) {
         /*
          * nothing we can do about it but log it
          */
-        DEBUGMSGTL(("internal:smeErrTable","error %d from "
-                    "smeErrTable_pre_request\n", rc));
+        DEBUGMSGTL(("internal:routeErrTable","error %d from "
+                    "routeErrTable_pre_request\n", rc));
         netsnmp_request_set_error_all(requests, SNMP_VALIDATE_ERR(rc));
     }
 
     return SNMP_ERR_NOERROR;
-} /* _mfd_smeErrTable_pre_request */
+} /* _mfd_routeErrTable_pre_request */
 
 /**
  * @internal
  * wrapper
  */
 static int
-_mfd_smeErrTable_post_request(netsnmp_mib_handler *handler,
+_mfd_routeErrTable_post_request(netsnmp_mib_handler *handler,
                              netsnmp_handler_registration *reginfo,
                              netsnmp_agent_request_info *agtreq_info,
                              netsnmp_request_info *requests)
 {
-    smeErrTable_rowreq_ctx *rowreq_ctx;
-    int rc = smeErrTable_post_request(smeErrTable_if_ctx.user_ctx);
+    routeErrTable_rowreq_ctx *rowreq_ctx;
+    int rc = routeErrTable_post_request(routeErrTable_if_ctx.user_ctx);
     if (MFD_SUCCESS != rc) {
         /*
          * nothing we can do about it but log it
          */
-        DEBUGMSGTL(("internal:smeErrTable","error %d from "
-                    "smeErrTable_post_request\n", rc));
+        DEBUGMSGTL(("internal:routeErrTable","error %d from "
+                    "routeErrTable_post_request\n", rc));
     }
 
     /*
@@ -473,50 +473,50 @@ _mfd_smeErrTable_post_request(netsnmp_mib_handler *handler,
     rc = netsnmp_check_requests_error(requests);
     if ((SNMP_ERR_NOERROR == rc) &&
         (NULL !=
-         (rowreq_ctx = (smeErrTable_rowreq_ctx_s*)netsnmp_container_table_row_extract(requests)))) {
+         (rowreq_ctx = (routeErrTable_rowreq_ctx_s*)netsnmp_container_table_row_extract(requests)))) {
         if (rowreq_ctx->rowreq_flags & MFD_ROW_CREATED) {
             rowreq_ctx->rowreq_flags &= ~MFD_ROW_CREATED;
-            CONTAINER_INSERT(smeErrTable_if_ctx.container, rowreq_ctx);
+            CONTAINER_INSERT(routeErrTable_if_ctx.container, rowreq_ctx);
         }
         else if (rowreq_ctx->rowreq_flags & MFD_ROW_DELETED) {
-            CONTAINER_REMOVE(smeErrTable_if_ctx.container, rowreq_ctx);
-            smeErrTable_release_rowreq_ctx(rowreq_ctx);
+            CONTAINER_REMOVE(routeErrTable_if_ctx.container, rowreq_ctx);
+            routeErrTable_release_rowreq_ctx(rowreq_ctx);
         }
     }
 
     return SNMP_ERR_NOERROR;
-} /* _mfd_smeErrTable_post_request */
+} /* _mfd_routeErrTable_post_request */
 
 /**
  * @internal
  * wrapper
  */
 static int
-_mfd_smeErrTable_object_lookup(netsnmp_mib_handler *handler,
+_mfd_routeErrTable_object_lookup(netsnmp_mib_handler *handler,
                          netsnmp_handler_registration *reginfo,
                          netsnmp_agent_request_info *agtreq_info,
                          netsnmp_request_info *requests)
 {
-    smeErrTable_rowreq_ctx *rowreq_ctx =
-                  (smeErrTable_rowreq_ctx_s*)netsnmp_container_table_row_extract(requests);
+    routeErrTable_rowreq_ctx *rowreq_ctx =
+                  (routeErrTable_rowreq_ctx_s*)netsnmp_container_table_row_extract(requests);
 
-    DEBUGMSGTL(("internal:smeErrTable:_mfd_smeErrTable_object_lookup","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:_mfd_routeErrTable_object_lookup","called\n"));
 
     /*
      * get our context from mfd
-     * smeErrTable_interface_ctx *if_ctx =
-     *             (smeErrTable_interface_ctx *)reginfo->my_reg_void;
+     * routeErrTable_interface_ctx *if_ctx =
+     *             (routeErrTable_interface_ctx *)reginfo->my_reg_void;
      */
 
     if(NULL == rowreq_ctx) {
         netsnmp_request_set_error_all(requests, SNMP_ERR_NOCREATION);
     }
     else {
-        smeErrTable_row_prep(rowreq_ctx);
+        routeErrTable_row_prep(rowreq_ctx);
     }
 
     return SNMP_ERR_NOERROR;
-} /* _mfd_smeErrTable_object_lookup */
+} /* _mfd_routeErrTable_object_lookup */
 
 /***********************************************************************
  *
@@ -528,67 +528,67 @@ _mfd_smeErrTable_object_lookup(netsnmp_mib_handler *handler,
  * Retrieve the value for a particular column
  */
 NETSNMP_STATIC_INLINE int
-_smeErrTable_get_column( smeErrTable_rowreq_ctx *rowreq_ctx,
+_routeErrTable_get_column( routeErrTable_rowreq_ctx *rowreq_ctx,
                        netsnmp_variable_list *var, int column )
 {
     int rc = SNMPERR_SUCCESS;
 
-    DEBUGMSGTL(("internal:smeErrTable:_mfd_smeErrTable_get_column","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:_mfd_routeErrTable_get_column","called\n"));
 
 
     netsnmp_assert(NULL != rowreq_ctx);
 
     switch(column) {
 
-    /* (INDEX) smeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
-    case COLUMN_SMEERRINDEX:
+    /* (INDEX) routeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
+    case COLUMN_ROUTEERRINDEX:
     var->type = ASN_INTEGER;
         var->val_len = sizeof(long);
-        (*var->val.integer) = rowreq_ctx->tbl_idx.smeErrIndex;
+        (*var->val.integer) = rowreq_ctx->tbl_idx.routeErrIndex;
         break;
 
-    /* (INDEX) smeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
-    case COLUMN_SMEERRCODE:
+    /* (INDEX) routeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
+    case COLUMN_ROUTEERRCODE:
     var->type = ASN_INTEGER;
         var->val_len = sizeof(long);
-        (*var->val.integer) = rowreq_ctx->tbl_idx.smeErrCode;
+        (*var->val.integer) = rowreq_ctx->tbl_idx.routeErrCode;
         break;
 
-    /* smeErrSystemId(3)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
-    case COLUMN_SMEERRSYSTEMID:
+    /* routeErrId(3)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_ROUTEERRID:
     var->type = ASN_OCTET_STR;
-rc = smeErrSystemId_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
+rc = routeErrId_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
         break;
 
-    /* smeErrCount(4)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
-    case COLUMN_SMEERRCOUNT:
+    /* routeErrCount(4)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */
+    case COLUMN_ROUTEERRCOUNT:
     var->val_len = sizeof(U64);
     var->type = ASN_COUNTER64;
-rc = smeErrCount_get(rowreq_ctx, (U64 *)var->val.string );
+rc = routeErrCount_get(rowreq_ctx, (U64 *)var->val.string );
         break;
 
      default:
-         snmp_log(LOG_ERR,"unknown column %d in _smeErrTable_get_column\n", column);
+         snmp_log(LOG_ERR,"unknown column %d in _routeErrTable_get_column\n", column);
          break;
     }
 
     return rc;
-} /* _smeErrTable_get_column */
+} /* _routeErrTable_get_column */
 
 int
-_mfd_smeErrTable_get_values(netsnmp_mib_handler *handler,
+_mfd_routeErrTable_get_values(netsnmp_mib_handler *handler,
                          netsnmp_handler_registration *reginfo,
                          netsnmp_agent_request_info *agtreq_info,
                          netsnmp_request_info *requests)
 {
-    smeErrTable_rowreq_ctx *rowreq_ctx =
-                  (smeErrTable_rowreq_ctx_s*)netsnmp_container_table_row_extract(requests);
+    routeErrTable_rowreq_ctx *rowreq_ctx =
+                  (routeErrTable_rowreq_ctx_s*)netsnmp_container_table_row_extract(requests);
     netsnmp_table_request_info * tri;
     u_char                     * old_string;
     void                      (*dataFreeHook)(void *);
     int                        rc;
 
-    DEBUGMSGTL(("internal:smeErrTable:_mfd_smeErrTable_get_values","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:_mfd_routeErrTable_get_values","called\n"));
 
     netsnmp_assert(NULL != rowreq_ctx);
 
@@ -614,7 +614,7 @@ _mfd_smeErrTable_get_values(netsnmp_mib_handler *handler,
         if(NULL == tri)
             continue;
 
-        rc = _smeErrTable_get_column(rowreq_ctx, requests->requestvb, tri->colnum);
+        rc = _routeErrTable_get_column(rowreq_ctx, requests->requestvb, tri->colnum);
         if(rc) {
             if(MFD_SKIP == rc) {
                 requests->requestvb->type = ASN_PRIV_RETRY;
@@ -643,7 +643,7 @@ _mfd_smeErrTable_get_values(netsnmp_mib_handler *handler,
     } /* for results */
 
     return SNMP_ERR_NOERROR;
-} /* _mfd_smeErrTable_get_values */
+} /* _mfd_routeErrTable_get_values */
 
 /***********************************************************************
  *
@@ -665,10 +665,10 @@ _mfd_smeErrTable_get_values(netsnmp_mib_handler *handler,
 static int
 _cache_load(netsnmp_cache *cache, void *vmagic)
 {
-    DEBUGMSGTL(("internal:smeErrTable:_cache_load","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:_cache_load","called\n"));
 
     if((NULL == cache) || (NULL == cache->magic)) {
-        snmp_log(LOG_ERR, "invalid cache for smeErrTable_cache_load\n");
+        snmp_log(LOG_ERR, "invalid cache for routeErrTable_cache_load\n");
         return -1;
     }
 
@@ -678,21 +678,21 @@ _cache_load(netsnmp_cache *cache, void *vmagic)
     /*
      * call user code
      */
-    return smeErrTable_cache_load((netsnmp_container*)cache->magic);
+    return routeErrTable_cache_load((netsnmp_container*)cache->magic);
 } /* _cache_load */
 
 /**
  * @internal
  */
 static void
-_cache_item_free(smeErrTable_rowreq_ctx *rowreq_ctx, void *context)
+_cache_item_free(routeErrTable_rowreq_ctx *rowreq_ctx, void *context)
 {
-    DEBUGMSGTL(("internal:smeErrTable:_cache_item_free","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:_cache_item_free","called\n"));
 
     if(NULL == rowreq_ctx)
         return;
 
-    smeErrTable_release_rowreq_ctx(rowreq_ctx);
+    routeErrTable_release_rowreq_ctx(rowreq_ctx);
 } /* _cache_item_free */
 
 /**
@@ -703,10 +703,10 @@ _cache_free(netsnmp_cache *cache, void *magic)
 {
     netsnmp_container *container;
 
-    DEBUGMSGTL(("internal:smeErrTable:_cache_free","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:_cache_free","called\n"));
 
     if((NULL == cache) || (NULL == cache->magic)) {
-        snmp_log(LOG_ERR, "invalid cache in smeErrTable_cache_free\n");
+        snmp_log(LOG_ERR, "invalid cache in routeErrTable_cache_free\n");
         return;
     }
 
@@ -715,7 +715,7 @@ _cache_free(netsnmp_cache *cache, void *magic)
     /*
      * call user code
      */
-    smeErrTable_cache_free(container);
+    routeErrTable_cache_free(container);
 
     /*
      * free all items. inefficient, but easy.
@@ -730,37 +730,35 @@ _cache_free(netsnmp_cache *cache, void *magic)
  * initialize the iterator container with functions or wrappers
  */
 void
-_smeErrTable_container_init(smeErrTable_interface_ctx *if_ctx)
+_routeErrTable_container_init(routeErrTable_interface_ctx *if_ctx)
 {
-    DEBUGMSGTL(("internal:smeErrTable:_smeErrTable_container_init","called\n"));
+    DEBUGMSGTL(("internal:routeErrTable:_routeErrTable_container_init","called\n"));
 
     /*
      * set up the cache
      */
     if_ctx->cache = netsnmp_cache_create(30, /* timeout in seconds */
                                          _cache_load, _cache_free,
-                                         smeErrTable_oid,
-                                         smeErrTable_oid_size);
+                                         routeErrTable_oid,
+                                         routeErrTable_oid_size);
 
     if(NULL == if_ctx->cache) {
-        snmp_log(LOG_ERR, "error creating cache for smeErrTable\n");
+        snmp_log(LOG_ERR, "error creating cache for routeErrTable\n");
         return;
     }
 
     if_ctx->cache->flags = NETSNMP_CACHE_DONT_INVALIDATE_ON_SET;
 
-    smeErrTable_container_init(&if_ctx->container, if_ctx->cache);
+    routeErrTable_container_init(&if_ctx->container, if_ctx->cache);
     if(NULL == if_ctx->container)
-        if_ctx->container = netsnmp_container_find("smeErrTable:table_container");
+        if_ctx->container = netsnmp_container_find("routeErrTable:table_container");
     if(NULL == if_ctx->container) {
         snmp_log(LOG_ERR,"error creating container in "
-                 "smeErrTable_container_init\n");
+                 "routeErrTable_container_init\n");
         return;
     }
     if_ctx->cache->magic = (void*)if_ctx->container;
-} /* _smeErrTable_container_init */
+} /* _routeErrTable_container_init */
 
-}//smeerrtable
-}//snmp
-}//smsc
+}}}
 

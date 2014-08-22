@@ -11,34 +11,31 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 
 /* include our parent header */
-#include "smeErrTable.hpp"
+#include "routeErrTable.hpp"
 
 #include <signal.h>
 
 
-namespace scag2 {
-namespace snmp {
-namespace smeerrtable {
+namespace scag2{
+namespace snmp{
+namespace routeerrtable{
 
-void InitSmeErrTable()
+void InitRouteErrTable()
 {
-  /* initialize the agent library */
-  //init_agent("smeErrTable");
+  /* init routeErrTable mib code */
+  init_routeErrTable();
 
-  /* init smeErrTable mib code */
-  init_smeErrTable();
-
-  /* read smeErrTable.conf files. */
-  init_snmp("smeErrTable");
+  /* read routeErrTable.conf files. */
+  init_snmp("routeErrTable");
 }
 
-void ShutdownSmeErrTable()
+void ShutdownRouteErrTable()
 {
-  snmp_shutdown("smeErrTable");
+  snmp_shutdown("routeErrTable");
 }
 
 
-}//smeerrtable
+}//routeErrtable
 }//snmp
 }//smsc
 

@@ -6,17 +6,14 @@
 #include "logger/Logger.h"
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/EventMonitor.hpp"
-//#include "smsc/smscsignalhandlers.h"
-//#include "smsc/smsc.hpp"
-//#include "smsc/version.h"
 
 #include "scag/counter/Manager.h"
 
 #include "smestattable/smeStatTable_subagent.hpp"
 #include "smeerrtable/smeErrTable_subagent.hpp"
+#include "routestattable/routeStatTable_subagent.hpp"
+#include "routeerrtable/routeErrTable_subagent.hpp"
 #include "SnmpAgent.hpp"
-//#include "SnmpAppender.hpp"
-//#include "TrapRecordLog.hpp"
 #include <signal.h>
 #include "scag/version.h"
 
@@ -32,10 +29,6 @@ extern "C" {
   msagNetSnmpHandler uptimeHandler;
   msagNetSnmpHandler statisticsHandler;
 
-//  void sendStatusNotification(unsigned int clientreg, void* clientarg);
-//  void sendAlarmNotification(unsigned int clientreg, void* clientarg);
-
-//  void send_change_status();
   void* agent = 0;
   void* agentlog = 0;
 
@@ -66,18 +59,10 @@ extern "C" {
   {
   }
 
-/*
-  const char* SnmpAgent::taskName()
-  {
-    return "SnmpAgent";
-  }
-*/
   SnmpAgent::SnmpAgent(unsigned node_number)
   {
     node = node_number;
     log = smsc::logger::Logger::getInstance("snmp.agent");
-//    smsc::logger::Logger *tlog = smsc::logger::Logger::getInstance("sms.snmp.alarm");//TODO implement SNMP Appender
-//    tlog->setAppender(new SnmpAppender("-",this));
     agentlog = (void*)log;
     agent = (void*)this;
     init();
@@ -96,54 +81,28 @@ extern "C" {
     agentStartTime.tv_sec--;
     agentStartTime.tv_usec += 1000000L;
 
-//    snmp_disable_stderrlog();  // print log errors to stderr
-//    netsnmp_ds_set_boolean(NETSNMP_DS_APPLICATION_ID, NETSNMP_DS_AGENT_ROLE, 1);  // we are a subagent
-//    init_agent("msagd");  // initialize the agent library
-    smsc_log_debug(log, "before init SNMP handlers");
     try
     {
       init_handlers();      // initialize mib code here
-      smsc_log_debug(log, "SNMP handlers init OK");
     }
     catch(...)
     {
-      smsc_log_debug(log, "SNMP handlers init failure");
+      smsc_log_error(log, "SNMP handlers init failure");
     }
-//    init_snmp("msag");    //read .conf files
 
     smestattable::SmeStatTableSubagent::Register();
     smeerrtable::InitSmeErrTable();
+    routestattable::RouteStatTableSubagent::Register();
+    routeerrtable::InitRouteErrTable();
   }
-/*
-  int SnmpAgent::Execute()
-  {
-    char buf1[64];
-    sprintf(buf1, "n%d.ucs.lst", node);
-    char buf2[64];
-    sprintf(buf2, "n%d.ucs.csv", node);
 
-    struct timeval t;t.tv_sec=0,t.tv_usec=500000;
-    snmp_alarm_register_hr(t, SA_REPEAT, dummyAlert, 0);
-
-    while(!isStopping)
-    {
-      agent_check_and_process(1);
-    }
-
-    smsc_log_debug(log, "try to shutdown snmp agent");
-    smestattable::SmeStatTableSubagent::Unregister();
-    smeerrtable::ShutdownSmeErrTable();
-    snmp_shutdown("msagd");// at shutdown time
-    smsc_log_debug(log, "snmp agent shutdowned");
-    return 0;
-  }
-*/
   void SnmpAgent::shutdown()
   {
     smsc_log_debug(log, "try to shutdown snmp agent");
     smestattable::SmeStatTableSubagent::Unregister();
     smeerrtable::ShutdownSmeErrTable();
-//    snmp_shutdown("msagd");// at shutdown time
+    routestattable::RouteStatTableSubagent::Unregister();
+    routeerrtable::ShutdownRouteErrTable();
     smsc_log_debug(log, "snmp agent shutdowned");
   }
 

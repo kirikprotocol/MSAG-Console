@@ -51,7 +51,7 @@ void init_smeStatTable(void);
  **********************************************************************
  **********************************************************************/
 /*
- * smeStatTable is subid 10 of smsc.
+ * smeStatTable is subid 10 of msag.
  * Its status is Current.
  * OID: .1.3.6.1.4.1.26757.1.10, length: 9
 */

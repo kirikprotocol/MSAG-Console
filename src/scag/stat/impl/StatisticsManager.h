@@ -168,17 +168,17 @@ using namespace scag::stat::sacc;
         Sender sender;
 
         Mutex                            svcCountersLock;
-        Hash   <CommonPerformanceCounter*>  svcSmppCounters;
-        Hash   <CommonPerformanceCounter*>  svcWapCounters;
-        Hash   <CommonPerformanceCounter*>  svcMmsCounters;
+        Hash<CommonPerformanceCounter*>  svcSmppCounters;
+        Hash<CommonPerformanceCounter*>  svcWapCounters;
+        Hash<CommonPerformanceCounter*>  svcMmsCounters;
 
         std::vector<Socket*> svcSockets;
         Mutex svcSocketsMutex;
 
-        Mutex                             scCountersLock;
-        Hash   <CommonPerformanceCounter*>  scSmppCounters;
-        Hash   <CommonPerformanceCounter*>  scWapCounters;
-        Hash   <CommonPerformanceCounter*>  scMmsCounters;
+        Mutex                            scCountersLock;
+        Hash<CommonPerformanceCounter*>  scSmppCounters;
+        Hash<CommonPerformanceCounter*>  scWapCounters;
+        Hash<CommonPerformanceCounter*>  scMmsCounters;
 
         std::vector<Socket*> scSockets;
         Mutex scSocketsMutex;
@@ -189,6 +189,8 @@ using namespace scag::stat::sacc;
         GenStatistics genStatSmpp;
         GenStatistics genStatHttp;
 
+        Mutex                            routeCountersLock;
+        Hash<CommonPerformanceCounter*>  routeSmppCounters;
         //File storage
     private:
 
@@ -209,6 +211,7 @@ using namespace scag::stat::sacc;
             return new TimeSlotCounter<int>(3600, 1000);
         }
         void incSmppCounter(const char* systemId, bool sc, int index, int errcode);
+        void incSmppRouteCounter(const smsc::sms::RouteId& routeId, int index, int errcode=-1);
 //        void incSvcSmppCounter(const char* systemId, int index);
         void incSvcWapCounter(const char*  systemId, int index);
         void incSvcMmsCounter(const char*  systemId, int index);
@@ -235,8 +238,9 @@ using namespace scag::stat::sacc;
 
     public:
 
-        StatisticsManager* InstanceSM();
+//        StatisticsManager* InstanceSM();
         Hash<CommonPerformanceCounter*>& getCounters(bool smsc=0);
+        Hash<CommonPerformanceCounter*>& getRouteCounters();
 //        Hash<CommonStat>& getErrors(bool smsc=0);
 
         void init( const StatManConfig& statManCfg );

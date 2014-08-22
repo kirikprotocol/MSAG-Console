@@ -10,16 +10,16 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 
 /* include our parent header */
-#include "smeErrTable.hpp"
+#include "routeErrTable.hpp"
 
-namespace smsc{
+namespace scag2{
 namespace snmp{
-namespace smeerrtable{
+namespace routeerrtable{
 
 /** @defgroup data_get data_get: Routines to get data
  *
- * TODO:230:M: Implement smeErrTable get routines.
- * TODO:240:M: Implement smeErrTable mapping routines (if any).
+ * TODO:230:M: Implement routeErrTable get routines.
+ * TODO:240:M: Implement routeErrTable mapping routines (if any).
  *
  * These routine are used to get the value for individual objects. The
  * row context is passed, along with a pointer to the memory where the
@@ -30,25 +30,25 @@ namespace smeerrtable{
 /**********************************************************************
  **********************************************************************
  ***
- *** Table smeErrTable
+ *** Table routeErrTable
  ***
  **********************************************************************
  **********************************************************************/
 /*
- * smeErrTable is subid 11 of msag.
+ * routeErrTable is subid 13 of msag.
  * Its status is Current.
- * OID: .1.3.6.1.4.1.26757.1.11, length: 9
+ * OID: .1.3.6.1.4.1.26757.2.13, length: 9
 */
 
 /* ---------------------------------------------------------------------
- * TODO:200:r: Implement smeErrTable data context functions.
+ * TODO:200:r: Implement routeErrTable data context functions.
  */
 
 /*---------------------------------------------------------------------
- * SIBINCO-SMSC-MIB::smeErrEntry.smeErrIndex
- * smeErrIndex is subid 1 of smeErrEntry.
+ * SIBINCO-SMSC-MIB::routeErrEntry.routeErrIndex
+ * routeErrIndex is subid 1 of routeErrEntry.
  * Its status is Current, and its access level is ReadOnly.
- * OID: .1.3.6.1.4.1.26757.1.11.1.1
+ * OID: .1.3.6.1.4.1.26757.2.13.1.1
  * Description:
 SME Index.
  *
@@ -72,7 +72,7 @@ SME Index.
  *
  * @note generation and use of this function can be turned off by re-running
  * mib2c after adding the following line to the file
- * default-node-smeErrIndex.m2d :
+ * default-node-routeErrIndex.m2d :
  *   @eval $m2c_node_skip_mapping = 1@
  *
  * @remark
@@ -81,27 +81,27 @@ SME Index.
  *  Otherwise, just do a direct copy.
  */
 int
-smeErrIndex_map(long *mib_smeErrIndex_val_ptr, long raw_smeErrIndex_val)
+routeErrIndex_map(long *mib_routeErrIndex_val_ptr, long raw_routeErrIndex_val)
 {
-    netsnmp_assert(NULL != mib_smeErrIndex_val_ptr);
+    netsnmp_assert(NULL != mib_routeErrIndex_val_ptr);
 
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrIndex_map","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrIndex_map","called\n"));
 
     /*
-     * TODO:241:o: |-> Implement smeErrIndex mapping.
+     * TODO:241:o: |-> Implement routeErrIndex mapping.
      * If the values for your data type don't exactly match the
      * possible values defined by the mib, you should map them here.
      */
-    (*mib_smeErrIndex_val_ptr) = raw_smeErrIndex_val;
+    (*mib_routeErrIndex_val_ptr) = raw_routeErrIndex_val;
 
     return MFD_SUCCESS;
-} /* smeErrIndex_map */
+} /* routeErrIndex_map */
 
 /*---------------------------------------------------------------------
- * SIBINCO-SMSC-MIB::smeErrEntry.smeErrCode
- * smeErrCode is subid 2 of smeErrEntry.
+ * SIBINCO-SMSC-MIB::routeErrEntry.routeErrCode
+ * routeErrCode is subid 2 of routeErrEntry.
  * Its status is Current, and its access level is ReadOnly.
- * OID: .1.3.6.1.4.1.26757.1.11.1.2
+ * OID: .1.3.6.1.4.1.26757.2.13.1.2
  * Description:
 SME Err Code.
  *
@@ -125,7 +125,7 @@ SME Err Code.
  *
  * @note generation and use of this function can be turned off by re-running
  * mib2c after adding the following line to the file
- * default-node-smeErrCode.m2d :
+ * default-node-routeErrCode.m2d :
  *   @eval $m2c_node_skip_mapping = 1@
  *
  * @remark
@@ -134,21 +134,21 @@ SME Err Code.
  *  Otherwise, just do a direct copy.
  */
 int
-smeErrCode_map(long *mib_smeErrCode_val_ptr, long raw_smeErrCode_val)
+routeErrCode_map(long *mib_routeErrCode_val_ptr, long raw_routeErrCode_val)
 {
-    netsnmp_assert(NULL != mib_smeErrCode_val_ptr);
+    netsnmp_assert(NULL != mib_routeErrCode_val_ptr);
 
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrCode_map","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrCode_map","called\n"));
 
     /*
-     * TODO:241:o: |-> Implement smeErrCode mapping.
+     * TODO:241:o: |-> Implement routeErrCode mapping.
      * If the values for your data type don't exactly match the
      * possible values defined by the mib, you should map them here.
      */
-    (*mib_smeErrCode_val_ptr) = raw_smeErrCode_val;
+    (*mib_routeErrCode_val_ptr) = raw_routeErrCode_val;
 
     return MFD_SUCCESS;
-} /* smeErrCode_map */
+} /* routeErrCode_map */
 
 
 /**
@@ -165,19 +165,19 @@ smeErrCode_map(long *mib_smeErrCode_val_ptr, long raw_smeErrCode_val)
  *  have already been mapped from their native/rawformat to the MIB format.
  */
 int
-smeErrTable_indexes_set_tbl_idx(smeErrTable_mib_index *tbl_idx, long smeErrIndex_val, long smeErrCode_val)
+routeErrTable_indexes_set_tbl_idx(routeErrTable_mib_index *tbl_idx, long routeErrIndex_val, long routeErrCode_val)
 {
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_indexes_set_tbl_idx","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrTable_indexes_set_tbl_idx","called\n"));
 
-    /* smeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
-    tbl_idx->smeErrIndex = smeErrIndex_val;
+    /* routeErrIndex(1)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
+    tbl_idx->routeErrIndex = routeErrIndex_val;
 
-    /* smeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
-    tbl_idx->smeErrCode = smeErrCode_val;
+    /* routeErrCode(2)/INTEGER/ASN_INTEGER/long(long)//l/A/w/e/R/d/h */
+    tbl_idx->routeErrCode = routeErrCode_val;
 
 
     return MFD_SUCCESS;
-} /* smeErrTable_indexes_set_tbl_idx */
+} /* routeErrTable_indexes_set_tbl_idx */
 
 /**
  * @internal
@@ -193,13 +193,13 @@ smeErrTable_indexes_set_tbl_idx(smeErrTable_mib_index *tbl_idx, long smeErrIndex
  *  from the mib index.
  */
 int
-smeErrTable_indexes_set(smeErrTable_rowreq_ctx *rowreq_ctx, long smeErrIndex_val, long smeErrCode_val)
+routeErrTable_indexes_set(routeErrTable_rowreq_ctx *rowreq_ctx, long routeErrIndex_val, long routeErrCode_val)
 {
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrTable_indexes_set","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrTable_indexes_set","called\n"));
 
-    if(MFD_SUCCESS != smeErrTable_indexes_set_tbl_idx(&rowreq_ctx->tbl_idx
-                                   , smeErrIndex_val
-                                   , smeErrCode_val
+    if(MFD_SUCCESS != routeErrTable_indexes_set_tbl_idx(&rowreq_ctx->tbl_idx
+                                   , routeErrIndex_val
+                                   , routeErrCode_val
            ))
         return MFD_ERROR;
 
@@ -207,20 +207,20 @@ smeErrTable_indexes_set(smeErrTable_rowreq_ctx *rowreq_ctx, long smeErrIndex_val
      * convert mib index to oid index
      */
     rowreq_ctx->oid_idx.len = (int)(sizeof(rowreq_ctx->oid_tmp) / sizeof(oid));
-    if(0 != smeErrTable_index_to_oid(&rowreq_ctx->oid_idx,
+    if(0 != routeErrTable_index_to_oid(&rowreq_ctx->oid_idx,
                                     &rowreq_ctx->tbl_idx)) {
         return MFD_ERROR;
     }
 
     return MFD_SUCCESS;
-} /* smeErrTable_indexes_set */
+} /* routeErrTable_indexes_set */
 
 
 /*---------------------------------------------------------------------
- * SIBINCO-SMSC-MIB::smeErrEntry.smeErrSystemId
- * smeErrSystemId is subid 3 of smeErrEntry.
+ * SIBINCO-SMSC-MIB::routeErrEntry.routeErrId
+ * routeErrId is subid 3 of routeErrEntry.
  * Its status is Current, and its access level is ReadOnly.
- * OID: .1.3.6.1.4.1.26757.1.11.1.3
+ * OID: .1.3.6.1.4.1.26757.2.13.1.3
  * Description:
 SME system Id.
  *
@@ -246,7 +246,7 @@ SME system Id.
  *
  * @note generation and use of this function can be turned off by re-running
  * mib2c after adding the following line to the file
- * default-node-smeErrSystemId.m2d :
+ * default-node-routeErrId.m2d :
  *   @eval $m2c_node_skip_mapping = 1@
  *
  * @remark
@@ -255,17 +255,17 @@ SME system Id.
  *  Otherwise, just do a direct copy.
  */
 int
-smeErrSystemId_map(char **mib_smeErrSystemId_val_ptr_ptr, size_t *mib_smeErrSystemId_val_ptr_len_ptr, char *raw_smeErrSystemId_val_ptr, size_t raw_smeErrSystemId_val_ptr_len, int allow_realloc)
+routeErrId_map(char **mib_routeErrId_val_ptr_ptr, size_t *mib_routeErrId_val_ptr_len_ptr, char *raw_routeErrId_val_ptr, size_t raw_routeErrId_val_ptr_len, int allow_realloc)
 {
     size_t converted_len;
 
-    netsnmp_assert(NULL != raw_smeErrSystemId_val_ptr);
-    netsnmp_assert((NULL != mib_smeErrSystemId_val_ptr_ptr) && (NULL != mib_smeErrSystemId_val_ptr_len_ptr));
+    netsnmp_assert(NULL != raw_routeErrId_val_ptr);
+    netsnmp_assert((NULL != mib_routeErrId_val_ptr_ptr) && (NULL != mib_routeErrId_val_ptr_len_ptr));
 
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrSystemId_map","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrId_map","called\n"));
 
     /*
-     * TODO:241:r: |-> Implement smeErrSystemId non-integer mapping
+     * TODO:241:r: |-> Implement routeErrId non-integer mapping
      * it is hard to autogenerate code for mapping types that are not simple
      * integers, so here is an idea of what you might need to do. It will
      * probably need some tweaking to get right.
@@ -275,44 +275,44 @@ smeErrSystemId_map(char **mib_smeErrSystemId_val_ptr_ptr, size_t *mib_smeErrSyst
      * the length of the mib data, set converted_len to the
      * space required.
      */
-    converted_len = raw_smeErrSystemId_val_ptr_len; /* assume equal */
-    if((NULL == *mib_smeErrSystemId_val_ptr_ptr) || (*mib_smeErrSystemId_val_ptr_len_ptr < converted_len)) {
+    converted_len = raw_routeErrId_val_ptr_len; /* assume equal */
+    if((NULL == *mib_routeErrId_val_ptr_ptr) || (*mib_routeErrId_val_ptr_len_ptr < converted_len)) {
         if(! allow_realloc) {
             snmp_log(LOG_ERR,"not enough space for value mapping\n");
             return SNMP_ERR_GENERR;
         }
-        *mib_smeErrSystemId_val_ptr_ptr = (char*)realloc( *mib_smeErrSystemId_val_ptr_ptr, converted_len * sizeof(**mib_smeErrSystemId_val_ptr_ptr));
-        if(NULL == *mib_smeErrSystemId_val_ptr_ptr) {
+        *mib_routeErrId_val_ptr_ptr = (char*)realloc( *mib_routeErrId_val_ptr_ptr, converted_len * sizeof(**mib_routeErrId_val_ptr_ptr));
+        if(NULL == *mib_routeErrId_val_ptr_ptr) {
             snmp_log(LOG_ERR,"could not allocate memory\n");
             return SNMP_ERR_GENERR;
         }
     }
-    *mib_smeErrSystemId_val_ptr_len_ptr = converted_len;
-    memcpy( *mib_smeErrSystemId_val_ptr_ptr, raw_smeErrSystemId_val_ptr, converted_len );
+    *mib_routeErrId_val_ptr_len_ptr = converted_len;
+    memcpy( *mib_routeErrId_val_ptr_ptr, raw_routeErrId_val_ptr, converted_len );
 
     return MFD_SUCCESS;
-} /* smeErrSystemId_map */
+} /* routeErrId_map */
 
 /**
- * Extract the current value of the smeErrSystemId data.
+ * Extract the current value of the routeErrId data.
  *
  * Set a value using the data context for the row.
  *
  * @param rowreq_ctx
  *        Pointer to the row request context.
- * @param smeErrSystemId_val_ptr_ptr
+ * @param routeErrId_val_ptr_ptr
  *        Pointer to storage for a char variable
- * @param smeErrSystemId_val_ptr_len_ptr
+ * @param routeErrId_val_ptr_len_ptr
  *        Pointer to a size_t. On entry, it will contain the size (in bytes)
- *        pointed to by smeErrSystemId.
+ *        pointed to by routeErrId.
  *        On exit, this value should contain the data size (in bytes).
  *
  * @retval MFD_SUCCESS         : success
  * @retval MFD_SKIP            : skip this node (no value for now)
  * @retval MFD_ERROR           : Any other error
 *
- * @note If you need more than (*smeErrSystemId_val_ptr_len_ptr) bytes of memory,
- *       allocate it using malloc() and update smeErrSystemId_val_ptr_ptr.
+ * @note If you need more than (*routeErrId_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update routeErrId_val_ptr_ptr.
  *       <b>DO NOT</b> free the previous pointer.
  *       The MFD helper will release the memory you allocate.
  *
@@ -322,46 +322,46 @@ smeErrSystemId_map(char **mib_smeErrSystemId_val_ptr_ptr, size_t *mib_smeErrSyst
  *         in a pointer to static memory, obviously.)
  */
 int
-smeErrSystemId_get( smeErrTable_rowreq_ctx *rowreq_ctx, char **smeErrSystemId_val_ptr_ptr, size_t *smeErrSystemId_val_ptr_len_ptr )
+routeErrId_get( routeErrTable_rowreq_ctx *rowreq_ctx, char **routeErrId_val_ptr_ptr, size_t *routeErrId_val_ptr_len_ptr )
 {
    /** we should have a non-NULL pointer and enough storage */
-   netsnmp_assert( (NULL != smeErrSystemId_val_ptr_ptr) && (NULL != *smeErrSystemId_val_ptr_ptr));
-   netsnmp_assert( NULL != smeErrSystemId_val_ptr_len_ptr );
+   netsnmp_assert( (NULL != routeErrId_val_ptr_ptr) && (NULL != *routeErrId_val_ptr_ptr));
+   netsnmp_assert( NULL != routeErrId_val_ptr_len_ptr );
 
 
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrSystemId_get","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrId_get","called\n"));
 
     netsnmp_assert(NULL != rowreq_ctx);
 
 /*
- * TODO:231:o: |-> Extract the current value of the smeErrSystemId data.
- * set (* smeErrSystemId_val_ptr_ptr ) and (* smeErrSystemId_val_ptr_len_ptr ) from rowreq_ctx->data
+ * TODO:231:o: |-> Extract the current value of the routeErrId data.
+ * set (* routeErrId_val_ptr_ptr ) and (* routeErrId_val_ptr_len_ptr ) from rowreq_ctx->data
  */
     /*
-     * make sure there is enough space for smeErrSystemId data
+     * make sure there is enough space for routeErrId data
      */
-    if ((NULL == (* smeErrSystemId_val_ptr_ptr )) ||
-        ((* smeErrSystemId_val_ptr_len_ptr ) < (rowreq_ctx->data.smeErrSystemId_len * sizeof((* smeErrSystemId_val_ptr_ptr )[0])))) {
+    if ((NULL == (* routeErrId_val_ptr_ptr )) ||
+        ((* routeErrId_val_ptr_len_ptr ) < (rowreq_ctx->data.routeErrId_len * sizeof((* routeErrId_val_ptr_ptr )[0])))) {
         /*
-         * allocate space for smeErrSystemId data
+         * allocate space for routeErrId data
          */
-        (* smeErrSystemId_val_ptr_ptr ) = (char*)malloc(rowreq_ctx->data.smeErrSystemId_len * sizeof((* smeErrSystemId_val_ptr_ptr )[0]));
-        if(NULL == (* smeErrSystemId_val_ptr_ptr )) {
+        (* routeErrId_val_ptr_ptr ) = (char*)malloc(rowreq_ctx->data.routeErrId_len * sizeof((* routeErrId_val_ptr_ptr )[0]));
+        if(NULL == (* routeErrId_val_ptr_ptr )) {
             snmp_log(LOG_ERR,"could not allocate memory\n");
             return MFD_ERROR;
         }
     }
-    (* smeErrSystemId_val_ptr_len_ptr ) = rowreq_ctx->data.smeErrSystemId_len * sizeof((* smeErrSystemId_val_ptr_ptr )[0]);
-    memcpy( (* smeErrSystemId_val_ptr_ptr ), rowreq_ctx->data.smeErrSystemId, (* smeErrSystemId_val_ptr_len_ptr ) );
+    (* routeErrId_val_ptr_len_ptr ) = rowreq_ctx->data.routeErrId_len * sizeof((* routeErrId_val_ptr_ptr )[0]);
+    memcpy( (* routeErrId_val_ptr_ptr ), rowreq_ctx->data.routeErrId, (* routeErrId_val_ptr_len_ptr ) );
 
     return MFD_SUCCESS;
-} /* smeErrSystemId_get */
+} /* routeErrId_get */
 
 /*---------------------------------------------------------------------
- * SIBINCO-SMSC-MIB::smeErrEntry.smeErrCount
- * smeErrCount is subid 4 of smeErrEntry.
+ * SIBINCO-SMSC-MIB::routeErrEntry.routeErrCount
+ * routeErrCount is subid 4 of routeErrEntry.
  * Its status is Current, and its access level is ReadOnly.
- * OID: .1.3.6.1.4.1.26757.1.11.1.4
+ * OID: .1.3.6.1.4.1.26757.2.13.1.4
  * Description:
 SME Counter Accepted
  *
@@ -384,7 +384,7 @@ SME Counter Accepted
  *
  * @note generation and use of this function can be turned off by re-running
  * mib2c after adding the following line to the file
- * default-node-smeErrCount.m2d :
+ * default-node-routeErrCount.m2d :
  *   @eval $m2c_node_skip_mapping = 1@
  *
  * @remark
@@ -393,30 +393,30 @@ SME Counter Accepted
  *  Otherwise, just do a direct copy.
  */
 int
-smeErrCount_map(U64 *mib_smeErrCount_val_ptr, U64 raw_smeErrCount_val)
+routeErrCount_map(U64 *mib_routeErrCount_val_ptr, U64 raw_routeErrCount_val)
 {
-    netsnmp_assert(NULL != mib_smeErrCount_val_ptr);
+    netsnmp_assert(NULL != mib_routeErrCount_val_ptr);
 
-    DEBUGMSGTL(("verbose:smeErrTable:smeErrCount_map","called\n"));
+    DEBUGMSGTL(("verbose:routeErrTable:routeErrCount_map","called\n"));
 
     /*
-     * TODO:241:o: |-> Implement smeErrCount mapping.
+     * TODO:241:o: |-> Implement routeErrCount mapping.
      * If the values for your data type don't exactly match the
      * possible values defined by the mib, you should map them here.
      */
-    (*mib_smeErrCount_val_ptr) = raw_smeErrCount_val;
+    (*mib_routeErrCount_val_ptr) = raw_routeErrCount_val;
 
     return MFD_SUCCESS;
-} /* smeErrCount_map */
+} /* routeErrCount_map */
 
 /**
- * Extract the current value of the smeErrCount data.
+ * Extract the current value of the routeErrCount data.
  *
  * Set a value using the data context for the row.
  *
  * @param rowreq_ctx
  *        Pointer to the row request context.
- * @param smeErrCount_val_ptr
+ * @param routeErrCount_val_ptr
  *        Pointer to storage for a U64 variable
  *
  * @retval MFD_SUCCESS         : success
@@ -424,24 +424,22 @@ smeErrCount_map(U64 *mib_smeErrCount_val_ptr, U64 raw_smeErrCount_val)
  * @retval MFD_ERROR           : Any other error
  */
 int
-smeErrCount_get( smeErrTable_rowreq_ctx *rowreq_ctx, U64 * smeErrCount_val_ptr )
+routeErrCount_get( routeErrTable_rowreq_ctx *rowreq_ctx, U64 * routeErrCount_val_ptr )
 {
    /** we should have a non-NULL pointer */
-   netsnmp_assert( NULL != smeErrCount_val_ptr );
+   netsnmp_assert( NULL != routeErrCount_val_ptr );
 
 /*
- * TODO:231:o: |-> copy smeErrCount data.
- * get (* smeErrCount_val_ptr ).low and (* smeErrCount_val_ptr ).high from rowreq_ctx->data
+ * TODO:231:o: |-> copy routeErrCount data.
+ * get (* routeErrCount_val_ptr ).low and (* routeErrCount_val_ptr ).high from rowreq_ctx->data
  */
-    (* smeErrCount_val_ptr ).high = rowreq_ctx->data.smeErrCount.high;
-    (* smeErrCount_val_ptr ).low = rowreq_ctx->data.smeErrCount.low;
+    (* routeErrCount_val_ptr ).high = rowreq_ctx->data.routeErrCount.high;
+    (* routeErrCount_val_ptr ).low = rowreq_ctx->data.routeErrCount.low;
 
 
     return MFD_SUCCESS;
-} /* smeErrCount_get */
+} /* routeErrCount_get */
 
-}//smeerrtable
-}//snmp
-}//smsc
+}}}
 
 /** @} */
