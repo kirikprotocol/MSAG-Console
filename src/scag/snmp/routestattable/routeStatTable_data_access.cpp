@@ -341,7 +341,7 @@ int routeStatTable_cache_load(netsnmp_container* container)
   smsc_log_debug(log, "routeStatTable_cache_load: getCounters(0) ok");
 
 //#ifdef DEBUG
-  fakeFillHashIfEmpty(h0);
+//  fakeFillHashIfEmpty(h0);
 //#endif
 
   return loadHashToContainer(container, h0);

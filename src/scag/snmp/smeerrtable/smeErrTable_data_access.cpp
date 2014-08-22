@@ -339,7 +339,7 @@ int smeErrTable_cache_load(netsnmp_container* container)
   smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(0);
 
 //#ifdef DEBUG
-  fakeFillHashIfEmpty(h0);
+//  fakeFillHashIfEmpty(h0);
 //#endif
   int result = loadHashToContainer(container, h0);
 

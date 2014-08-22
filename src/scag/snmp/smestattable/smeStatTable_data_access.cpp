@@ -373,7 +373,7 @@ int smeStatTable_cache_load(netsnmp_container* container)
   smsc_log_debug(log, "smeStatTable_cache_load: getCounters(0) ok");
 
 //#ifdef DEBUG
-  fakeFillHashIfEmpty(h0);
+//  fakeFillHashIfEmpty(h0);
 //#endif
   int result = loadHashToContainer(container, h0);
 

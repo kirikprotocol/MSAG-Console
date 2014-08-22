@@ -338,7 +338,7 @@ int routeErrTable_cache_load(netsnmp_container* container)
   smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getRouteCounters();
 
 //#ifdef DEBUG
-  fakeFillHashIfEmpty(h0);
+//  fakeFillHashIfEmpty(h0);
 //#endif
 
   return loadHashToContainer(container, h0);
