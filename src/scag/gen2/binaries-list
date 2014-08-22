@@ -44,12 +44,13 @@ scag/msag           gwmain2        \
   -lscag-config-base \
   \
 switch SNMP
-YES: -lscag-snmp -lscag-snmp-counters -lscag-snmp-smeerrtable -lscag-snmp-smestattable \
+YES: -lscag-snmp -lscag-snmp-counters \
+  -lscag-snmp-smestattable -lscag-snmp-smeerrtable \
+  -lscag-snmp-routestattable -lscag-snmp-routeerrtable \
 endswitch
   \
   -lscag-stat-base \
   -lscag-stat-impl \
-
   -lscag-util-properties \
   -lscag-util-storage \
   -lscag-util-memory \
@@ -85,7 +86,8 @@ endswitch
   $(SSL_LIB) $(LIBICONV) \
   -lpthread $(LIBRT) -ldl \
   $(DBUSLIB) \
-  $(LIBMALLOC)  
+  $(LIBMALLOC)
+
 
 
 scag/tests/testRule testRule \
