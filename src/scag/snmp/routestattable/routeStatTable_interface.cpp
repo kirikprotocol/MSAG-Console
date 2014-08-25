@@ -32,6 +32,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include <net-snmp/agent/table_container.h>
+#include <net-snmp/agent/row_merge.h>
 
 /* include our parent header */
 #include "routeStatTable.hpp"

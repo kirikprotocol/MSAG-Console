@@ -335,6 +335,7 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
       smsc_log_error(log, "smeStatTable_cache_load fillRecord error");
       continue;
     }
+/*
     if ( container->insert_filter )
     {
       smsc_log_debug(log, "smeStatTable_cache_load: container insert_filter (%p)=%d",
@@ -342,7 +343,7 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
     }
     else
       smsc_log_debug(log, "smeStatTable_cache_load: container: NO insert_filter");
-
+*/
     int rc = CONTAINER_INSERT(container, rec);
     if ( 0 == rc )
       ++recCount;
