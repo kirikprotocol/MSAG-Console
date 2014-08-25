@@ -386,19 +386,18 @@ static int _mfd_routeStatTable_pre_request(netsnmp_mib_handler *handler,
                             netsnmp_agent_request_info *agtreq_info,
                             netsnmp_request_info *requests)
 {
+/*
     if (1 != netsnmp_row_merge_status_first(reginfo, agtreq_info)) {
         DEBUGMSGTL(("internal:routeStatTable","skipping additional pre_request\n"));
         return SNMP_ERR_NOERROR;
     }
     int rc = routeStatTable_pre_request(routeStatTable_if_ctx.user_ctx);
     if (MFD_SUCCESS != rc) {
-        /*
-         * nothing we can do about it but log it
-         */
+         //nothing we can do about it but log it
         DEBUGMSGTL(("internal:routeStatTable","error %d from routeStatTable_pre_request\n", rc));
         netsnmp_request_set_error_all(requests, SNMP_VALIDATE_ERR(rc));
     }
-
+*/
     return SNMP_ERR_NOERROR;
 } /* _mfd_routeStatTable_pre_request */
 
