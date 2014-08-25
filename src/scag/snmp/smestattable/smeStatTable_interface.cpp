@@ -384,19 +384,18 @@ static int _mfd_smeStatTable_pre_request(netsnmp_mib_handler *handler,
                             netsnmp_agent_request_info *agtreq_info,
                             netsnmp_request_info *requests)
 {
+/*
     if (1 != netsnmp_row_merge_status_first(reginfo, agtreq_info)) {
         DEBUGMSGTL(("internal:smeStatTable","skipping additional pre_request\n"));
         return SNMP_ERR_NOERROR;
     }
     int rc = smeStatTable_pre_request(smeStatTable_if_ctx.user_ctx);
     if (MFD_SUCCESS != rc) {
-        /*
-         * nothing we can do about it but log it
-         */
+         // nothing we can do about it but log it
         DEBUGMSGTL(("internal:smeStatTable","error %d from smeStatTable_pre_request\n", rc));
         netsnmp_request_set_error_all(requests, SNMP_VALIDATE_ERR(rc));
     }
-
+*/
     return SNMP_ERR_NOERROR;
 } /* _mfd_smeStatTable_pre_request */
 
