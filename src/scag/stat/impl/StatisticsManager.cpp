@@ -333,7 +333,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
         if(routeSt) {
           routeSt->rejected++; routeSt->failed++;
           incSmppRouteCounter(se.routeId, cntRejected, se.errCode);
-          incSmppRouteCounter(se.routeId, cntFailed, -1);
+          incSmppRouteCounter(se.routeId, cntFailed, se.errCode); // -1);
         }
         genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntFailed);
         break;
@@ -347,7 +347,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
         if(routeSt) {
           routeSt->rejected++; routeSt->gw_rejected++;
           incSmppRouteCounter(se.routeId, cntRejected, se.errCode);
-          incSmppRouteCounter(se.routeId, cntGw_Rejected, -1);
+          incSmppRouteCounter(se.routeId, cntGw_Rejected, se.errCode); // -1);
         }
         genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntGw_Rejected);
         break;
@@ -393,7 +393,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
         if(routeSt) {
           routeSt->rejected++; routeSt->gw_rejected++;
           incSmppRouteCounter(se.routeId, cntRejected, se.errCode);
-          incSmppRouteCounter(se.routeId, cntGw_Rejected, -1);
+          incSmppRouteCounter(se.routeId, cntGw_Rejected, se.errCode); // -1);
         }
 
         genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntGw_Rejected);
