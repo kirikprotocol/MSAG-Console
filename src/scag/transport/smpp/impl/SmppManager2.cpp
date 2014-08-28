@@ -672,16 +672,11 @@ void SmppManagerImpl::ReloadRoutes()
 
 void SmppManagerImpl::addRegistryItem(SmppEntityInfo& info)
 {
-  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem1: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
   info.uniqueId = ++smeUniqueId;
   const char* tmp = new char[34];
-  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem2: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
   strncpy((char*)tmp, info.systemId.c_str(), 34);
-  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem3: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
   registry.Insert(tmp, new SmppEntity(info));
-  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem4: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
   systemIdArray.push_back(tmp);
-  smsc_log_debug(log,"SmppManagerImpl::addRegistryItem5: %s (%d) %s (%d)", info.systemId.c_str(), info.uniqueId, systemIdArray.back(), systemIdArray.size());
 }
 
 uint32_t SmppManagerImpl::getSmeIndex(const char* smeSystemId)
@@ -691,7 +686,6 @@ uint32_t SmppManagerImpl::getSmeIndex(const char* smeSystemId)
   if (ptr)
   {
     result = (*ptr)->info.uniqueId;
-    smsc_log_debug(log,"SmppManagerImpl::getSmeIndex: %s=(%d) [%d]", smeSystemId, result, registry.GetCount());
   }
   return result;
 }

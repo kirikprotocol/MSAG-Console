@@ -168,6 +168,7 @@ void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  
     smsc_log_error(logitf, "error registering table smeStatTable");
     return;
   }
+  snmp_log(LOG_INFO,"register table smeStatTable, success\n");
   smsc_log_debug(logitf, "register table smeStatTable, success");
 
   reginfo->my_reg_void = &smeStatTable_if_ctx;

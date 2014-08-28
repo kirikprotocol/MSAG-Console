@@ -170,6 +170,7 @@ void _routeStatTable_initialize_interface(routeStatTable_registration_ptr reg_pt
     smsc_log_error(logitf, "error registering table routeStatTable");
     return;
   }
+  snmp_log(LOG_INFO,"register table routeStatTable, success\n");
   smsc_log_debug(logitf, "register table routeStatTable, success");
 
   reginfo->my_reg_void = &routeStatTable_if_ctx;
