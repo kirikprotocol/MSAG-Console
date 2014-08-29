@@ -91,9 +91,8 @@ static Netsnmp_Node_Handler _mfd_smeStatTable_get_values;
  */
 void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  u_long flags)
 {
-  logitf = smsc::logger::Logger::getInstance("snmp.itfc");
-  smsc_log_debug(logitf, "_smeStatTable_initialize_interface called");
-//  DEBUGMSGTL(("internal:smeStatTable:_smeStatTable_initialize_interface","called\n"));
+  logitf = smsc::logger::Logger::getInstance("snmp.sstat");
+  DEBUGMSGTL(("internal:smeStatTable:_smeStatTable_initialize_interface","called\n"));
 
   netsnmp_baby_steps_access_methods *access_multiplexer = &smeStatTable_if_ctx.access_multiplexer;
   netsnmp_table_registration_info *tbl_info = &smeStatTable_if_ctx.tbl_info;
@@ -110,7 +109,6 @@ void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  
    * Setting up the table's definition
    */
   netsnmp_table_helper_add_indexes(tbl_info, ASN_INTEGER, /* index: smeStatIndex */ 0);
-  smsc_log_debug(logitf, "_smeStatTable_initialize_interface netsnmp_table_helper_add_indexes");
 
   /*  Define the minimum and maximum accessible columns.  This
       optimizes retrieval. */
@@ -126,15 +124,14 @@ void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  
    * call data access initialization code
    */
   smeStatTable_init_data(reg_ptr);
-  smsc_log_debug(logitf, "_smeStatTable_initialize_interface smeStatTable_init_data");
 
   /*
    * set up the container
    */
   _smeStatTable_container_init(&smeStatTable_if_ctx);
   if (NULL == smeStatTable_if_ctx.container) {
-    smsc_log_debug(logitf, "could not initialize container for smeStatTable");
-//    snmp_log(LOG_ERR,"could not initialize container for smeStatTable\n");
+    smsc_log_error(logitf, "could not initialize container for smeStatTable");
+    snmp_log(LOG_ERR,"could not initialize container for smeStatTable\n");
     return;
   }
 
@@ -155,8 +152,7 @@ void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  
    *
    * Create a registration, save our reg data, register table.
    */
-  smsc_log_debug(logitf, "init_smeStatTable", "Registering smeStatTable as a mibs-for-dummies table");
-//  DEBUGMSGTL(("smeStatTable:init_smeStatTable", "Registering smeStatTable as a mibs-for-dummies table.\n"));
+  DEBUGMSGTL(("smeStatTable:init_smeStatTable", "Registering smeStatTable as a mibs-for-dummies table.\n"));
   handler = netsnmp_baby_steps_access_multiplexer_get(access_multiplexer);
   reginfo = netsnmp_handler_registration_create("smeStatTable", handler,
                                                 smeStatTable_oid,

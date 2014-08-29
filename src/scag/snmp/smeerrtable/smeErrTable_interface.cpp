@@ -163,11 +163,11 @@ _smeErrTable_initialize_interface(smeErrTable_registration_ptr reg_ptr,  u_long 
                                                   );
     if (NULL == reginfo) {
       snmp_log(LOG_ERR,"error registering table smeErrTable\n");
-      smsc_log_error(smsc::logger::Logger::getInstance("snmp.etbl"), "error registering table smeErrTable");
+      smsc_log_error(smsc::logger::Logger::getInstance("snmp.serr"), "error registering table smeErrTable");
       return;
     }
     snmp_log(LOG_INFO,"register table smeErrTable, success\n");
-    smsc_log_debug(smsc::logger::Logger::getInstance("snmp.etbl"), "register table smeErrTable, success");
+    smsc_log_debug(smsc::logger::Logger::getInstance("snmp.serr"), "register table smeErrTable, success");
 
     reginfo->my_reg_void = &smeErrTable_if_ctx;
 

@@ -109,8 +109,8 @@ routeStatTable_indexes_set(routeStatTable_rowreq_ctx *rowreq_ctx, long routeStat
 
 
 /*---------------------------------------------------------------------
- * EYELINE-MSAG-MIB::routeStatEntry.routeStatSystemId
- * routeStatSystemId is subid 2 of routeStatEntry.
+ * EYELINE-MSAG-MIB::routeStatEntry.routeStatRouteId
+ * routeStatRouteId is subid 2 of routeStatEntry.
  * Its status is Current, and its access level is ReadOnly.
  * OID: .1.3.6.1.4.1.26757.2.12.1.2
  * Description:
@@ -129,25 +129,25 @@ SME system Id.
  * This data type requires a length.  (Max 32)
  */
 /**
- * Extract the current value of the routeStatSystemId data.
+ * Extract the current value of the routeStatRouteId data.
  *
  * Set a value using the data context for the row.
  *
  * @param rowreq_ctx
  *        Pointer to the row request context.
- * @param routeStatSystemId_val_ptr_ptr
+ * @param routeStatRouteId_val_ptr_ptr
  *        Pointer to storage for a char variable
- * @param routeStatSystemId_val_ptr_len_ptr
+ * @param routeStatRouteId_val_ptr_len_ptr
  *        Pointer to a size_t. On entry, it will contain the size (in bytes)
- *        pointed to by routeStatSystemId.
+ *        pointed to by routeStatRouteId.
  *        On exit, this value should contain the data size (in bytes).
  *
  * @retval MFD_SUCCESS         : success
  * @retval MFD_SKIP            : skip this node (no value for now)
  * @retval MFD_ERROR           : Any other error
 *
- * @note If you need more than (*routeStatSystemId_val_ptr_len_ptr) bytes of memory,
- *       allocate it using malloc() and update routeStatSystemId_val_ptr_ptr.
+ * @note If you need more than (*routeStatRouteId_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update routeStatRouteId_val_ptr_ptr.
  *       <b>DO NOT</b> free the previous pointer.
  *       The MFD helper will release the memory you allocate.
  *
@@ -157,42 +157,42 @@ SME system Id.
  *         in a pointer to static memory, obviously.)
  */
 int
-routeStatSystemId_get( routeStatTable_rowreq_ctx *rowreq_ctx, char **routeStatSystemId_val_ptr_ptr, size_t *routeStatSystemId_val_ptr_len_ptr )
+routeStatRouteId_get( routeStatTable_rowreq_ctx *rowreq_ctx, char **routeStatRouteId_val_ptr_ptr, size_t *routeStatRouteId_val_ptr_len_ptr )
 {
    /** we should have a non-NULL pointer and enough storage */
-   netsnmp_assert( (NULL != routeStatSystemId_val_ptr_ptr) && (NULL != *routeStatSystemId_val_ptr_ptr));
-   netsnmp_assert( NULL != routeStatSystemId_val_ptr_len_ptr );
+   netsnmp_assert( (NULL != routeStatRouteId_val_ptr_ptr) && (NULL != *routeStatRouteId_val_ptr_ptr));
+   netsnmp_assert( NULL != routeStatRouteId_val_ptr_len_ptr );
 
 
-    DEBUGMSGTL(("verbose:routeStatTable:routeStatSystemId_get","called\n"));
+    DEBUGMSGTL(("verbose:routeStatTable:routeStatRouteId_get","called\n"));
 
     netsnmp_assert(NULL != rowreq_ctx);
 
 /*
- * TODO:231:o: |-> Extract the current value of the routeStatSystemId data.
- * copy (* routeStatSystemId_val_ptr_ptr ) data and (* routeStatSystemId_val_ptr_len_ptr ) from rowreq_ctx->data
+ * TODO:231:o: |-> Extract the current value of the routeStatRouteId data.
+ * copy (* routeStatRouteId_val_ptr_ptr ) data and (* routeStatRouteId_val_ptr_len_ptr ) from rowreq_ctx->data
  */
     /*
-     * make sure there is enough space for routeStatSystemId data
+     * make sure there is enough space for routeStatRouteId data
      */
-    if ((NULL == (* routeStatSystemId_val_ptr_ptr )) ||
-        ((* routeStatSystemId_val_ptr_len_ptr ) < (rowreq_ctx->data.routeStatSystemId_len* sizeof(rowreq_ctx->data.routeStatSystemId[0]))))
+    if ((NULL == (* routeStatRouteId_val_ptr_ptr )) ||
+        ((* routeStatRouteId_val_ptr_len_ptr ) < (rowreq_ctx->data.routeStatRouteId_len* sizeof(rowreq_ctx->data.routeStatRouteId[0]))))
     {
         /*
-         * allocate space for routeStatSystemId data
+         * allocate space for routeStatRouteId data
          */
-        (* routeStatSystemId_val_ptr_ptr ) = (char*)malloc(rowreq_ctx->data.routeStatSystemId_len * sizeof(rowreq_ctx->data.routeStatSystemId[0]));
-        if(NULL == (* routeStatSystemId_val_ptr_ptr ))
+        (* routeStatRouteId_val_ptr_ptr ) = (char*)malloc(rowreq_ctx->data.routeStatRouteId_len * sizeof(rowreq_ctx->data.routeStatRouteId[0]));
+        if(NULL == (* routeStatRouteId_val_ptr_ptr ))
         {
             snmp_log(LOG_ERR,"could not allocate memory\n");
             return MFD_ERROR;
         }
     }
-    (* routeStatSystemId_val_ptr_len_ptr ) = rowreq_ctx->data.routeStatSystemId_len* sizeof(rowreq_ctx->data.routeStatSystemId[0]);
-    memcpy( (* routeStatSystemId_val_ptr_ptr ), rowreq_ctx->data.routeStatSystemId, rowreq_ctx->data.routeStatSystemId_len* sizeof(rowreq_ctx->data.routeStatSystemId[0]) );
+    (* routeStatRouteId_val_ptr_len_ptr ) = rowreq_ctx->data.routeStatRouteId_len* sizeof(rowreq_ctx->data.routeStatRouteId[0]);
+    memcpy( (* routeStatRouteId_val_ptr_ptr ), rowreq_ctx->data.routeStatRouteId, rowreq_ctx->data.routeStatRouteId_len* sizeof(rowreq_ctx->data.routeStatRouteId[0]) );
 
     return MFD_SUCCESS;
-} /* routeStatSystemId_get */
+} /* routeStatRouteId_get */
 
 /*---------------------------------------------------------------------
  * EYELINE-MSAG-MIB::routeStatEntry.routeStatAccepted
@@ -580,18 +580,18 @@ int routeStatIndex_map(long *mib_routeStatIndex_val_ptr, long raw_routeStatIndex
 
   return MFD_SUCCESS;
 }
-int routeStatSystemId_map(char **mib_routeStatSystemId_val_ptr_ptr, size_t *mib_routeStatSystemId_val_ptr_len_ptr,
-    char *raw_routeStatSystemId_val_ptr, size_t raw_routeStatSystemId_val_ptr_len, int allow_realloc)
+int routeStatRouteId_map(char **mib_routeStatRouteId_val_ptr_ptr, size_t *mib_routeStatRouteId_val_ptr_len_ptr,
+    char *raw_routeStatRouteId_val_ptr, size_t raw_routeStatRouteId_val_ptr_len, int allow_realloc)
 {
   size_t converted_len;
 
-  netsnmp_assert(NULL != raw_routeStatSystemId_val_ptr);
-  netsnmp_assert((NULL != mib_routeStatSystemId_val_ptr_ptr) && (NULL != mib_routeStatSystemId_val_ptr_len_ptr));
+  netsnmp_assert(NULL != raw_routeStatRouteId_val_ptr);
+  netsnmp_assert((NULL != mib_routeStatRouteId_val_ptr_ptr) && (NULL != mib_routeStatRouteId_val_ptr_len_ptr));
 
-  DEBUGMSGTL(("verbose:routeStatTable:routeStatSystemId_map","called\n"));
+  DEBUGMSGTL(("verbose:routeStatTable:routeStatRouteId_map","called\n"));
 
   /*
-   * TODO:241:r: |-> Implement routeStatSystemId non-integer mapping
+   * TODO:241:r: |-> Implement routeStatRouteId non-integer mapping
    * it is hard to autogenerate code for mapping types that are not simple
    * integers, so here is an idea of what you might need to do. It will
    * probably need some tweaking to get right.
@@ -601,23 +601,23 @@ int routeStatSystemId_map(char **mib_routeStatSystemId_val_ptr_ptr, size_t *mib_
    * the length of the mib data, set converted_len to the
    * space required.
    */
-  converted_len = raw_routeStatSystemId_val_ptr_len; /* assume equal */
-  if((NULL == *mib_routeStatSystemId_val_ptr_ptr) || (*mib_routeStatSystemId_val_ptr_len_ptr < converted_len)) {
+  converted_len = raw_routeStatRouteId_val_ptr_len; /* assume equal */
+  if((NULL == *mib_routeStatRouteId_val_ptr_ptr) || (*mib_routeStatRouteId_val_ptr_len_ptr < converted_len)) {
       if(! allow_realloc) {
           snmp_log(LOG_ERR,"not enough space for value mapping\n");
           return SNMP_ERR_GENERR;
       }
-      *mib_routeStatSystemId_val_ptr_ptr = (char*)realloc( *mib_routeStatSystemId_val_ptr_ptr, converted_len * sizeof(**mib_routeStatSystemId_val_ptr_ptr));
-      if(NULL == *mib_routeStatSystemId_val_ptr_ptr) {
+      *mib_routeStatRouteId_val_ptr_ptr = (char*)realloc( *mib_routeStatRouteId_val_ptr_ptr, converted_len * sizeof(**mib_routeStatRouteId_val_ptr_ptr));
+      if(NULL == *mib_routeStatRouteId_val_ptr_ptr) {
           snmp_log(LOG_ERR,"could not allocate memory\n");
           return SNMP_ERR_GENERR;
       }
   }
-  *mib_routeStatSystemId_val_ptr_len_ptr = converted_len;
-  memcpy( *mib_routeStatSystemId_val_ptr_ptr, raw_routeStatSystemId_val_ptr, converted_len );
+  *mib_routeStatRouteId_val_ptr_len_ptr = converted_len;
+  memcpy( *mib_routeStatRouteId_val_ptr_ptr, raw_routeStatRouteId_val_ptr, converted_len );
 
   return MFD_SUCCESS;
-} /* routeStatSystemId_map */
+} /* routeStatRouteId_map */
 
 int routeStatAccepted_map(U64 *mib_routeStatAccepted_val_ptr, U64 raw_routeStatAccepted_val)
 {

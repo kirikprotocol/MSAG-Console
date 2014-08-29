@@ -42,7 +42,7 @@ namespace routestattable {
      * indexes
      */
 
-    int routeStatSystemId_get( routeStatTable_rowreq_ctx *rowreq_ctx, char **routeStatSystemId_val_ptr_ptr, size_t *routeStatSystemId_val_ptr_len_ptr );
+    int routeStatRouteId_get( routeStatTable_rowreq_ctx *rowreq_ctx, char **routeStatRouteId_val_ptr_ptr, size_t *routeStatRouteId_val_ptr_len_ptr );
     int routeStatAccepted_get( routeStatTable_rowreq_ctx *rowreq_ctx, U64 * routeStatAccepted_val_ptr );
     int routeStatRejected_get( routeStatTable_rowreq_ctx *rowreq_ctx, U64 * routeStatRejected_val_ptr );
     int routeStatDelivered_get( routeStatTable_rowreq_ctx *rowreq_ctx, U64 * routeStatDelivered_val_ptr );
@@ -56,8 +56,8 @@ namespace routestattable {
   int routeStatTable_indexes_set(routeStatTable_rowreq_ctx *rowreq_ctx, long routeStatIndex_val);
 
   int routeStatIndex_map(long *mib_routeStatIndex_val_ptr, long raw_routeStatIndex_val);
-  int routeStatSystemId_map(char **mib_routeStatSystemId_val_ptr_ptr, size_t *mib_routeStatSystemId_val_ptr_len_ptr,
-      char *raw_routeStatSystemId_val_ptr, size_t raw_routeStatSystemId_val_ptr_len, int allow_realloc);
+  int routeStatRouteId_map(char **mib_routeStatRouteId_val_ptr_ptr, size_t *mib_routeStatRouteId_val_ptr_len_ptr,
+      char *raw_routeStatRouteId_val_ptr, size_t raw_routeStatRouteId_val_ptr_len, int allow_realloc);
   int routeStatAccepted_map(U64 *mib_routeStatAccepted_val_ptr, U64 raw_routeStatAccepted_val);
   int routeStatRejected_map(U64 *mib_routeStatRejected_val_ptr, U64 raw_routeStatRejected_val);
   int routeStatDelivered_map(U64 *mib_routeStatDelivered_val_ptr, U64 raw_routeStatDelivered_val);

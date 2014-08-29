@@ -52,6 +52,8 @@ namespace snmp {
 namespace smestattable {
 
 smsc::logger::Logger* log;
+const char* containerName = "smeStatTableContainer";
+const char* noStatData = "No-statistics-data";
 
 void uint64_to_U64(uint64_t val1, U64& val2)
 {
@@ -71,10 +73,9 @@ void fill64(uint64_t value, U64& counter)
 }
 */
 
-bool fillRecord(smeStatTable_rowreq_ctx* rec, char* sysId, stat::CommonPerformanceCounter* counter)
+bool fillRecord(smeStatTable_rowreq_ctx* rec, const char* sysId, stat::CommonPerformanceCounter* counter)
 {
-  smsc_log_debug(log, "fillRecord() sysId %s count %d",
-      sysId?sysId:"empty", counter?counter->count:0);
+  smsc_log_debug(log, "fillRecord() sysId %s count %d", sysId ? sysId : "empty", counter ? counter->count : 0);
   if (!sysId)
     return false;
   if (!counter)
@@ -154,7 +155,7 @@ int smeStatTable_init_data(smeStatTable_registration_ptr smeStatTable_reg)
     ***              END  EXAMPLE CODE              ***
     ***************************************************/
 
-    log = smsc::logger::Logger::getInstance("snmp.stbl");
+    log = smsc::logger::Logger::getInstance("snmp.sstat");
 /*
     try
     {
@@ -273,10 +274,11 @@ std::string netsnmp_index2str(netsnmp_index oid_idx)
   return oid2str(oid_idx.oids, oid_idx.len);
 }
 
-int fillNextCounter(netsnmp_container* container, char* sysId, stat::CommonPerformanceCounter* counter)
+int fillNextCounter(netsnmp_container* container, const char* sysId, stat::CommonPerformanceCounter* counter)
 {
-  long smeStatIndex = scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId);
-  smsc_log_debug(log, "smeStatTable_cache_load: h.Next %s (%d)", sysId ? sysId : "empty", smeStatIndex);
+  const char* sid = sysId ? sysId : noStatData;
+  long smeStatIndex = sysId ? scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId) : 0;
+  smsc_log_debug(log, "smeStatTable_cache_load: h.Next %s (%d)", sid, smeStatIndex);
 
   smeStatTable_rowreq_ctx *rec = 0;
 
@@ -298,7 +300,7 @@ int fillNextCounter(netsnmp_container* container, char* sysId, stat::CommonPerfo
   smsc_log_debug(log, "smeStatTable_cache_load: smeStatTable_indexes_set(%d)=%s %s %d",
     smeStatIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.smeStatIndex);
 
-  if ( !fillRecord(rec, sysId, counter) )
+  if ( !fillRecord(rec, sid, counter) )
   {
     smsc_log_error(log, "smeStatTable_cache_load fillRecord error");
     return -3;
@@ -319,7 +321,7 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
   h.First();
   while ( h.Next(sysId, counter) )
   {
-    int result = fillNextCounter(container, sysId, counter);
+    int result = fillNextCounter(container, (const char*)sysId, counter);
     if ( 0 == result )
     {
       ++recCount;
@@ -332,7 +334,7 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
     if (counter) counter->clear();
   }
 
-  smsc_log_debug(log, "smeStatTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : "empty");
+  smsc_log_debug(log, "smeStatTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : noStatData);
   return MFD_SUCCESS;
 }
 
@@ -341,7 +343,7 @@ int smeStatTable_cache_load(netsnmp_container* container)
   if (container)
   {
     if ( !container->container_name )
-      container->container_name = "smeStatTableContainer";
+      container->container_name = (char*)containerName;
     smsc_log_debug(log, "smeStatTable_cache_load container %s", container->container_name);
   }
   else
@@ -350,7 +352,7 @@ int smeStatTable_cache_load(netsnmp_container* container)
     return MFD_RESOURCE_UNAVAILABLE;
   }
   smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = SmeStatTableSubagent::getStatMan()->getCounters(0);
-  smsc_log_debug(log, "smeStatTable_cache_load: getCounters(0) ok");
+  smsc_log_debug(log, "smeStatTable_cache_load: getCounters(0) ok, %d entries", h0.GetCount());
 
 // fill zero data if counters hash is empty
   if ( 0 == h0.GetCount() )
@@ -360,7 +362,7 @@ int smeStatTable_cache_load(netsnmp_container* container)
     counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
     for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = 0;
     counter->cntErrors.Insert(0,0);
-    int result = fillNextCounter(container, 0, counter);
+    fillNextCounter(container, 0, counter);
     return MFD_SUCCESS;
   }
   int result = loadHashToContainer(container, h0);

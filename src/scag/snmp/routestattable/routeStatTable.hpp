@@ -85,10 +85,10 @@ typedef netsnmp_data_list* routeStatTable_registration_ptr;
 typedef struct routeStatTable_data_s {
     
         /*
-         * routeStatSystemId(2)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         * routeStatRouteId(2)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
          */
-   char   routeStatSystemId[32];
-size_t      routeStatSystemId_len; /* # of char elements, not bytes */
+   char   routeStatRouteId[32];
+size_t      routeStatRouteId_len; /* # of char elements, not bytes */
     
         /*
          * routeStatAccepted(3)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h

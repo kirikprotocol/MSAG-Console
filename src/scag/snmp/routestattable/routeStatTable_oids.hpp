@@ -15,7 +15,7 @@ namespace routestattable {
 #define ROUTESTATTABLE_OID            1,3,6,1,4,1,26757,2,12
 
 #define COLUMN_ROUTESTATINDEX         1
-#define COLUMN_ROUTESTATSYSTEMID      2
+#define COLUMN_routeStatRouteId      2
 #define COLUMN_ROUTESTATACCEPTED      3
 #define COLUMN_ROUTESTATREJECTED      4
 #define COLUMN_ROUTESTATDELIVERED     5

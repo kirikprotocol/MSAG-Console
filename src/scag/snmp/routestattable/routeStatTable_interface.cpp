@@ -92,9 +92,8 @@ static Netsnmp_Node_Handler _mfd_routeStatTable_get_values;
  */
 void _routeStatTable_initialize_interface(routeStatTable_registration_ptr reg_ptr,  u_long flags)
 {
-  logitf = smsc::logger::Logger::getInstance("snmp.itfc");
-  smsc_log_debug(logitf, "_routeStatTable_initialize_interface called");
-//  DEBUGMSGTL(("internal:routeStatTable:_routeStatTable_initialize_interface","called\n"));
+  logitf = smsc::logger::Logger::getInstance("snmp.sstat");
+  DEBUGMSGTL(("internal:routeStatTable:_routeStatTable_initialize_interface","called\n"));
 
   netsnmp_baby_steps_access_methods *access_multiplexer = &routeStatTable_if_ctx.access_multiplexer;
   netsnmp_table_registration_info *tbl_info = &routeStatTable_if_ctx.tbl_info;
@@ -112,7 +111,6 @@ void _routeStatTable_initialize_interface(routeStatTable_registration_ptr reg_pt
    * Setting up the table's definition
    */
   netsnmp_table_helper_add_indexes(tbl_info, ASN_INTEGER, /* index: routeStatIndex */ 0);
-  smsc_log_debug(logitf, "_routeStatTable_initialize_interface netsnmp_table_helper_add_indexes");
 
   /*  Define the minimum and maximum accessible columns.  This
       optimizes retrieval. */
@@ -128,15 +126,14 @@ void _routeStatTable_initialize_interface(routeStatTable_registration_ptr reg_pt
    * call data access initialization code
    */
   routeStatTable_init_data(reg_ptr);
-  smsc_log_debug(logitf, "_routeStatTable_initialize_interface routeStatTable_init_data");
 
   /*
    * set up the container
    */
   _routeStatTable_container_init(&routeStatTable_if_ctx);
   if (NULL == routeStatTable_if_ctx.container) {
-    smsc_log_debug(logitf, "could not initialize container for routeStatTable");
-//    snmp_log(LOG_ERR,"could not initialize container for routeStatTable\n");
+    smsc_log_error(logitf, "could not initialize container for routeStatTable");
+    snmp_log(LOG_ERR,"could not initialize container for routeStatTable\n");
     return;
   }
 
@@ -157,8 +154,7 @@ void _routeStatTable_initialize_interface(routeStatTable_registration_ptr reg_pt
    *
    * Create a registration, save our reg data, register table.
    */
-  smsc_log_debug(logitf, "init_routeStatTable", "Registering routeStatTable as a mibs-for-dummies table");
-//  DEBUGMSGTL(("routeStatTable:init_routeStatTable", "Registering routeStatTable as a mibs-for-dummies table.\n"));
+  DEBUGMSGTL(("routeStatTable:init_routeStatTable", "Registering routeStatTable as a mibs-for-dummies table.\n"));
   handler = netsnmp_baby_steps_access_multiplexer_get(access_multiplexer);
   reginfo = netsnmp_handler_registration_create("routeStatTable", handler,
                                                 routeStatTable_oid,
@@ -500,10 +496,10 @@ NETSNMP_STATIC_INLINE int _routeStatTable_get_column( routeStatTable_rowreq_ctx 
     (*var->val.integer) = rowreq_ctx->tbl_idx.routeStatIndex;
     break;
 
-    /* routeStatSystemId(2)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
-    case COLUMN_ROUTESTATSYSTEMID:
+    /* routeStatRouteId(2)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_routeStatRouteId:
     var->type = ASN_OCTET_STR;
-    rc = routeStatSystemId_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
+    rc = routeStatRouteId_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
     break;
 
     /* routeStatAccepted(3)/COUNTER64/ASN_COUNTER64/U64(U64)//l/A/w/e/r/d/h */

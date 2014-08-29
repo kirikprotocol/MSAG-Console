@@ -43,7 +43,7 @@
  **********************************************************************
  **********************************************************************/
 /*
- * EYELINE-MSAG-MIB::routeStatTable is subid 10 of msag.
+ * EYELINE-MSAG-MIB::routeStatTable is subid 12 of msag.
  * Its status is Current.
  * OID: .1.3.6.1.4.1.26757.2.12, length: 9
 */
@@ -53,6 +53,8 @@ namespace snmp {
 namespace routestattable {
 
 smsc::logger::Logger* log;
+const char* containerName = "routeStatTableContainer";
+const char* noStatData = "No-statistics-data";
 
 void uint64_to_U64(uint64_t val1, U64& val2)
 {
@@ -60,23 +62,22 @@ void uint64_to_U64(uint64_t val1, U64& val2)
   val2.low = val1&0xffffffffUL;
 }
 
-bool fillRecord(routeStatTable_rowreq_ctx* rec, char* sysId, stat::CommonPerformanceCounter* counter)
+bool fillRecord(routeStatTable_rowreq_ctx* rec, const char* routeId, stat::CommonPerformanceCounter* counter)
 {
-  smsc_log_debug(log, "fillRecord() sysId %s count %d",
-      sysId?sysId:"empty", counter?counter->count:0);
-  if (!sysId)
+  smsc_log_debug(log, "fillRecord() routeId %s count %d", routeId?routeId:"empty", counter?counter->count:0);
+  if (!routeId)
     return false;
   if (!counter)
     return false;
 
-  char routeStatSystemId[34];
-  size_t routeStatSystemId_len = (strlen(sysId)<32) ? strlen(sysId) : 32;
-  strncpy(&routeStatSystemId[0], sysId, routeStatSystemId_len);
+  char routeStatId[34];
+  size_t routeStatId_len = (strlen(routeId)<32) ? strlen(routeId) : 32;
+  strncpy(&routeStatId[0], routeId, routeStatId_len);
 
 /*
   if (
-       (NULL == rec->data.routeStatSystemId)
-       || (rec->data.routeStatSystemId_len < (routeStatSystemId_len * sizeof(routeStatSystemId[0])))
+       (NULL == rec->data.routeStatRouteId)
+       || (rec->data.routeStatRouteId_len < (routeStatId_len * sizeof(routeStatId[0])))
      )
   {
     snmp_log(LOG_ERR,"not enough space for value\n");
@@ -84,8 +85,8 @@ bool fillRecord(routeStatTable_rowreq_ctx* rec, char* sysId, stat::CommonPerform
   }
 */
 
-  rec->data.routeStatSystemId_len = routeStatSystemId_len * sizeof(routeStatSystemId[0]);
-  memcpy( rec->data.routeStatSystemId, routeStatSystemId, routeStatSystemId_len * sizeof(routeStatSystemId[0]) );
+  rec->data.routeStatRouteId_len = routeStatId_len * sizeof(routeStatId[0]);
+  memcpy( rec->data.routeStatRouteId, routeStatId, routeStatId_len * sizeof(routeStatId[0]) );
 
   uint64_to_U64(counter->cntEvent[stat::Counters::cntAccepted],      rec->data.routeStatAccepted);
   uint64_to_U64(counter->cntEvent[stat::Counters::cntRejected],      rec->data.routeStatRejected);
@@ -95,7 +96,7 @@ bool fillRecord(routeStatTable_rowreq_ctx* rec, char* sysId, stat::CommonPerform
   uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptOk],     rec->data.routeStatReceiptOk);
   uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptFailed], rec->data.routeStatReceiptFailed);
 
-  smsc_log_debug(log, "fillRecord() %s OK", sysId);
+  smsc_log_debug(log, "fillRecord() %s OK", routeId);
   return true;
 }
 
@@ -135,7 +136,7 @@ int routeStatTable_init_data(routeStatTable_registration_ptr routeStatTable_reg)
     ***              END  EXAMPLE CODE              ***
     ***************************************************/
 
-    log = smsc::logger::Logger::getInstance("snmp.stbl");
+    log = smsc::logger::Logger::getInstance("snmp.sstat");
     return MFD_SUCCESS;
 } /* routeStatTable_init_data */
 
@@ -241,37 +242,47 @@ std::string netsnmp_index2str(netsnmp_index oid_idx)
   return oid2str(oid_idx.oids, oid_idx.len);
 }
 
-void fakeFillHashIfEmpty(smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h)
+int fillNextCounter(netsnmp_container* container, const char* routeId, long routeStatIndex, stat::CommonPerformanceCounter* counter)
 {
-  if ( h.GetCount() > 0 ) return;
-  stat::CommonPerformanceCounter* counter = 0;
-  smsc_log_debug(log, "routeStatTable_cache_load: no records, make some fake counters");
-  counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
-  for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = i+1;
-  counter->cntErrors.Insert(11,1);
-  h.Insert("1", counter);
+  const char* sid = routeId ? routeId : noStatData;
+  smsc_log_debug(log, "routeStatTable_cache_load: h.Next %s (%d)", sid, routeStatIndex);
 
-  counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
-  for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = i+10;
-  counter->cntErrors.Insert(21,2);
-  counter->cntErrors.Insert(22,2);
-  h.Insert("2", counter);
-
-  counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
-  for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = i+100;
-  counter->cntErrors.Insert(31,3);
-  counter->cntErrors.Insert(32,3);
-  counter->cntErrors.Insert(33,3);
-  h.Insert("SMSC", counter);
-}
-
-
-int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h)
-{
-  long   routeStatIndex = 0;
-  size_t recCount = 0;
   routeStatTable_rowreq_ctx *rec = 0;
-  char* sysId = 0;
+
+  rec = routeStatTable_allocate_rowreq_ctx();
+  if (NULL == rec)
+  {
+    smsc_log_error(log, "routeStatTable_cache_load: memory allocation failed");
+    return -1;
+  }
+
+  if( MFD_SUCCESS != routeStatTable_indexes_set(rec, routeStatIndex) )
+  {
+    smsc_log_error(log, "routeStatTable_cache_load: error setting index while loading routeStatTable data");
+    routeStatTable_release_rowreq_ctx(rec);
+    return -2;
+  }
+  std::string idxStr = netsnmp_index2str(rec->oid_idx);
+  std::string oidStr = oid2str(rec->oid_tmp, MAX_routeStatTable_IDX_LEN);
+  smsc_log_debug(log, "routeStatTable_cache_load: routeStatTable_indexes_set(%d)=%s %s %d",
+      routeStatIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.routeStatIndex);
+
+  if ( !fillRecord(rec, sid, counter) )
+  {
+    smsc_log_error(log, "routeStatTable_cache_load fillRecord error");
+    return -3;
+  }
+
+  int rc = CONTAINER_INSERT(container, rec);
+  if ( 0 != rc )
+    smsc_log_error(log, "routeStatTable_cache_load CONTAINER_INSERT returns(%d)", rc);
+  return rc;
+}
+/*
+
+//
+  long   routeStatIndex = 0;
+  routeStatTable_rowreq_ctx *rec = 0;
   stat::CommonPerformanceCounter* counter = 0;
 
   h.First();
@@ -283,7 +294,6 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
     if (NULL == rec)
     {
       smsc_log_error(log, "routeStatTable_cache_load: memory allocation failed");
-//      continue;
       return MFD_RESOURCE_UNAVAILABLE;
     }
 
@@ -303,15 +313,15 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
       smsc_log_error(log, "routeStatTable_cache_load fillRecord error");
       continue;
     }
-/*
-    if ( container->insert_filter )
-    {
-      smsc_log_debug(log, "routeStatTable_cache_load: container insert_filter (%p)=%d",
-        container->insert_filter, container->insert_filter(container, rec));
-    }
-    else
-      smsc_log_debug(log, "routeStatTable_cache_load: container: NO insert_filter");
-*/
+
+//    if ( container->insert_filter )
+//    {
+//      smsc_log_debug(log, "routeStatTable_cache_load: container insert_filter (%p)=%d",
+//        container->insert_filter, container->insert_filter(container, rec));
+//    }
+//    else
+//      smsc_log_debug(log, "routeStatTable_cache_load: container: NO insert_filter");
+
     int rc = CONTAINER_INSERT(container, rec);
     if ( 0 == rc )
       ++recCount;
@@ -323,6 +333,34 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
 
   smsc_log_debug(log, "routeStatTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : "empty");
   return MFD_SUCCESS;
+*/
+
+int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h)
+{
+  long   routeStatIndex = 0;
+  size_t recCount = 0;
+  char* routeId = 0;
+  stat::CommonPerformanceCounter* counter = 0;
+
+  h.First();
+  while ( h.Next(routeId, counter) )
+  {
+    routeStatIndex++;
+    int result = fillNextCounter(container, (const char*)routeId, routeStatIndex, counter);
+    if ( 0 == result )
+    {
+      ++recCount;
+    }
+    else if ( -1 == result )
+    {
+      return MFD_RESOURCE_UNAVAILABLE;
+    }
+    if (routeId) routeId = 0;
+    if (counter) counter->clear();
+  }
+
+  smsc_log_debug(log, "routeStatTable_cache_load: inserted %d records, last [%s]", (int)recCount, routeId ? routeId : noStatData);
+  return MFD_SUCCESS;
 }
 
 int routeStatTable_cache_load(netsnmp_container* container)
@@ -330,7 +368,7 @@ int routeStatTable_cache_load(netsnmp_container* container)
   if (container)
   {
     if ( !container->container_name )
-      container->container_name = "routeStatTableContainer";
+      container->container_name = (char*)containerName;
     smsc_log_debug(log, "routeStatTable_cache_load container %s", container->container_name);
   }
   else
@@ -339,23 +377,20 @@ int routeStatTable_cache_load(netsnmp_container* container)
     return MFD_RESOURCE_UNAVAILABLE;
   }
   smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getRouteCounters();
-  smsc_log_debug(log, "routeStatTable_cache_load: getCounters(0) ok");
+  smsc_log_debug(log, "routeStatTable_cache_load: getCounters(0) ok, %d entries", h0.GetCount());
 
-//#ifdef DEBUG
-//  fakeFillHashIfEmpty(h0);
-//#endif
-
+// fill zero data if counters hash is empty
+  if ( 0 == h0.GetCount() )
+  {
+    stat::CommonPerformanceCounter* counter = 0;
+    smsc_log_debug(log, "routeStatTable_cache_load: no records, make fake counters");
+    counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
+    for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = 0;
+    counter->cntErrors.Insert(0,0);
+    fillNextCounter(container, 0, 1, counter);
+    return MFD_SUCCESS;
+  }
   return loadHashToContainer(container, h0);
-/*
-  int result = loadHashToContainer(container, h0);
-
-  if ( result != MFD_SUCCESS )
-    return result;
-
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = RouteStatTableSubagent::getStatMan()->getCounters(1);
-  smsc_log_debug(log, "routeStatTable_cache_load: getCounters(1) ok");
-  return loadHashToContainer(container, h1);
-*/
 }
 
 /**

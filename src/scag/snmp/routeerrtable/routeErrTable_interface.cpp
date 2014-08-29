@@ -163,11 +163,11 @@ _routeErrTable_initialize_interface(routeErrTable_registration_ptr reg_ptr,  u_l
                                                   );
     if (NULL == reginfo) {
       snmp_log(LOG_ERR,"error registering table routeErrTable\n");
-      smsc_log_error(smsc::logger::Logger::getInstance("snmp.etbl"), "error registering table routeErrTable");
+      smsc_log_error(smsc::logger::Logger::getInstance("snmp.rerr"), "error registering table routeErrTable");
       return;
     }
     snmp_log(LOG_INFO,"register table routeErrTable, success\n");
-    smsc_log_debug(smsc::logger::Logger::getInstance("snmp.etbl"), "register table routeErrTable, success");
+    smsc_log_debug(smsc::logger::Logger::getInstance("snmp.rerr"), "register table routeErrTable, success");
 
     reginfo->my_reg_void = &routeErrTable_if_ctx;
 
