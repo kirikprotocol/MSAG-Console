@@ -27,6 +27,7 @@ extern "C" {
   msagNetSnmpHandler statusHandler;
   msagNetSnmpHandler descrHandler;
   msagNetSnmpHandler uptimeHandler;
+  msagNetSnmpHandler uptimeFormattedHandler;
   msagNetSnmpHandler statisticsHandler;
 
   void* agent = 0;
@@ -35,10 +36,11 @@ extern "C" {
   struct timeval  agentStartTime;
   static int     status = 0;
   static time_t  statusTime;
-//                                       1.3.6.1.4.1.26757.2.1
-  static oid msagDescrOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 2, 1, 0 };
-  static oid status_oid[] =            { 1, 3, 6, 1, 4, 1, 26757, 2, 2, 0 };
-  static oid uptimeOid[] =             { 1, 3, 6, 1, 4, 1, 26757, 2, 3, 0 };
+
+  static oid msagDescrOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 2, 1 };
+  static oid status_oid[] =            { 1, 3, 6, 1, 4, 1, 26757, 2, 2 };
+  static oid uptimeOid[] =             { 1, 3, 6, 1, 4, 1, 26757, 2, 3 };
+  static oid uptimeOid1[] =            { 1, 3, 6, 1, 4, 1, 26757, 2, 3, 0 };
 
   static oid sumbitOkOid[] =           { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 3, 0 };
   static oid sumbitErrOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 4, 0 };
@@ -159,9 +161,13 @@ extern "C" {
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("msagDescr"," handler inited\n"));
 
-    reginfo = netsnmp_create_handler_registration("msagUpTime", uptimeHandler, uptimeOid, OID_LENGTH(uptimeOid), HANDLER_CAN_RONLY);
+    reginfo = netsnmp_create_handler_registration("msagUptime", uptimeHandler, uptimeOid, OID_LENGTH(uptimeOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("msagUpTime"," handler inited\n"));
+
+    reginfo = netsnmp_create_handler_registration("msagUptimeFormatted", uptimeFormattedHandler, uptimeOid1, OID_LENGTH(uptimeOid1), HANDLER_CAN_RONLY);
+    netsnmp_register_instance(reginfo);
+    DEBUGMSGTL(("msagUpTimeF"," handler inited\n"));
   }
 
   extern "C"
@@ -236,7 +242,6 @@ using scag2::snmp::SnmpAgent;
   int descrHandler(netsnmp_mib_handler* handler, netsnmp_handler_registration* reginfo,
                    netsnmp_agent_request_info* reqinfo, netsnmp_request_info* requests)
   {
-    DEBUGMSGTL(("descrHandler","called\n"));
     if ( MODE_GET == reqinfo->mode )
     {
       const char* str_version = getStrVersion();
@@ -287,6 +292,37 @@ using scag2::snmp::SnmpAgent;
       case MODE_SET_COMMIT:
       case MODE_SET_FREE:
         break;
+    }
+    if (handler->next && handler->next->access_method)
+    {
+      return netsnmp_call_next_handler(handler, reginfo, reqinfo, requests);
+    }
+    return SNMP_ERR_NOERROR;
+  }
+
+  extern "C"
+  int uptimeFormattedHandler(netsnmp_mib_handler* handler, netsnmp_handler_registration* reginfo,
+                    netsnmp_agent_request_info* reqinfo, netsnmp_request_info* requests)
+  {
+    struct timeval diff, now;
+    u_long days, hours, mins, secs, s100;
+    char strTime[64];
+
+    if ( MODE_GET == reqinfo->mode )
+    {
+      gettimeofday(&now, NULL);
+      diff.tv_sec = now.tv_sec - agentStartTime.tv_sec - 1;
+      diff.tv_usec = now.tv_usec - agentStartTime.tv_usec + 1000000;
+      diff.tv_usec = (diff.tv_usec > 0) ? diff.tv_usec : 0;
+      days = diff.tv_sec / 86400;
+      diff.tv_sec %= 86400;
+      hours = diff.tv_sec / 3600;
+      diff.tv_sec %= 3600;
+      mins = diff.tv_sec / 60;
+      secs = diff.tv_sec % 60;
+      s100 = diff.tv_usec / 10000;
+      sprintf(strTime, "%d days %02u:%02u:%02u.%02u", days, hours, mins, secs, s100);
+      snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR, (u_char*)strTime, strlen(strTime));
     }
     if (handler->next && handler->next->access_method)
     {

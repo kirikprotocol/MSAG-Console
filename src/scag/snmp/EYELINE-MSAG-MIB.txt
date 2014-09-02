@@ -2,6 +2,7 @@
 -- HISTORY
 -- 2008-12-09  Dmitry Bukin     created
 -- 2010-01-26  Dmitry Bukin     renamed to EYELINE prefix, more traps added
+-- 2014-09-01  Sergey Khomutinnikov ksv@eyeline.mobi	add smeStatTable, smeErrTable, routeStatTable, routeErrTable
 
     EYELINE-MSAG-MIB DEFINITIONS ::= BEGIN
     IMPORTS
@@ -45,6 +46,16 @@
     DESCRIPTION
     "MSAG uptime"
     ::= { msag 3 }
+
+    -- 1.3.6.1.4.1.26757.2.3.0
+    msagUptimeFormatted OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+    "MSAG uptime formatted"
+    ::= { msagUptime 0 }
+
 
     -- 1.3.6.1.4.1.26757.2.4
     msagCounterTable OBJECT-TYPE
