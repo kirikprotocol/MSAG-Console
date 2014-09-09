@@ -233,21 +233,19 @@ std::string netsnmp_index2str(netsnmp_index oid_idx)
   return oid2str(oid_idx.oids, oid_idx.len);
 }
 
+// returns negatuve error or positive inserted records counter
 int fillNextCounter(netsnmp_container* container, const char* sysId, stat::CommonPerformanceCounter* counter)
 {
-  smsc_log_debug(log, "smeErrTable.fillNextCounter: sysId %p", sysId);
   int result = 0;
   const char* sid = sysId ? sysId : noStatData;
   int       smeErrCode = 0;
   uint64_t  errCount = 0;
   smeErrTable_rowreq_ctx* rec = 0;
-  smsc_log_debug(log, "smeErrTable.fillNextCounter: sysId %s", sysId?sysId:sid);
   long smeErrIndex = scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sid);
-  smsc_log_debug(log, "smeErrTable_cache_load: sysId %d", smeErrIndex);
 
   for(scag2::stat::IntHash<uint64_t>::Iterator iter = counter->cntErrors.First(); iter.Next(smeErrCode, errCount); )
   {
-    smsc_log_debug(log, "smeErrTable.fillNextCounter: %s(%d) Next %d %lld", sid, smeErrIndex, smeErrCode, errCount);
+//    smsc_log_debug(log, "smeErrTable.fillNextCounter: %s(%d) Next %d %lld", sid, smeErrIndex, smeErrCode, errCount);
 
     if (!errCount) continue;
 
@@ -267,8 +265,8 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
 
     std::string idxStr = netsnmp_index2str(rec->oid_idx);
     std::string oidStr = oid2str(rec->oid_tmp, MAX_smeErrTable_IDX_LEN);
-    smsc_log_debug(log, "smeErrTable_cache_load: smeErrTable_indexes_set(%d)=%s %s %d",
-        smeErrIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.smeErrIndex);
+//    smsc_log_debug(log, "smeErrTable_cache_load: smeErrTable_indexes_set(%d)=%s %s %d",
+//        smeErrIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.smeErrIndex);
 
     if ((NULL == rec->data.smeErrSystemId) || strlen(sid) > sizeof(rec->data.smeErrSystemId))
     {
@@ -283,18 +281,19 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
     uint64_to_U64(errCount, rec->data.smeErrCount);
 
     int rc = CONTAINER_INSERT(container, rec);
-    if ( 0 != rc )
-    {
+    if ( 0 == rc )
       ++result;
+    else
+    {
       smsc_log_error(log, "smeErrTable_cache_load CONTAINER_INSERT returns(%d)", rc);
+      return -3;
     }
   }
   return result;
 }
 
-int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h)
+int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h, int& recCount)
 {
-  size_t recCount = 0;
   char* sysId = 0;
   stat::CommonPerformanceCounter* cs;
 
@@ -302,30 +301,25 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
   while ( h.Next(sysId, cs) )
   {
     int result = fillNextCounter(container, (const char*)sysId, cs);
-    if ( 0 == result )
-    {
-      ++recCount;
-    }
+    if ( result > 0 )
+      recCount += result;
     else if ( -1 == result )
-    {
       return MFD_RESOURCE_UNAVAILABLE;
-    }
-    else if ( -2 == result )
-    {
+    else
       return MFD_ERROR;
-    }
   }
-  smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records, last [%s]", (int)recCount, sysId ? sysId : noStatData);
   return MFD_SUCCESS;
 }
 
 int smeErrTable_cache_load(netsnmp_container* container)
 {
+  int retCode = 0;
+  int recCount = 0;
   if (container)
   {
     if ( !container->container_name )
       container->container_name = (char*)containerName;
-    smsc_log_debug(log, "smeErrTable_cache_load container %s", container->container_name);
+//    smsc_log_debug(log, "smeErrTable_cache_load container %s", container->container_name);
   }
   else
   {
@@ -334,27 +328,33 @@ int smeErrTable_cache_load(netsnmp_container* container)
   }
 
   smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(0);
+  retCode = loadHashToContainer(container, h0, recCount);
+  if ( retCode != MFD_SUCCESS )
+  {
+    return retCode;
+  }
 
-// fill zero data if counters hash is empty
-  if ( 0 == h0.GetCount() )
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(1);
+  retCode =  loadHashToContainer(container, h1, recCount);
+  if ( retCode != MFD_SUCCESS )
+  {
+    return retCode;
+  }
+
+// fill zero data if counters hash is empty or no errors registered
+  if ( (retCode == MFD_SUCCESS) && (0 == recCount) )
   {
     stat::CommonPerformanceCounter* counter = 0;
-    smsc_log_debug(log, "smeErrTable_cache_load: no records, make some fake counters");
+    smsc_log_debug(log, "smeErrTable_cache_load: no records, make fake counters");
     counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
     for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = 0;
     counter->cntErrors.Insert(0, 1);
     fillNextCounter(container, 0, counter);
     return MFD_SUCCESS;
   }
+  smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records", recCount);
 
-  int result = loadHashToContainer(container, h0);
-
-  if ( result != MFD_SUCCESS )
-    return result;
-
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(1);
-  smsc_log_debug(log, "smeStatTable_cache_load: getCounters(1) ok");
-  return loadHashToContainer(container, h1);
+  return retCode;
 } /* smeErrTable_cache_load */
 
 

@@ -16,7 +16,7 @@ namespace stat {
   {
     typedef enum SmppStatCounterType
     {
-      cntAccepted,
+      cntAccepted=0,
       cntRejected,
       cntDelivered,
       cntGw_Rejected,

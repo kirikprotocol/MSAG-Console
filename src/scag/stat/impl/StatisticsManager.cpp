@@ -138,7 +138,7 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     location = statManConfig.getDir();
     traffloc = location;
     if( !location.length() )
-        throw Exception("StatisticsManager, configure: Dirrectory has zero length.");
+        throw Exception("StatisticsManager, configure: Directory has zero length.");
 
     // Deletes last slash if it exists
     int len = location.length();
@@ -1071,17 +1071,19 @@ void StatisticsManager::incSvcScCounter(const char* systemId, int index, int max
 void StatisticsManager::incSmppCounter(const char* systemId, bool sc, int index, int errcode)
 {
   if(sc)
-    incSvcScCounter(systemId, index, PERF_CNT_COUNT, scSmppCounters, scCountersLock, errcode);
+//    incSvcScCounter(systemId, index, PERF_CNT_COUNT, scSmppCounters, scCountersLock, errcode);
+    incSvcScCounter(systemId, index, stat::Counters::cntSmppSize, scSmppCounters, scCountersLock, errcode);
   else
   {
-    index = indexByCounter(index);
-    incSvcScCounter(systemId, index, PERF_CNT_COUNT, svcSmppCounters, svcCountersLock, errcode);
+//    index = indexByCounter(index);
+//    incSvcScCounter(systemId, index, PERF_CNT_COUNT, svcSmppCounters, svcCountersLock, errcode);
+    incSvcScCounter(systemId, index, stat::Counters::cntSmppSize, svcSmppCounters, svcCountersLock, errcode);
   }
 }
 
 void StatisticsManager::incSmppRouteCounter(const smsc::sms::RouteId& routeId, int index, int errcode)
 {
-  int max_cnt = PERF_CNT_COUNT;
+  int max_cnt = stat::Counters::cntSmppSize;
   const char* pRouteId = &routeId[0];
   if ( !strlen(pRouteId) || index < 0 || index >= max_cnt) return;
 
@@ -1328,7 +1330,7 @@ void StatisticsManager::addGenSocket(Socket * socket)
     smsc_log_info(logger, "performance::add connect from %s", buf);
     genSockets.push_back(socket);
 }
-
+/*
 int StatisticsManager::indexByCounter(int counter)
 {
 
@@ -1350,7 +1352,7 @@ int StatisticsManager::indexByCounter(int counter)
 
   return -1;
 }
-
+*/
 int StatisticsManager::indexByHttpCounter(int event)
 {
   using namespace Counters;
