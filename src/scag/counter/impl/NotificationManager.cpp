@@ -33,7 +33,7 @@ NotificationManager::~NotificationManager()
 
 void NotificationManager::advanceTime( usec_type curTime )
 {
-    smsc_log_debug(log_,"advanceTime %lld", curTime);
+//    smsc_log_debug(log_,"advanceTime %lld", curTime);
     smsc::core::synchronization::MutexGuard mg(lock_);
     char* c;
     SendData* s;

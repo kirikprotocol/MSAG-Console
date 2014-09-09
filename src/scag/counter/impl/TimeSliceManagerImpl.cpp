@@ -90,7 +90,7 @@ int TimeSliceManagerImpl::Execute()
             if ( curTime < wakeTime ) {
                 const int sleepTime = int((wakeTime-curTime)/1000);
                 if ( sleepTime > 0 ) {
-                    smsc_log_debug(log_,"sleeping %u msec",sleepTime);
+//                    smsc_log_debug(log_,"sleeping %u msec",sleepTime);
                     mon_.wait(sleepTime);
                     if ( stopping_ ) break;
                     continue;
@@ -106,7 +106,7 @@ int TimeSliceManagerImpl::Execute()
         GroupMap::iterator ilast = groupMap.upper_bound( curTime );
         GroupMap newMap;
         for ( GroupMap::iterator i = groupMap.begin(); i != ilast; ++i ) {
-            smsc_log_debug(log_,"advancing group %u",timeToSlice(i->second->getSlice()));
+//            smsc_log_debug(log_,"advancing group %u",timeToSlice(i->second->getSlice()));
             const usec_type nextTime = i->second->advanceTime(curTime);
             newMap.insert(std::make_pair(nextTime,i->second));
         }

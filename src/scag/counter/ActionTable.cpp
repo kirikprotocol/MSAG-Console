@@ -20,13 +20,13 @@ actions_(list)
         MutexGuard mg(logMutex);
         if (!log_) log_ = smsc::logger::Logger::getInstance("cnt.atbl");
     }
-    smsc_log_debug(log_,"ctor %p",this);
+//    smsc_log_debug(log_,"ctor %p",this);
 }
 
 
 ActionTable::~ActionTable()
 {
-    smsc_log_debug(log_,"dtor %p",this);
+//    smsc_log_debug(log_,"dtor %p",this);
     for ( std::list<OldList>::iterator i = oldlists_.begin();
           i != oldlists_.end(); ++i ) {
         delete i->second;
@@ -36,7 +36,7 @@ ActionTable::~ActionTable()
 
 void ActionTable::modified( const char* cname, CntSeverity& sev, int64_t value, unsigned maxval )
 {
-    smsc_log_debug(log_,"%p: counter '%s' modified, new val=%llu",this,cname,value);
+//    smsc_log_debug(log_,"%p: counter '%s' modified, new val=%llu",this,cname,value);
     ActionList* ptr;
     {
         MutexGuard mg(actlock_);
@@ -67,11 +67,11 @@ void ActionTable::ref(bool add)
         MutexGuard mg(lock_);
         if (add) {
             ++ref_;
-            smsc_log_debug(log_,"%p: ref +1 => %u",this,ref_);
+//            smsc_log_debug(log_,"%p: ref +1 => %u",this,ref_);
             return;
         }
         destroy = !--ref_;
-        smsc_log_debug(log_,"%p: ref -1 => %u%s",this,ref_,destroy?" (need dtor)":"");
+//        smsc_log_debug(log_,"%p: ref -1 => %u%s",this,ref_,destroy?" (need dtor)":"");
     }
     if (destroy) delete this;
 }

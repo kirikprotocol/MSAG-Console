@@ -33,7 +33,7 @@ bool Connector::setupSockets(util::msectime_type currentTime )
     for ( int i = 0; i < sockets_.Count(); ++i ) {
         proto::Socket& socket = *sockets_[i];
         if ( socket.isConnected() ) {
-            smsc_log_debug(log_,"channel %p is connected, waiting for server answer ...",&socket);
+//            smsc_log_debug(log_,"channel %p is connected, waiting for server answer ...",&socket);
             // finishingSockets_.Push( &channel );
             // wakeupTime_ = currentTime;
             rv = true;

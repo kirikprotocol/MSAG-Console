@@ -25,13 +25,13 @@ socket_(socket)
         MutexGuard mg(logMtx);
         if (!log_) log_ = smsc::logger::Logger::getInstance("ctxreg");
     }
-    smsc_log_debug(log_,"ctor %p for channel %p sock=%p",this,socket.get(),socket->getSocket());
+//    smsc_log_debug(log_,"ctor %p for channel %p sock=%p",this,socket.get(),socket->getSocket());
 }
 
 
 ContextRegistry::~ContextRegistry()
 {
-    smsc_log_debug(log_,"dtor %p for channel %p sock=%p",this,socket_.get(),socket_->getSocket());
+//    smsc_log_debug(log_,"dtor %p for channel %p sock=%p",this,socket_.get(),socket_->getSocket());
 }
 
 
@@ -42,8 +42,8 @@ bool ContextRegistry::push( Context* ctx )
     bool wasempty = list_.empty();
     if ( map_.Exist( seqNum ) ) {
         // already there
-        smsc_log_debug(log_,"could not push ctx=%p seq=%u into %p channel %p",
-                       ctx,seqNum,this,socket_.get());
+//        smsc_log_debug(log_,"could not push ctx=%p seq=%u into %p channel %p",
+//                       ctx,seqNum,this,socket_.get());
         return false;
     }
     ProcessingList::iterator i = list_.insert(list_.end(),ContextPtr(ctx));
@@ -53,8 +53,8 @@ bool ContextRegistry::push( Context* ctx )
         smsc_log_info(log_,"total number of contexts in %p channel %p: %u",
                       this,socket_.get(),unsigned(map_.Count()));
     }
-    smsc_log_debug(log_,"ctx=%p seq=%u pushed into %p channel %p",
-                   ctx,seqNum,this,socket_.get());
+//    smsc_log_debug(log_,"ctx=%p seq=%u pushed into %p channel %p",
+//                   ctx,seqNum,this,socket_.get());
     return true;
 }
 
@@ -78,8 +78,8 @@ ContextPtr ContextRegistry::pop( uint32_t seqNum )
         smsc_log_info(log_,"total number of contexts in %p channel %p: %u",
                       this,socket_.get(),mapcount);
     }
-    smsc_log_debug(log_,"ctx=%p seq=%u was popped from %p channel %p",
-                  res.get(), seqNum, this, socket_.get());
+//    smsc_log_debug(log_,"ctx=%p seq=%u was popped from %p channel %p",
+//                  res.get(), seqNum, this, socket_.get());
     return res;
 }
 

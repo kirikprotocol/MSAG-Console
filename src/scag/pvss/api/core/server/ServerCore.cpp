@@ -207,16 +207,16 @@ void ServerCore::reportPacket( uint32_t seqNum,
     {
         ContextRegistryPtr ptr = regset_.get(&channel);
         if (!ptr) {
-            smsc_log_debug( loge_,"packet seqNum=%d on channel %p sock=%p reported, but registry is not found",
-                            seqNum, &channel, channel.getSocket());
+//            smsc_log_debug( loge_,"packet seqNum=%d on channel %p sock=%p reported, but registry is not found",
+//                            seqNum, &channel, channel.getSocket());
             countExceptions( PvssException::UNKNOWN, "reportMissReg");
             return;
         }
         ContextPtr i = ptr->get(seqNum);
         if ( !i ) {
-            smsc_log_debug(loge_, "packet seqNum=%d on channel %p sock=%p reported as %s, but not found",
-                           seqNum, &channel, channel.getSocket(),
-                           packetStateToString(state));
+//            smsc_log_debug(loge_, "packet seqNum=%d on channel %p sock=%p reported as %s, but not found",
+//                           seqNum, &channel, channel.getSocket(),
+//                           packetStateToString(state));
             countExceptions( PvssException::UNKNOWN, "reportMissSeqnum" );
             return;
         }
@@ -618,7 +618,7 @@ void ServerCore::sendResponse( ServerContextPtr& ctx ) /* throw (PvssException) 
 {
     int seqNum = ctx->getSeqNum();
     PvssSocketBase* socket = ctx->getSocket();
-    smsc_log_debug(log_,"sendResp ctx=%p seq=%u on channel %p sock=%p",ctx.get(),seqNum,socket,socket->getSocket());
+//    smsc_log_debug(log_,"sendResp ctx=%p seq=%u on channel %p sock=%p",ctx.get(),seqNum,socket,socket->getSocket());
     const Response* response = ctx->getResponse().get();
     if (!response) {
         throw PvssException(PvssException::BAD_RESPONSE,"response is null");
@@ -656,8 +656,8 @@ void ServerCore::sendResponse( ServerContextPtr& ctx ) /* throw (PvssException) 
     }
 
     try {
-        smsc_log_debug(log_,"sending response %p to channel %p sock=%p",
-                       response, socket, socket->getSocket());
+ //       smsc_log_debug(log_,"sending response %p to channel %p sock=%p",
+ //                      response, socket, socket->getSocket());
         ctx->sendResponse();
     } catch (...) {
         ptr->pop(seqNum);
@@ -694,16 +694,16 @@ void ServerCore::reportContext( ServerContext* ctx )
 
     ContextRegistryPtr ptr = regset_.get(socket);
     if (!ptr) {
-        smsc_log_debug(log_,"context registry is not found for ctx=%p seq=%u channel %p sock=%p",
-                       ctx,unsigned(seqNum),socket,socket->getSocket());
+//        smsc_log_debug(log_,"context registry is not found for ctx=%p seq=%u channel %p sock=%p",
+//                       ctx,unsigned(seqNum),socket,socket->getSocket());
         countExceptions(PvssException::UNKNOWN,"reportNoReg");
         return;
     }
 
     // extract from context registry
     if ( !ptr->pop(seqNum).get() ) {
-        smsc_log_debug(log_,"unknown resp ctx=%p seq=%u is reported on channel %p sock=%p",
-                       ctx,unsigned(seqNum),socket,socket->getSocket());
+//        smsc_log_debug(log_,"unknown resp ctx=%p seq=%u is reported on channel %p sock=%p",
+//                       ctx,unsigned(seqNum),socket,socket->getSocket());
         countExceptions(PvssException::UNKNOWN, "reportUnkSeq" );
         return;
     }

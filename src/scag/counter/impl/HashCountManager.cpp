@@ -240,7 +240,7 @@ MsagCounterTableElement* HashCountManager::updateSnmpCounterList( MsagCounterTab
 CounterPtrAny HashCountManager::getAnyCounter( const char* name )
 {
     if (!name) return CounterPtrAny();
-    smsc_log_debug(log_,"asking to fetch counter '%s'",name);
+//    smsc_log_debug(log_,"asking to fetch counter '%s'",name);
     {
         MutexGuard mg(hashMutex_);
         Counter** ptr = hash_.GetPtr(name);

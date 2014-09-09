@@ -250,7 +250,7 @@ void PvssSocket::disconnect()
 void PvssSocket::registerWriter( PacketWriter* writer )
 {
     MutexGuard mg(writerMutex_);
-    smsc_log_debug(log_,"attaching writer %p to channel %p",writer,this);
+//    smsc_log_debug(log_,"attaching writer %p to channel %p",writer,this);
     // assert( bool(writer) != bool(writer_) );
     writer_ = writer;
 }

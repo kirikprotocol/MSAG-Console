@@ -83,7 +83,7 @@ public:
 
     void popAll(ProcessingList& rv) 
     {
-        smsc_log_debug(log_,"popping all ctxs from %p channel %p",this,socket_.get());
+//        smsc_log_debug(log_,"popping all ctxs from %p channel %p",this,socket_.get());
         smsc::core::synchronization::MutexGuard mg(mon_);
         rv.clear();
         rv.swap(list_);
@@ -251,7 +251,7 @@ public:
         if ( ! set_.Exists(key) ) {
             ContextRegistryPtr reg(new ContextRegistry(sock));
             set_.Insert(key,reg);
-            smsc_log_debug(log_,"regptr %p created", reg.get());
+//            smsc_log_debug(log_,"regptr %p created", reg.get());
         }
     }
 
@@ -278,7 +278,7 @@ public:
             if (!i.Next(key,result)) return result;
             set_.Delete(key);
         }
-        smsc_log_debug(log_,"regptr %p popped",result.get());
+//        smsc_log_debug(log_,"regptr %p popped",result.get());
         return result;
     }
 
@@ -340,7 +340,7 @@ public:
             smsc::core::synchronization::MutexGuard mg(createMon_);
             if ( !set_.Pop(key,val) ) { return val; }
         }
-        smsc_log_debug(log_,"regptr %p popped",val.get());
+//        smsc_log_debug(log_,"regptr %p popped",val.get());
         return val;
     }
 

@@ -160,7 +160,7 @@ void ClientCore::shutdown()
 void ClientCore::closeChannel( PvssSocketBase& channel )
 {
     Core::closeChannel(channel);
-    smsc_log_info(logger,"closing channel %p sock=%p", &channel, channel.getSocket());
+//    smsc_log_info(logger,"closing channel %p sock=%p", &channel, channel.getSocket());
     PvssSocket& sock = static_cast<PvssSocket&>(channel);
     connector_->unregisterChannel(sock);
     bool found = false;
@@ -175,7 +175,7 @@ void ClientCore::closeChannel( PvssSocketBase& channel )
                       &sock);
         if (i != channels_.end()) {
             found = true;
-            smsc_log_debug(logger,"pushing channel %p sock=%p to dead", &channel, channel.getSocket());
+//            smsc_log_debug(logger,"pushing channel %p sock=%p to dead", &channel, channel.getSocket());
             deadChannels_.push_back(*i);
             channels_.erase(i);
         }
@@ -411,7 +411,7 @@ void ClientCore::clearChannels()
     for ( ChannelList::iterator i = channels_.begin(); i != channels_.end(); ++i ) {
         PvssSocketPtr& channel = *i;
         Core::closeChannel(*channel);
-        smsc_log_debug(logger,"pushing channel %p sock=%p to dead", channel.get(), channel->getSocket());
+//        smsc_log_debug(logger,"pushing channel %p sock=%p to dead", channel.get(), channel->getSocket());
         deadChannels_.push_back(*i);
     }
     channels_.clear();

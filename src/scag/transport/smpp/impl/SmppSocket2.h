@@ -82,10 +82,10 @@ struct SmppSocket : SmppChannel
         wrBuffer = new char[wrBufSize];
         dump = smsc::logger::Logger::getInstance("smpp.bind");
         if ( s ) {
-            smsc_log_debug( log_, "SmppSocket @%p ctor(%x)", this, s );
+//            smsc_log_debug( log_, "SmppSocket @%p ctor(%x)", this, s );
             sock->setData(0,this);
         } else {
-            smsc_log_debug( log_, "SmppSocket @%p ctor()", this);
+//            smsc_log_debug( log_, "SmppSocket @%p ctor()", this);
         }
         fillPeerData();
     }
@@ -184,9 +184,11 @@ struct SmppSocket : SmppChannel
           MutexGuard mg(mtx);
           res = (wrBufUsed>0 || outQueue.Count()>0);
       }
+/*
       if (res) {
           smsc_log_debug(log_,"SmppSocket @%p wantToSend()",this);
       }
+*/
       return res;
   }
   void sendData();
@@ -266,7 +268,7 @@ protected:
 
     virtual ~SmppSocket()
     {
-        smsc_log_debug(log_, "SmppSocket @%p destroying: %x", this, sock);
+//        smsc_log_debug(log_, "SmppSocket @%p destroying: %x", this, sock);
         onDestroy();
     }
 

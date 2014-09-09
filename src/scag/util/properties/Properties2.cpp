@@ -43,8 +43,8 @@ void Property::show( const char* where ) const
     case pt_date: stype="date"; break;
     default: stype="???"; break;
     }
-    smsc_log_debug(log_,"%s@%p sync=%d type=%s i=%lld s='%s'",
-                   where, this, sync, stype, i_val, s_val.empty() ? "" : s_val.c_str() );
+//    smsc_log_debug(log_,"%s@%p sync=%d type=%s i=%lld s='%s'",
+//                   where, this, sync, stype, i_val, s_val.empty() ? "" : s_val.c_str() );
 }
 
 

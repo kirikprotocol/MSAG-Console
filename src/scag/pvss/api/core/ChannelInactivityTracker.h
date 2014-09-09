@@ -43,8 +43,8 @@ public:
 
     bool removeChannel( PvssSocketBase& channel )
     {
-        smsc_log_debug(log_,"removing channel %p sock=%p from inactracker",
-                       &channel, channel.getSocket());
+//        smsc_log_debug(log_,"removing channel %p sock=%p from inactracker",
+//                       &channel, channel.getSocket());
         smsc::core::synchronization::MutexGuard mg(activityTimesMutex);
         return activityTimes.Delete(&channel);
     }

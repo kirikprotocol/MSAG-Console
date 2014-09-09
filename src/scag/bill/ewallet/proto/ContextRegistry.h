@@ -266,7 +266,7 @@ public:
             key->attach("ewall.reg");
             Registry* reg = new Registry;
             set_.Insert(key,reg);
-            smsc_log_debug(log_,"regptr %p created", reg);
+//            smsc_log_debug(log_,"regptr %p created", reg);
         }
     }
 

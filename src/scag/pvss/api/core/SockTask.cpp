@@ -57,7 +57,7 @@ void SockTask::registerChannel( PvssSocketPtr& con )
     {
         smsc::core::synchronization::MutexGuard mg(mon_);
         if ( isStopping ) return;
-        smsc_log_debug(log_,"registering channel %p",&con);
+//        smsc_log_debug(log_,"registering channel %p",&con);
         pendingSockets_.push_back(con);
         mon_.notify();
     }
@@ -66,7 +66,7 @@ void SockTask::registerChannel( PvssSocketPtr& con )
 
 void SockTask::unregisterChannel( PvssSocket& sock )
 {
-    smsc_log_debug(log_,"unregistering channel %p sock=%p",&sock,sock.getSocket());
+//    smsc_log_debug(log_,"unregistering channel %p sock=%p",&sock,sock.getSocket());
     {
         smsc::core::synchronization::MutexGuard mg(mon_);
         if ( isStopping ) {
@@ -100,7 +100,7 @@ void SockTask::processPending()
     for ( ConnArray::iterator i = work.begin(), ie = work.end(); i != ie; ++i ) {
         workingSockets_.push_back(*i);
         attachToSocket(**i);
-        smsc_log_debug(log_,"channel %p sock=%p registered",i->get(),(*i)->getSocket());
+//        smsc_log_debug(log_,"channel %p sock=%p registered",i->get(),(*i)->getSocket());
     }
     work.clear();
     {
@@ -119,7 +119,7 @@ void SockTask::processPending()
     }
     for ( ConnArray::iterator i = work.begin(), ie = work.end(); i != ie; ++i ) {
         detachFromSocket(**i);
-        smsc_log_debug(log_,"channel %p sock=%p unregistered",i->get(),(*i)->getSocket());
+//        smsc_log_debug(log_,"channel %p sock=%p unregistered",i->get(),(*i)->getSocket());
     }
 }
 

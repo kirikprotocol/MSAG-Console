@@ -416,9 +416,9 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
             te = int(session->expirationTime()-now);
             ta = int(session->lastAccessTime()-now);
         }
-        smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d %s exp=%+d acc=%+d",
-                        key.toString().c_str(), cmdaddr, create ? 1:0,
-                        session, sqsz, what, te, ta );
+//        smsc_log_debug( log_,"fetchSession(key=%s,cmd=%p,create=%d) => session=%p qsz=%d %s exp=%+d acc=%+d",
+//                        key.toString().c_str(), cmdaddr, create ? 1:0,
+//                        session, sqsz, what, te, ta );
     }
 
     if ( session )
@@ -491,7 +491,7 @@ void SessionStoreImpl::releaseSession( Session& session )
             UnlockMutexGuard ug(cacheLock_);
             // if ( ispersist ) {
             disk_->set( key, cache_->store2ref(*v) );
-            smsc_log_debug(log_, "session=%p/%s is flushed", &session, key.toString().c_str() );
+//            smsc_log_debug(log_, "session=%p/%s is flushed", &session, key.toString().c_str() );
             // } else {
             // disk_->remove( key );
             // smsc_log_debug(log_, "removed key=%s session=%p", key.toString().c_str(), &session );
@@ -518,8 +518,8 @@ void SessionStoreImpl::releaseSession( Session& session )
     // commands are owned elsewhere
     // delete prevcmd;
 
-    smsc_log_debug( log_, "releaseSession(session=%p/%s) => prevcmd=%u nextcmd=%u, tot/ldd/lck=%u/%u/%u",
-                    &session, key.toString().c_str(), prevuid, nextuid, tot, ldd, lck );
+//    smsc_log_debug( log_, "releaseSession(session=%p/%s) => prevcmd=%u nextcmd=%u, tot/ldd/lck=%u/%u/%u",
+//                    &session, key.toString().c_str(), prevuid, nextuid, tot, ldd, lck );
 
     if ( ! (nextcmd && carryNextCommand( session, nextcmd, true)) )
         expiration_->scheduleExpire(expiration,lastaccess,key);
@@ -579,7 +579,7 @@ bool SessionStoreImpl::expireSessions( std::vector<std::pair<SessionKey,time_t> 
 {
     assert( expired.size() > 0 || flush.size() > 0 );
 
-    smsc_log_debug( log_, "%u/%u sessions to be expired/flushed", expired.size(), flush.size() );
+//    smsc_log_debug( log_, "%u/%u sessions to be expired/flushed", expired.size(), flush.size() );
 
     time_t now = time(0);
     Session* session = 0;
@@ -603,16 +603,19 @@ bool SessionStoreImpl::expireSessions( std::vector<std::pair<SessionKey,time_t> 
                 if ( !stopping_ || session->needsFlush() || session->hasPersistentOperation() ) {
 
                     // session should be kept on disk.
-                    smsc_log_debug( log_, "session=%p/%s is being flushed",
-                                    session, session->sessionKey().toString().c_str() );
+//                    smsc_log_debug( log_, "session=%p/%s is being flushed",
+//                                    session, session->sessionKey().toString().c_str() );
                     scag_plog_debug(pl,log_);
                     session->print(pl);
                     disk_->set( session->sessionKey(), *session );
 
-                } else {
+                }
+/*
+                else {
                     smsc_log_debug( log_, "session=%p/%s is not flushed",
                                     session, session->sessionKey().toString().c_str() );
                 }
+*/
 
             } else if ( finw && ! fin_->finalize( *session ) ) {
 
@@ -624,8 +627,8 @@ bool SessionStoreImpl::expireSessions( std::vector<std::pair<SessionKey,time_t> 
 
                 // finalization is done, remove the session from disk
                 if ( diskio_ ) {
-                    smsc_log_debug( log_, "session=%p/%s is being erased from disk",
-                                    session, session->sessionKey().toString().c_str() );
+//                    smsc_log_debug( log_, "session=%p/%s is being erased from disk",
+//                                    session, session->sessionKey().toString().c_str() );
                     disk_->remove( session->sessionKey() );
                 }
 
@@ -693,23 +696,23 @@ bool SessionStoreImpl::expireSessions( std::vector<std::pair<SessionKey,time_t> 
             bool uploaded;
             {
                 UnlockMutexGuard umg(cacheLock_);
-                smsc_log_debug(log_,"key=%s to be expired is not found",
-                               key.toString().c_str() );
+//                smsc_log_debug(log_,"key=%s to be expired is not found", key.toString().c_str() );
                 uploaded = disk_->get( key, cache_->store2ref(*v) );
-                if ( ! uploaded ) {
-                    smsc_log_debug( log_, "session key=%s cannot be uploaded",
-                                   key.toString().c_str() );
-                } else {
-                    smsc_log_debug( log_,"session=%p/%s has been just uploaded",
-                                    session, key.toString().c_str() );
+                if ( uploaded ) {
+//                    smsc_log_debug( log_,"session=%p/%s has been just uploaded", session, key.toString().c_str() );
                     if ( firsttime && ! session->hasPersistentOperation() ) {
-                        smsc_log_debug( log_, "... but session is not persistent" );
+//                        smsc_log_debug( log_, "... but session is not persistent" );
                         finw = false;
                     } else {
                         scag_plog_debug(pl,log_);
                         session->print(pl);
                     }
                 }
+/*
+                else {
+                    smsc_log_debug( log_, "session key=%s cannot be uploaded", key.toString().c_str() );
+                }
+*/
             }
             if ( ! uploaded ) totalSessions_->increment(); // ++totalSessions_;
             session->setCurrentCommand(0);
@@ -869,8 +872,8 @@ bool SessionStoreImpl::uploadInitial( unsigned cnt )
                 if ( disk_->get( key, cache_->store2ref(v) ) )
                 {
                     // loaded
-                    smsc_log_debug(log_, "uploaded session=%p/%s has expire=%d",
-                                   session, key.toString().c_str(), int(session->expirationTime()-now));
+//                    smsc_log_debug(log_, "uploaded session=%p/%s has expire=%d",
+//                                   session, key.toString().c_str(), int(session->expirationTime()-now));
                     // scag_plog_debug(pl,log_);
                     // session->print(pl);
                     expiration_->scheduleExpire( session->expirationTime(),

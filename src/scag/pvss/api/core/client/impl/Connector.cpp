@@ -46,8 +46,8 @@ int Connector::setupSockets(util::msectime_type currentTime)
                 channel->setConnectTime( currentTime );
                 continue;
             }
-            smsc_log_debug(log_,"channel %p sock=%p is connected, waiting for server answer ...",
-                           channel.get(), channel->getSocket());
+//            smsc_log_debug(log_,"channel %p sock=%p is connected, waiting for server answer ...",
+//                           channel.get(), channel->getSocket());
             finishingSockets_.push_back( channel );
             rv = 0;
         } else {

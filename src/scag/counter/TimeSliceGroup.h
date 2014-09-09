@@ -20,7 +20,7 @@ protected:
             smsc::core::synchronization::MutexGuard mg(lock_);
             if (!log_) log_ = smsc::logger::Logger::getInstance("cnt.tgrp");
         }
-        smsc_log_debug(log_,"ctor %p, slice=%llu",this,slice);
+//        smsc_log_debug(log_,"ctor %p, slice=%llu",this,slice);
     }
 
 public:
@@ -50,8 +50,8 @@ public:
     }
 
     usec_type advanceTime( usec_type curTime ) {
-        smsc_log_debug(log_,"%u: advanceTime(%lld)",
-                       TimeSliceManager::timeToSlice(slice_), curTime);
+//        smsc_log_debug(log_,"%u: advanceTime(%lld)",
+//                       TimeSliceManager::timeToSlice(slice_), curTime);
         smsc::core::synchronization::MutexGuard mg(lock_);
         for ( ItemList::iterator i = itemList_.begin(); i != itemList_.end(); ++i ) {
             (*i)->advanceTime( curTime );
