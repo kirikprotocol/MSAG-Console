@@ -282,8 +282,7 @@ void SmppSocket::sendData()
     wrBuffer=new char[sz];
     wrBufSize=sz;
   }
-  smsc_log_debug(log_,"Preparing to send %x/%d",
-     pdu->get_commandId(), pdu->get_sequenceNumber());
+//  smsc_log_debug(log_,"Preparing to send %x/%d",  pdu->get_commandId(), pdu->get_sequenceNumber());
   SmppStream st;
   assignStreamWith(&st,wrBuffer,wrBufSize,false);
   if(!fillSmppPdu(&st,pdu))
@@ -304,7 +303,7 @@ void SmppSocket::sendData()
   }
   wrBufSent=0;
   wrBufUsed=sz;
-  smsc_log_debug(log_,"Prepared buffer size %d",wrBufUsed);
+//  smsc_log_debug(log_,"Prepared buffer size %d",wrBufUsed);
 }
 
 

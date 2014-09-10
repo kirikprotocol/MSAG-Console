@@ -1306,11 +1306,13 @@ SCAGCommand(c), _SmppCommand(c)
     }
     const unsigned clones = get_smsCommand().ref();
     // no need to assign uid
+/*
     smsc_log_debug( log_, "Command create (clone): cmd=%p, type=%d(%s), serial=%u, seq=%d, clones=%u",
                     this, cmdid_, commandIdName(cmdid_),
                     shared_->uid,
                     shared_->dialogId,
                     clones );
+*/
     session_ = 0;
 }
 
@@ -1323,8 +1325,8 @@ void SmppCommand::dispose()
         const uint32_t dialogId = shared_->dialogId;
         const unsigned clones = get_smsCommand().unref();
         if ( clones ) {
-            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), serial=%u, seq=%u, %u clones still exist",
-                           this, cmdid_, commandIdName(cmdid_), uid, dialogId, clones );
+//            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), serial=%u, seq=%u, %u clones still exist",
+//                           this, cmdid_, commandIdName(cmdid_), uid, dialogId, clones );
             return;
         }
     }
@@ -1338,10 +1340,12 @@ void SmppCommand::dispose()
                 MutexGuard mtxx(cntMutex);
                 sc = --commandCounter;
             }
+/*
             if ( cmdid_ != PROCESSEXPIREDRESP ) {
                 smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), count=%u, serial=%u, seq=%u",
                                this, cmdid_, commandIdName(cmdid_), sc, shared_->uid, shared_->dialogId );
             }
+*/
         }
     }
 
@@ -1424,10 +1428,12 @@ void SmppCommand::postfix()
     }
     // if ( ++stuid == uint32_t(-1) ) ++stuid;
     shared_->uid = makeSerial();
+/*
     if ( cmdid_ != PROCESSEXPIREDRESP ) {
         smsc_log_debug( log_, "Command create: cmd=%p, type=%d(%s), count=%u, serial=%u, seq=%u",
                         this, cmdid_, commandIdName(cmdid_), commandCounter, shared_->uid, shared_->dialogId );
     }
+*/
 }
 
 

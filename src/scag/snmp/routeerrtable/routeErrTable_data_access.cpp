@@ -244,7 +244,7 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, long errInd
 
   for(scag2::stat::IntHash<uint64_t>::Iterator iter = counter->cntErrors.First(); iter.Next(errCode, errCount); )
   {
-    smsc_log_debug(log, "routeErrTable_cache_load: %s(%d) Next %d %lld", sid, errIndex, errCode, errCount);
+//    smsc_log_debug(log, "routeErrTable_cache_load: %s(%d) Next %d %lld", sid, errIndex, errCode, errCount);
 
     if (!errCount) continue;
 
@@ -264,8 +264,8 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, long errInd
 
     std::string idxStr = netsnmp_index2str(rec->oid_idx);
     std::string oidStr = oid2str(rec->oid_tmp, MAX_routeErrTable_IDX_LEN);
-    smsc_log_debug(log, "routeErrTable_cache_load: routeErrTable_indexes_set(%d)=%s %s %d",
-        errIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.routeErrIndex);
+//    smsc_log_debug(log, "routeErrTable_cache_load: routeErrTable_indexes_set(%d)=%s %s %d",
+//        errIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.routeErrIndex);
 
     if ((NULL == rec->data.routeErrId) || strlen(sid) > sizeof(rec->data.routeErrId))
     {

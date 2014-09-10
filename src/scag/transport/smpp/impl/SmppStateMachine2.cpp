@@ -557,7 +557,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
 
             // orgcmd->operation is not set in case of transit route
             if ( orgCmd->getOperationId() == invalidOpId() ) {
-                smsc_log_debug(log_, "%s: orgcmd has no operation, transit route?", where );
+//                smsc_log_debug(log_, "%s: orgcmd has no operation, transit route?", where );
                 if (ri.statistics) {
                   const Address& address =  isDirFromService(dir) ? sms->getDestinationAddress() : sms->getOriginatingAddress();
                   const SessionKey key( address );
