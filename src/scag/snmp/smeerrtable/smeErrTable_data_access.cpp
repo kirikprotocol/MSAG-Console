@@ -301,7 +301,7 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
   while ( h.Next(sysId, cs) )
   {
     int result = fillNextCounter(container, (const char*)sysId, cs);
-    if ( result > 0 )
+    if ( result >= 0 )
       recCount += result;
     else if ( -1 == result )
       return MFD_RESOURCE_UNAVAILABLE;
@@ -329,20 +329,12 @@ int smeErrTable_cache_load(netsnmp_container* container)
 
   smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(0);
   retCode = loadHashToContainer(container, h0, recCount);
-  if ( retCode != MFD_SUCCESS )
+  if ( retCode == MFD_SUCCESS )
   {
-    return retCode;
+    smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(1);
+    retCode =  loadHashToContainer(container, h1, recCount);
   }
-
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(1);
-  retCode =  loadHashToContainer(container, h1, recCount);
-  if ( retCode != MFD_SUCCESS )
-  {
-    return retCode;
-  }
-
-// fill zero data if counters hash is empty or no errors registered
-  if ( (retCode == MFD_SUCCESS) && (0 == recCount) )
+  if ( 0 == recCount )    // fill zero data if counters hash is empty or no errors registered
   {
     stat::CommonPerformanceCounter* counter = 0;
     smsc_log_debug(log, "smeErrTable_cache_load: no records, make fake counters");
@@ -350,10 +342,9 @@ int smeErrTable_cache_load(netsnmp_container* container)
     for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = 0;
     counter->cntErrors.Insert(0, 1);
     fillNextCounter(container, 0, counter);
-    return MFD_SUCCESS;
+    ++recCount;
   }
-  smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records", recCount);
-
+  smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records, retCode=%d", recCount, retCode);
   return retCode;
 } /* smeErrTable_cache_load */
 

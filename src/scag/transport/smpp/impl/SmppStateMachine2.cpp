@@ -147,8 +147,8 @@ struct StateMachine::ResponseRegistry
         // we will use dialog id in resp
         cmd->set_dialogId( seq );
         reg.Insert(key,val);
-        smsc_log_debug(log, "register uid=%d, seq=%d, name=%s", uid, seq,
-                       cmd->getDstEntity()->info.systemId.c_str());
+//        smsc_log_debug(log, "register uid=%d, seq=%d, name=%s", uid, seq,
+//                       cmd->getDstEntity()->info.systemId.c_str());
         return true;
     }
 
@@ -159,7 +159,7 @@ struct StateMachine::ResponseRegistry
         if (!log) log = smsc::logger::Logger::getInstance("smpp.reg");
         RegKey key(uid, seq);
         RegValue* ptr=reg.GetPtr(key);
-        smsc_log_debug(log, "get uid=%d seq=%d - %s", uid, seq, (ptr) ? "ok":"not found");
+//        smsc_log_debug(log, "get uid=%d seq=%d - %s", uid, seq, (ptr) ? "ok":"not found");
         std::auto_ptr<SmppCommand> cmd;
         if (ptr) {
             cmd.reset(ptr->cmd);
@@ -356,6 +356,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
         cmdName = "Submit";
         break;
     case DELIVERY:
+        smsc_log_debug(log_,"DELIVERY putCommand");
         cmdName = "Delivery";
         break;
     case DATASM :
@@ -387,7 +388,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
             if( ri.slicing != router::SlicingType::NONE && 
                 !sliced && (cnt = getPartsCount(sms)) > 1)
             {
-                smsc_log_debug(log_, "%s: slicing message, type=%d, parts=%d, resppolicy=%d", cmdName, ri.slicing, cnt, ri.slicingRespPolicy);
+//                smsc_log_debug(log_, "%s: slicing message, type=%d, parts=%d, resppolicy=%d", cmdName, ri.slicing, cnt, ri.slicingRespPolicy);
                 cmd->get_smsCommand().setSlicingParams(ri.slicingRespPolicy, cnt);
                 uint32_t seq = 0, refNum = dst->getNextSlicingSeq(ri.slicing);
 
@@ -470,7 +471,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
     src = cmd->getEntity();
 
     do { // fake loop
-
+/*
         smsc_log_debug(log_, "%s: got cmd=%p cmd->serial=%u cmd->sess=%p%s",
                        where,
                        cmd,
@@ -478,7 +479,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                        cmd->getSession(),
                        cmd->getOperationId() != invalidOpId() ? ", continued..." : ""
                        );
-
+*/
         router::RouteInfo ri = router::RouteInfo();
         if ( cmd->getOperationId() == invalidOpId() )
         {
@@ -624,9 +625,9 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
             }
 
 
-            smsc_log_debug(log_,"%s: got session=%p key='%s' %s",
-                           where,
-                           session.get(), key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
+//            smsc_log_debug(log_,"%s: got session=%p key='%s' %s",
+//                           where,
+//                           session.get(), key.toString().c_str(), cmd->get_resp()->expiredResp ? "(expired)" : "");
 
         } // if no pre-locked session
 
@@ -691,7 +692,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
     {
         session->getLongCallContext().runPostProcessActions();
     }
-    smsc_log_debug(log_, "%s: processed", where );
+//    smsc_log_debug(log_, "%s: processed", where );
 }
 
 
@@ -717,13 +718,14 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
 
     util::HRTiming hrt( inhrt );
     hrt.comment( where );
-
+/*
     smsc_log_debug(log_, "%s: got cmd=%p cmd->serial=%u cmd->sess=%p%s",
                    where,
                    cmd,
                    cmd->getSerial(),
                    cmd->getSession(),
                    cmd->getOperationId() != invalidOpId() ? ", continued..." : "" );
+*/
     uint32_t rcnt = 0, failed = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
