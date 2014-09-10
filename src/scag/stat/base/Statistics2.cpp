@@ -56,6 +56,26 @@ const char* commandIdName( int id )
 namespace scag2 {
 namespace stat {
 
+const char* SmppStatEvent::eventTypeToString( events::smpp::EventType pt )
+{
+#define PTTOSTRING(x) case(x) : return #x
+  switch (pt) {
+    PTTOSTRING(events::smpp::RECEIPT_OK);
+    PTTOSTRING(events::smpp::RECEIPT_FAILED);
+    PTTOSTRING(events::smpp::FAILED);
+    PTTOSTRING(events::smpp::REJECTED);
+    PTTOSTRING(events::smpp::ACCEPTED);
+    PTTOSTRING(events::smpp::RESP_OK);
+    PTTOSTRING(events::smpp::RESP_EXPIRED);
+    PTTOSTRING(events::smpp::RESP_REJECTED);
+    PTTOSTRING(events::smpp::RESP_GW_REJECTED);
+    PTTOSTRING(events::smpp::RESP_FAILED);
+    PTTOSTRING(events::smpp::GW_REJECTED);
+#undef PTTOSTRING
+    default: return "???";
+  }
+}
+
 // ============================================================
 SaccSerialBuffer::SaccSerialBuffer(char* data, size_t size):buff_() {
   buff_.setExtBuf(data, size);

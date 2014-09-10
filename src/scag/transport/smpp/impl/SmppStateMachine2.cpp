@@ -336,8 +336,9 @@ void StateMachine::registerEvent( int event,
         dstType = dst->info.type == etSmsc;
     }
 
-    smsc_log_debug(log_, "registerEvent: %d, src='%s', dst='%s', rid='%s', err=%d",
-                   event, src_id, dst_id ? dst_id : "NULL",
+    smsc_log_debug(log_, "registerEvent: %d(%s), src='%s', dst='%s', rid='%s', err=%d",
+                   event, SmppStatEvent::eventTypeToString((events::smpp::EventType)event),
+                   src_id, dst_id ? dst_id : "NULL",
                    rid ? rid : "NULL", errCode );
 
     Statistics::Instance().registerEvent

@@ -237,19 +237,21 @@ using scag::util::SerializeBuffer;
 
     namespace events{
         namespace smpp{
-            const int RECEIPT_OK = 18;
-            const int RECEIPT_FAILED = 19;
+          enum EventType {
+            RECEIPT_OK = 18,
+            RECEIPT_FAILED = 19,
 
-            const int FAILED = 20;
-            const int REJECTED = 21;
-            const int ACCEPTED = 22;
+            FAILED = 20,
+            REJECTED = 21,
+            ACCEPTED = 22,
 
-            const int RESP_OK = 23;
-            const int RESP_EXPIRED = 24;
-            const int RESP_REJECTED = 25;
-            const int RESP_GW_REJECTED = 26;
-            const int RESP_FAILED = 27;
-            const int GW_REJECTED = 28;
+            RESP_OK = 23,
+            RESP_EXPIRED = 24,
+            RESP_REJECTED = 25,
+            RESP_GW_REJECTED = 26,
+            RESP_FAILED = 27,
+            GW_REJECTED = 28
+          };
         }
         namespace http{
             const int REQUEST_OK = 1;
@@ -319,6 +321,7 @@ using scag::util::SerializeBuffer;
         srcType = src.srcType;
         dstType = src.dstType;
       }
+      static const char* eventTypeToString( events::smpp::EventType pt );
     };
 
     struct HttpStatEvent
