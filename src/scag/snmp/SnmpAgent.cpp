@@ -47,8 +47,8 @@ extern "C" {
   static oid deliverOkOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 5, 0 };
   static oid deliverGwErrOid[] =       { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 6, 0 };
   static oid deliverErrOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 7, 0 };
-//  static oid receiptOkOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 8, 0 };
-//  static oid receiptErrOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 9, 0 };
+  static oid receiptOkOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 8, 0 };
+  static oid receiptErrOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 2, 4, 9, 0 };
 };
 
   namespace scag2 {
@@ -143,7 +143,7 @@ extern "C" {
     reginfo = netsnmp_create_handler_registration("deliverERR", statisticsHandler, deliverErrOid, OID_LENGTH(deliverErrOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("deliverERR"," handler inited\n"));
-/*
+
     reginfo = netsnmp_create_handler_registration("receiptOk", statisticsHandler, receiptOkOid, OID_LENGTH(receiptOkOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("receiptOk"," handler inited\n"));
@@ -151,7 +151,7 @@ extern "C" {
     reginfo = netsnmp_create_handler_registration("receiptErr", statisticsHandler, receiptErrOid, OID_LENGTH(receiptErrOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
     DEBUGMSGTL(("receiptErr"," handler inited\n"));
-*/
+
 
     reginfo = netsnmp_create_handler_registration("status", statusHandler, status_oid, OID_LENGTH(status_oid), HANDLER_CAN_RWRITE);
     netsnmp_register_instance(reginfo);

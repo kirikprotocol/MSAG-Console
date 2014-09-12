@@ -17,20 +17,6 @@ namespace scag2 {
 namespace snmp {
 namespace routestattable {
 
-/*
-static scag2::stat::StatisticsManager* statManPtr = 0;
-
-scag2::stat::StatisticsManager* RouteStatTableSubagent::getStatMan()
-{
-  return statManPtr;
-}
-
-void RouteStatTableSubagent::Init(scag2::stat::StatisticsManager* statman)
-{
-  statManPtr = statman;
-}
-*/
-
 void RouteStatTableSubagent::Register()
 {
   se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE6"), 131);

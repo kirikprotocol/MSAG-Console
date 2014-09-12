@@ -410,7 +410,7 @@ static int _mfd_smeStatTable_post_request(netsnmp_mib_handler *handler,
   int rc = smeStatTable_post_request(smeStatTable_if_ctx.user_ctx);
   if (MFD_SUCCESS != rc) {
       /*
-       * nothing we can do about it but logitf it
+       * nothing we can do about it but log it
        */
     smsc_log_debug(logitf, "smeStatTable error %d from smeStatTable_post_request", rc);
     DEBUGMSGTL(("internal:smeStatTable","error %d from smeStatTable_post_request\n", rc));

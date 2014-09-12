@@ -57,6 +57,7 @@ namespace smeerrtable{
 smsc::logger::Logger* log;
 const char* containerName = "smeErrTableContainer";
 const char* noStatData = "No-statistics-data";
+bool fillEmptyData = false;
 
 
 /**
@@ -168,6 +169,13 @@ void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
       __warning2__("Config parameter snmp.cacheTimeout not found, using default=%d", cacheTimeout);
     }
     cache->timeout = cacheTimeout; /* seconds */
+    try {
+      fillEmptyData = config::ConfigManager::Instance().getConfig()->getBool("snmp.fillEmptyData");
+    }
+    catch (...) {
+      smsc_log_info(log, "Config parameter snmp.fillEmptyData not found, using default=%s", fillEmptyData?"true":"false");
+      snmp_log(LOG_ERR, "Config parameter snmp.fillEmptyData not found, using default=%s\n", fillEmptyData?"true":"false");
+    }
 } /* smeErrTable_container_init */
 
 /**
@@ -334,7 +342,7 @@ int smeErrTable_cache_load(netsnmp_container* container)
     smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getCounters(1);
     retCode =  loadHashToContainer(container, h1, recCount);
   }
-  if ( 0 == recCount )    // fill zero data if counters hash is empty or no errors registered
+  if ( 0 == recCount && fillEmptyData )    // fill zero data if counters hash is empty or no errors registered
   {
     stat::CommonPerformanceCounter* counter = 0;
     smsc_log_debug(log, "smeErrTable_cache_load: no records, make fake counters");

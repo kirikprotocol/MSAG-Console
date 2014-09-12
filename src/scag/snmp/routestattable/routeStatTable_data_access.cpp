@@ -55,6 +55,7 @@ namespace routestattable {
 smsc::logger::Logger* log;
 const char* containerName = "routeStatTableContainer";
 const char* noStatData = "No-statistics-data";
+bool fillEmptyData = false;
 
 void uint64_to_U64(uint64_t val1, U64& val2)
 {
@@ -206,6 +207,13 @@ void routeStatTable_container_init(netsnmp_container **container_ptr_ptr, netsnm
       snmp_log(LOG_ERR, "Config parameter snmp.cacheTimeout not found, using default=%d\n", cacheTimeout);
     }
     cache->timeout = cacheTimeout; /* seconds */
+    try {
+      fillEmptyData = config::ConfigManager::Instance().getConfig()->getBool("snmp.fillEmptyData");
+    }
+    catch (...) {
+      smsc_log_info(log, "Config parameter snmp.fillEmptyData not found, using default=%s", fillEmptyData?"true":"false");
+      snmp_log(LOG_ERR, "Config parameter snmp.fillEmptyData not found, using default=%s\n", fillEmptyData?"true":"false");
+    }
 } /* routeStatTable_container_init */
 
 void routeStatTable_container_shutdown(netsnmp_container *container_ptr)
@@ -323,7 +331,7 @@ int routeStatTable_cache_load(netsnmp_container* container)
   smsc_log_debug(log, "routeStatTable_cache_load: getCounters(0) ok, %d entries", h0.GetCount());
 
   retCode = loadHashToContainer(container, h0, recCount);
-  if ( 0 == recCount )  // fill zero data if counters hash is empty
+  if ( 0 == recCount && fillEmptyData )  // fill zero data if counters hash is empty
   {
     stat::CommonPerformanceCounter* counter = 0;
     smsc_log_debug(log, "routeStatTable_cache_load: no records, make fake counters");
