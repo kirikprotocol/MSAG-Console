@@ -105,7 +105,7 @@ struct CommonPerformanceCounter
 
 class PerformanceListener{
 public:
-    virtual void getSmppPerfData(uint64_t *cnt)=0;
+    virtual void getSmppPerfData(uint64_t *cnt, int limit=0)=0;
     virtual void getHttpPerfData(uint64_t *cnt)=0;
     virtual void reportGenPerformance(PerformanceData * data)=0;
     virtual void reportSvcPerformance()=0;
@@ -154,10 +154,10 @@ struct GenStatistics
         counters[counter]++;
     }
 
-    void getCounters(uint64_t * cnt)
+    void getCounters(uint64_t * cnt, int limit=0)
     {
         MutexGuard g(statLock);
-        memcpy(cnt, counters, sizeof(uint64_t) * count);
+        memcpy( cnt, counters, sizeof(uint64_t) * (limit?limit:count) );
     }
 };
 

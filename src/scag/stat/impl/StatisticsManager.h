@@ -261,7 +261,7 @@ using namespace scag::stat::sacc;
         virtual void registerSaccEvent( stat::SaccAlarmEvent* ev );
         virtual void registerSaccEvent( stat::SaccAlarmMessageEvent* ev );
 
-        virtual void getSmppPerfData(uint64_t *cnt);
+        virtual void getSmppPerfData(uint64_t *cnt, int limit=0);
         virtual void getHttpPerfData(uint64_t *cnt);
 
         virtual void reportGenPerformance(PerformanceData * data);

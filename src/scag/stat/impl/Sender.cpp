@@ -170,7 +170,7 @@ int Sender::Execute()
       uint64_t smppPerf[PERF_CNT_COUNT];
       uint64_t httpPerf[PERF_HTTP_COUNT];
       // success, error, reschedule
-      perfListener->getSmppPerfData(smppPerf);
+      perfListener->getSmppPerfData(smppPerf, PERF_CNT_COUNT);
       perfListener->getHttpPerfData(httpPerf);
       PerformanceData d;
       d.smppCountersNumber=PERF_CNT_COUNT;

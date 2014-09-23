@@ -194,8 +194,8 @@ StatisticsManager::StatisticsManager() :
 Statistics(), Thread(), ConfigListener(STATMAN_CFG),
 logger(Logger::getInstance("statman")),
 currentIndex(0), bExternalFlush(false), isStarted(false),
-//genStatSmpp(Counters::cntSmppSize), genStatHttp(Counters::cntHttpSize)
-genStatSmpp(PERF_CNT_COUNT), genStatHttp(PERF_HTTP_COUNT)
+genStatSmpp(Counters::cntSmppSize), genStatHttp(Counters::cntHttpSize)
+//genStatSmpp(PERF_CNT_COUNT), genStatHttp(PERF_HTTP_COUNT)
 {
     memset(&smppFileTM, 0, sizeof(smppFileTM));
     memset(&httpFileTM, 0, sizeof(httpFileTM));
@@ -1200,9 +1200,9 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     }
 }
 
-void StatisticsManager::getSmppPerfData(uint64_t *cnt)
+void StatisticsManager::getSmppPerfData(uint64_t *cnt, int limit)
 {
-    genStatSmpp.getCounters(cnt);
+    genStatSmpp.getCounters(cnt, limit);
 }
 
 void StatisticsManager::getHttpPerfData(uint64_t *cnt)

@@ -13,6 +13,7 @@
 #include "smeerrtable/smeErrTable_subagent.hpp"
 #include "routestattable/routeStatTable_subagent.hpp"
 #include "routeerrtable/routeErrTable_subagent.hpp"
+#include "scag/stat/impl/StatCountersEnum.hpp"
 #include "SnmpAgent.hpp"
 #include <signal.h>
 #include "scag/version.h"
@@ -359,7 +360,7 @@ using scag2::snmp::SnmpAgent;
     std::string text = "";
     if ( oidlen ) { snprintf(buf, 32, "%d", id[0]); text = buf; }
 
-    for( int i = 1; i < oidlen; ++i ) { snprintf(buf, 32, ".%d", id[i]); text += buf; }
+    for( int i = 1; i < oidlen; ++i ) { snprintf(buf, 32, ".%u", id[i]); text += buf; }
     smsc_log_debug(lg, "%s oid = [%s]", msg, text.c_str());
   }
 
@@ -367,98 +368,82 @@ using scag2::snmp::SnmpAgent;
   int statisticsHandler(netsnmp_mib_handler* handler, netsnmp_handler_registration* reginfo,
                         netsnmp_agent_request_info* reqinfo, netsnmp_request_info* requests)
   {
-//    int i;
-    //netsnmp_variable_list *var = requests->requestvb;
-    struct counter64 val;
-    uint64_t perf[10];  //fake
-//    uint64_t perf[smsc::performanceCounters];
-//    ((smsc::Smsc*)smscptr)->getPerfData(perf);
+    smsc::logger::Logger* log = (smsc::logger::Logger*)agentlog;
+    smsc_log_debug(log, "statisticsHandler info: handlerName=%s contextName=%s",
+      reginfo->handlerName?reginfo->handlerName:"default",
+      reginfo->contextName?reginfo->contextName:"default");
+    oidLogDump(log, reginfo->rootoid, reginfo->rootoid_len, "statisticsHandler info:");
 
-    const int perfBase=6;
+    smsc_log_debug(log, "statisticsHandler info: priority=%d range_subid=%d range_ubound=%u timeout=%d, global_cacheid=%d",
+        reginfo->priority, reginfo->range_subid, reginfo->range_ubound, reginfo->timeout, reginfo->global_cacheid);
+
+    struct counter64 val;
+    uint64_t perf[scag2::stat::Counters::cntSmppSize];
+    scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getSmppPerfData(perf);
 
     if ( MODE_GET == reqinfo->mode )
     {
-//  case MODE_GET:
-
-      oidLogDump(((smsc::logger::Logger*)agentlog), reginfo->rootoid, reginfo->rootoid_len, "hello from stats handler;");
+      oidLogDump(log, reginfo->rootoid, reginfo->rootoid_len, "hello from stats handler;");
       scag2::counter::Manager::getInstance().dumpCounterList();
-/*
-      for( i = 0; i <= reginfo->rootoid_len; i++ )
-      {
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "oid[%d] = %d", i, reginfo->rootoid[i]);
-      }
-*/
+
 #define requestedOidIs(x) (snmp_oid_compare(x, OID_LENGTH(x), reginfo->rootoid, reginfo->rootoid_len) == 0)
 
       if ( requestedOidIs(sumbitOkOid) )
       {
-        val.high = perf[perfBase+0] >> 32;
-        val.low  = perf[perfBase+0] & 0xffffffff;
+        val.high = perf[scag2::stat::Counters::cntAccepted] >> 32;
+        val.low  = perf[scag2::stat::Counters::cntAccepted] & 0xffffffff;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char*)&val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "submitOK req");
       }
       else if ( requestedOidIs(sumbitErrOid) )
       {
-        val.high = perf[perfBase+1] >> 32;
-        val.low  = perf[perfBase+1] & 0xffffffff;
+        val.high = perf[scag2::stat::Counters::cntRejected] >> 32;
+        val.low  = perf[scag2::stat::Counters::cntRejected] & 0xffffffff;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char*)&val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "submitErr req");
       }
       else if ( requestedOidIs(deliverOkOid) )
       {
-        val.high = perf[perfBase+2] >> 32;
-        val.low  = perf[perfBase+2] & 0xffffffff;
+        val.high = perf[scag2::stat::Counters::cntDelivered] >> 32;
+        val.low  = perf[scag2::stat::Counters::cntDelivered] & 0xffffffff;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char*)&val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverOK req");
       }
       else if ( requestedOidIs(deliverGwErrOid) )
       {
-        val.high = perf[perfBase+3] >> 32;
-        val.low  = perf[perfBase+3] & 0xffffffff;
+        val.high = perf[scag2::stat::Counters::cntGw_Rejected] >> 32;
+        val.low  = perf[scag2::stat::Counters::cntGw_Rejected] & 0xffffffff;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverERR req");
       }
       else if ( requestedOidIs(deliverErrOid) )
       {
-        val.high = perf[perfBase+4] >> 32;
-        val.low  = perf[perfBase+4] & 0xffffffff;
+        val.high = perf[scag2::stat::Counters::cntFailed] >> 32;
+        val.low  = perf[scag2::stat::Counters::cntFailed] & 0xffffffff;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverERR req");
       }
-/*
       else if ( requestedOidIs(receiptOkOid) )
       {
-        val.high = perf[perfBase+5] >> 32;
-        val.low  = perf[perfBase+5] & 0xffffffff;
+        val.high = perf[scag2::stat::Counters::cntRecieptOk] >> 32;
+        val.low  = perf[scag2::stat::Counters::cntRecieptOk] & 0xffffffff;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "rescheduled req");
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "receiptOk req");
       }
       else if ( requestedOidIs(receiptErrOid) )
       {
-        val.high = perf[perfBase+6] >> 32;
-        val.low  = perf[perfBase+6] & 0xffffffff;
+        val.high = perf[scag2::stat::Counters::cntRecieptFailed] >> 32;
+        val.low  = perf[scag2::stat::Counters::cntRecieptFailed] & 0xffffffff;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverTEMP req");
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "receiptErr req");
       }
-*/
       else
       {
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "OID compare: found nothing");
         netsnmp_set_request_error(reqinfo, requests, SNMP_NOSUCHINSTANCE);
       }
     }
-/*
-    else
-    {
-      case MODE_SET_RESERVE1:
-      case MODE_SET_RESERVE2:
-      case MODE_SET_ACTION:
-      case MODE_SET_COMMIT:
-      case MODE_SET_UNDO:
-      case MODE_SET_FREE:
-      case MODE_GETNEXT: do nothing
-    }
- */
+
 #undef requestedOidIs
 
     if (handler->next && handler->next->access_method)
@@ -467,4 +452,4 @@ using scag2::snmp::SnmpAgent;
     }
     return SNMP_ERR_NOERROR;
   }
-//=============
+
