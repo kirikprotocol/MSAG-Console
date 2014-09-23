@@ -368,6 +368,7 @@ using scag2::snmp::SnmpAgent;
   int statisticsHandler(netsnmp_mib_handler* handler, netsnmp_handler_registration* reginfo,
                         netsnmp_agent_request_info* reqinfo, netsnmp_request_info* requests)
   {
+    const char* debuginfo[] = {"cntAccepted", "cntRejected", "cntDelivered", "cntGw_Rejected", "cntFailed", "cntRecieptOk", "cntRecieptFailed"};
     smsc::logger::Logger* log = (smsc::logger::Logger*)agentlog;
     smsc_log_debug(log, "statisticsHandler info: handlerName=%s contextName=%s",
       reginfo->handlerName?reginfo->handlerName:"default",
@@ -388,59 +389,26 @@ using scag2::snmp::SnmpAgent;
 
 #define requestedOidIs(x) (snmp_oid_compare(x, OID_LENGTH(x), reginfo->rootoid, reginfo->rootoid_len) == 0)
 
-      if ( requestedOidIs(sumbitOkOid) )
-      {
-        val.high = perf[scag2::stat::Counters::cntAccepted] >> 32;
-        val.low  = perf[scag2::stat::Counters::cntAccepted] & 0xffffffff;
-        snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char*)&val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "submitOK req");
-      }
-      else if ( requestedOidIs(sumbitErrOid) )
-      {
-        val.high = perf[scag2::stat::Counters::cntRejected] >> 32;
-        val.low  = perf[scag2::stat::Counters::cntRejected] & 0xffffffff;
-        snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char*)&val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "submitErr req");
-      }
-      else if ( requestedOidIs(deliverOkOid) )
-      {
-        val.high = perf[scag2::stat::Counters::cntDelivered] >> 32;
-        val.low  = perf[scag2::stat::Counters::cntDelivered] & 0xffffffff;
-        snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char*)&val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverOK req");
-      }
-      else if ( requestedOidIs(deliverGwErrOid) )
-      {
-        val.high = perf[scag2::stat::Counters::cntGw_Rejected] >> 32;
-        val.low  = perf[scag2::stat::Counters::cntGw_Rejected] & 0xffffffff;
-        snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverERR req");
-      }
-      else if ( requestedOidIs(deliverErrOid) )
-      {
-        val.high = perf[scag2::stat::Counters::cntFailed] >> 32;
-        val.low  = perf[scag2::stat::Counters::cntFailed] & 0xffffffff;
-        snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverERR req");
-      }
-      else if ( requestedOidIs(receiptOkOid) )
-      {
-        val.high = perf[scag2::stat::Counters::cntRecieptOk] >> 32;
-        val.low  = perf[scag2::stat::Counters::cntRecieptOk] & 0xffffffff;
-        snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "receiptOk req");
-      }
-      else if ( requestedOidIs(receiptErrOid) )
-      {
-        val.high = perf[scag2::stat::Counters::cntRecieptFailed] >> 32;
-        val.low  = perf[scag2::stat::Counters::cntRecieptFailed] & 0xffffffff;
-        snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "receiptErr req");
-      }
-      else
+      scag2::stat::Counters::SmppStatCounterType index = scag2::stat::Counters::cntSmppSize;
+      if ( requestedOidIs(sumbitOkOid) )            index = scag2::stat::Counters::cntAccepted;
+      else if ( requestedOidIs(sumbitErrOid) )      index = scag2::stat::Counters::cntRejected;
+      else if ( requestedOidIs(deliverOkOid) )      index = scag2::stat::Counters::cntDelivered;
+      else if ( requestedOidIs(deliverGwErrOid) )   index = scag2::stat::Counters::cntGw_Rejected;
+      else if ( requestedOidIs(deliverErrOid) )     index = scag2::stat::Counters::cntFailed;
+      else if ( requestedOidIs(receiptOkOid) )      index = scag2::stat::Counters::cntRecieptOk;
+      else if ( requestedOidIs(receiptErrOid) )     index = scag2::stat::Counters::cntRecieptFailed;
+
+      if (index == scag2::stat::Counters::cntSmppSize)
       {
         smsc_log_debug(((smsc::logger::Logger*)agentlog), "OID compare: found nothing");
         netsnmp_set_request_error(reqinfo, requests, SNMP_NOSUCHINSTANCE);
+      }
+      else
+      {
+        val.high = perf[index] >> 32;
+        val.low  = perf[index] & 0xffffffff;
+        snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char*)&val, sizeof(val));
+        smsc_log_debug(((smsc::logger::Logger*)agentlog), "%s req", debuginfo[index]);
       }
     }
 
