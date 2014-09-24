@@ -235,10 +235,7 @@ extern "C" {
   }
 
 using scag2::snmp::SnmpAgent;
-//using smsc::snmp::CLEAR;
-//using smsc::snmp::INFO;
 
-  //static char version[] ="MSAG UNKNOWN VERSION";
   extern "C"
   int descrHandler(netsnmp_mib_handler* handler, netsnmp_handler_registration* reginfo,
                    netsnmp_agent_request_info* reqinfo, netsnmp_request_info* requests)
@@ -248,22 +245,7 @@ using scag2::snmp::SnmpAgent;
       const char* str_version = getStrVersion();
       snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR, (u_char*)str_version, strlen(str_version));
     }
-/*
-    switch (reqinfo->mode)
-    {
-      case MODE_GET:
-        const char* str_version = getStrVersion();
-        snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR, (u_char*)str_version, strlen(str_version));
-        break;
-      case MODE_SET_RESERVE1:
-      case MODE_SET_RESERVE2:
-      case MODE_SET_ACTION:
-      case MODE_SET_UNDO:
-      case MODE_SET_COMMIT:
-      case MODE_SET_FREE:
-        break;
-    }
-*/
+
     if (handler->next && handler->next->access_method)
     {
       return netsnmp_call_next_handler(handler, reginfo, reqinfo, requests);
@@ -355,7 +337,7 @@ using scag2::snmp::SnmpAgent;
   extern "C"
   void oidLogDump(smsc::logger::Logger* lg, oid* id, size_t oidlen, const char* message)
   {
-    char buf[32];
+    char buf[64];
     const char* msg = message ? message : "";
     std::string text = "";
     if ( oidlen ) { snprintf(buf, 32, "%d", id[0]); text = buf; }
