@@ -20,8 +20,8 @@
     <javac srcdir="${java_src}"
            destdir="${java_out}"
            classpath="${log4j_jar}"
-           target="1.5"
-           source="1.5"
+           target="1.6"
+           source="1.6"
            includeantruntime="false"/>
   </target>
 
