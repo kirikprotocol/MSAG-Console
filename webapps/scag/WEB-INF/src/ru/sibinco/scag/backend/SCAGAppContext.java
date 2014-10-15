@@ -28,18 +28,13 @@ import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.scag.scmon.ScServer;
 import ru.sibinco.scag.svcmon.SvcMonServer;
 import ru.sibinco.scag.util.LocaleManager;
-import ru.sibinco.tomcat_auth.XmlAuthenticator;
-
 import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 
-
-/**
- * Created by IntelliJ IDEA. User: igork Date: 25.02.2004 Time: 17:22:47
- */
 public class SCAGAppContext {
+
     private static SCAGAppContext instance = null;
 
     private Logger logger = Logger.getLogger(this.getClass());
@@ -81,8 +76,7 @@ public class SCAGAppContext {
         return isCluster;
     }
 
-    private SCAGAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
-            Config.ParamNotFoundException, SibincoException {
+    private SCAGAppContext(final String config_filename) throws Throwable, Config.ParamNotFoundException, SibincoException {
         try {
             //System.out.println("  **  config file:" + new File(config_filename).getAbsolutePath());
             System.out.flush();
@@ -127,7 +121,7 @@ public class SCAGAppContext {
 //            final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
 
             ServiceInfo scagServiceInfo = null;
-            if( instType.equals(HSDaemon.typeCluster) ) { ;
+            if( instType.equals(HSDaemon.typeCluster) ) {
 //                scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
                 scagDaemon = null;
                 scagServiceInfo = null;
@@ -161,7 +155,6 @@ public class SCAGAppContext {
             scServer.start();
             liveConnect = new LiveConnect(ruleManager,config);
             liveConnect.start();
-            XmlAuthenticator.init(new File(config.getString("users_config_file")));
         } catch (Throwable e) {
             logger.fatal("Could not initialize App Context", e);
             e.printStackTrace();

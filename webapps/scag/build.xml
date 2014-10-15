@@ -38,7 +38,6 @@
   <property name="scmon_out" location="${java_out}/${scmon_path}"/>
 
   <property name="sibinco_lib" location="${WEBBUILD_DIR}/jars/sibinco_lib.jar"/>
-  <property name="tomcat_auth_lib" location="${WEBBUILD_DIR}/jars/sibinco_tomcat_auth.jar"/>
   <property name="log4j_jar" location="WEB-INF/lib/log4j.jar"/>
   <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet-api.jar"/>
   <property name="jsp_jar" location="${CATALINA_HOME}/common/lib/jsp-api.jar"/>
@@ -55,7 +54,7 @@
 
   <target name="compile" depends="init" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" source="1.6" target="1.6"
-           classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}:${jstl_jar}:${jsp_jar}:${xerces_jar}"
+           classpath="${sibinco_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}:${jstl_jar}:${jsp_jar}:${xerces_jar}"
            includeantruntime="false"/>
     <native2ascii encoding="UTF-8" src="${java_src}/locales" dest="${java_out}/locales" excludes="*.xml"/>
     <native2ascii encoding="UTF-8" src="${perfmon_src}/applet" dest="${perfmon_out}/applet" excludes="*.java"/>
@@ -131,7 +130,6 @@
 			   
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${basedir}/WEB-INF/lib"  includes="*.jar"/>
-      <fileset file="${tomcat_auth_lib}"/>
       <fileset file="${sibinco_lib}"/>
     </copy>
 
