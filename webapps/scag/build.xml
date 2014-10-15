@@ -125,7 +125,7 @@
        <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
      </copy>
     <copy todir="${exploded}" preservelastmodified="yes">
-       <fileset dir="." includes="**/*.jsp **/*.js **/*.html **/*.htm **/*.gif **/*.bmp **/*.jpg **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd **/*.png"/>
+       <fileset dir="." includes="**/*.jsp **/*.js **/*.html **/*.htm **/*.gif **/*.bmp **/*.jpg **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd **/*.png **/*.config"/>
     </copy>     
 			   
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
