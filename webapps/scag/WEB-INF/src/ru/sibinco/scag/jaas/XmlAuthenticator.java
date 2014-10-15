@@ -20,7 +20,7 @@ public class XmlAuthenticator implements Authenticator{
 
   private Map<String, MSAGPrincipal> users;
 
-  public XmlAuthenticator(final File usersFile) throws Exception {
+  public XmlAuthenticator(final File usersFile) throws ParserConfigurationException, SAXException, IOException {
     try {
       if (log.isInfoEnabled()) log.info("Try to initialize file '" + usersFile.getAbsolutePath() + "' ...");
       Document document = parse(new FileReader(usersFile));
@@ -39,7 +39,13 @@ public class XmlAuthenticator implements Authenticator{
         users.put(name, new MSAGPrincipal(name, password, roles));
       }
       if (log.isInfoEnabled()) log.info("Initialized success with " + users.values().size() + " users.");
-    } catch (Exception e) {
+    } catch (IOException e) {
+      log.error("Couldn't load users from file "+usersFile+"'.", e);
+      throw e;
+    } catch (ParserConfigurationException e) {
+      log.error("Couldn't load users from file "+usersFile+"'.", e);
+      throw e;
+    } catch (SAXException e) {
       log.error("Couldn't load users from file "+usersFile+"'.", e);
       throw e;
     }

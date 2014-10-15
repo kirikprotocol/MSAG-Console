@@ -8,8 +8,10 @@ import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.tomcat_auth.XmlAuthenticator;
 import ru.sibinco.scag.backend.installation.HSDaemon;
+import ru.sibinco.scag.jaas.Authenticator;
+import ru.sibinco.scag.jaas.XmlAuthenticator;
+import ru.sibinco.scag.web.WebContext;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
@@ -23,7 +25,7 @@ public class UserManager {
 
     private Logger logger = Logger.getLogger(this.getClass());
 
-    private Map users = Collections.synchronizedMap(new HashMap());
+    private Map<String, User> users = Collections.synchronizedMap(new HashMap<String, User>());
     private final File configFile;
     private final HSDaemon hsDaemon;
     public UserManager(String config, HSDaemon hsDaemon) throws IOException, ParserConfigurationException, SAXException {
@@ -58,7 +60,8 @@ public class UserManager {
 
     public synchronized void apply() throws IOException, ParserConfigurationException, SAXException, SibincoException {
         store();
-        XmlAuthenticator.init(configFile);
+        Authenticator authenticator =  new XmlAuthenticator(configFile);
+        WebContext.setAuthenticator(authenticator);
         hsDaemon.store(configFile);
     }
 
@@ -67,10 +70,11 @@ public class UserManager {
 
         PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configNew), Functions.getLocaleEncoding()));
         Functions.storeConfigHeader(out, "users", "users.dtd", Functions.getLocaleEncoding());
-        for (Iterator i = new SortedList(users.keySet()).iterator(); i.hasNext();) {
-            String userLogin = (String) i.next();
-            User user = (ScagUser) users.get(userLogin);
-            out.print(user.getXmlText());
+        SortedList sortedList = new SortedList(users.keySet());
+        for (Object o : sortedList) {
+          String userLogin = (String) o;
+          User user = users.get(userLogin);
+          out.print(user.getXmlText());
         }
         Functions.storeConfigFooter(out, "users");
         out.flush();

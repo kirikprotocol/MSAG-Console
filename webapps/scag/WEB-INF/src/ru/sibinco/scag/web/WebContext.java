@@ -18,4 +18,8 @@ public class WebContext {
     return auth;
   }
 
+  public static void setAuthenticator(Authenticator authenticator){
+    auth = authenticator;
+  }
+
 }
