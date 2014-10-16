@@ -869,7 +869,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <untar compression="gzip"
                src="${SMSC_DIR}/config/tomcat/apache-tomcat-7.0.56.tar.gz"
                dest="${WEBDISTR_DIR}/tomcat"/>
-        <delete dir="${SMSC_DIR}/config/tomcat/apache-tomcat-7.0.56"/>
+        <delete dir="${WEBDISTR_DIR}/tomcat/apache-tomcat-7.0.56"/>
         <chmod perm="775">
             <fileset dir="${WEBDISTR_DIR}/tomcat/bin" includes="*.sh"/>
         </chmod>
