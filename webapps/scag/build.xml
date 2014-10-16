@@ -39,12 +39,11 @@
 
   <property name="sibinco_lib" location="${WEBBUILD_DIR}/jars/sibinco_lib.jar"/>
   <property name="log4j_jar" location="WEB-INF/lib/log4j.jar"/>
-  <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet-api.jar"/>
-  <property name="jsp_jar" location="${CATALINA_HOME}/common/lib/jsp-api.jar"/>
-  <property name="tomcat_server_libs"
-            location="${CATALINA_HOME}/server/lib/catalina.jar:${CATALINA_HOME}/bin/jmx.jar"/>  
+  <property name="servlet_jar" location="${CATALINA_HOME}/lib/servlet-api.jar"/>
+  <property name="jsp_jar" location="${CATALINA_HOME}/lib/jsp-api.jar"/>
+  <property name="tomcat_server_libs" location="${CATALINA_HOME}/lib/catalina.jar"/>
   <property name="jstl_jar" location="WEB-INF/lib/jstl.jar"/>
-  <property name="xerces_jar" location="${CATALINA_HOME}/common/endorsed/xercesImpl.jar"/>
+  <!--property name="xerces_jar" location="${CATALINA_HOME}/common/endorsed/xercesImpl.jar"/-->
   <target name="init">
     <tstamp/>
     <mkdir dir="${java_out}"/>
@@ -53,8 +52,8 @@
   </target>
 
   <target name="compile" depends="init" description="compile the sources">
-    <javac srcdir="${java_src}" destdir="${java_out}" source="1.6" target="1.6"
-           classpath="${sibinco_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}:${jstl_jar}:${jsp_jar}:${xerces_jar}"
+    <javac srcdir="${java_src}" destdir="${java_out}" target="1.6"
+           classpath="${sibinco_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}:${jstl_jar}:${jsp_jar}"
            includeantruntime="false"/>
     <native2ascii encoding="UTF-8" src="${java_src}/locales" dest="${java_out}/locales" excludes="*.xml"/>
     <native2ascii encoding="UTF-8" src="${perfmon_src}/applet" dest="${perfmon_out}/applet" excludes="*.java"/>
