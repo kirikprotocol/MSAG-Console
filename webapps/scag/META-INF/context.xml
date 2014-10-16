@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<Context path="/" reloadable="true">
+<Context path="/" reloadable="true" useHttpOnly="false">
   <Realm className="org.apache.catalina.realm.JAASRealm"
          appName="MSAGCustomLogin"
          userClassNames="ru.sibinco.scag.jaas.User"
