@@ -45,8 +45,8 @@
     <manifest file="${basedir}/version_manifest.mf" encoding="utf-8" mode="update">
       <attribute name="Bundle-Version" value="${version}"/>
     </manifest>
-    <jar jarfile="${dist}/${artifact}.jar" basedir="${build}/classes" excludes="**/log4j.properties"
-         manifest="${basedir}/version_manifest.mf">
+    <jar jarfile="${dist}/${artifact}.jar" basedir="${build}/classes"
+         manifest="${basedir}/version_manifest.mf" compress="true">
       <fileset file="${basedir}/history.txt"/>
       <fileset dir="${build}/classes">
         <include name="bsh/**/*.class"/>
