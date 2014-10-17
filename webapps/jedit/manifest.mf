@@ -1,1 +1,2 @@
 Created-By: Dmitry Stepanov
+Main-Class: org.gjt.sp.jedit.jEdit
