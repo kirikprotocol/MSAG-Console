@@ -62,7 +62,8 @@
     </manifest>
     <jar jarfile="${dist}/${artifact}.jar"
          basedir="${build}/classes"
-         manifest="${basedir}/version_manifest.mf" compress="true">
+         manifest="${basedir}/version_manifest.mf" compress="true"
+         duplicate="preserve">
       <fileset file="${basedir}/history.txt"/>
       <fileset dir="${build}/classes">
         <include name="bsh/**/*.class"/>
