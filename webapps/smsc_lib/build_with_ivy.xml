@@ -1,0 +1,68 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="build" default="build" basedir=".">
+  <property file="${basedir}/version.properties"/>
+  <property file="${user.home}/.ivy2/build.properties"/>
+  <property name="doc.class.path" value="**/*.java"/>
+  <property name="configuration" value="default"/>
+  <property name="status" value="release"/>
+  <property name="publisher" value="eyeline"/>
+  <fail unless="version" message="Invalid configuration specified: ${configuration}, supported configurations: release, integration"/>
+
+  <property name="src" location="${basedir}/src"/>
+  <property name="build" location="${basedir}/.build"/>
+  <property name="dist" location="${build}/distr"/>
+  <path id="classpath">
+    <pathelement location="${build}/classes"/>
+    <pathelement location="${src}"/>
+    <fileset dir="${build}/lib" includes="*.jar"/>
+  </path>
+
+  <target name="resolve" description="retrieve dependencies with ivy">
+    <ivy:settings file="${user.home}/.ivy2/ivysettings.xml"/>
+    <ivy:resolve conf="${configuration}"/>
+    <mkdir dir="${build}/lib"/>
+    <ivy:retrieve pattern="${build}/lib/[artifact].[ext]" type="jar,bundle"/>
+    <mkdir dir="${build}/report"/>
+    <ivy:report todir="${build}/report" graph="true"/>
+  </target>
+
+  <target name="compile" description="compile the source" depends="resolve">
+    <mkdir dir="${build}"/>
+    <mkdir dir="${build}/classes"/>
+    <javac srcdir="${src}" destdir="${build}/classes" classpathref="classpath" verbose="no" debug="yes" source="1.6" target="1.6" encoding="utf-8"/>
+  </target>
+
+  <target name="build" description="build jar" depends="compile">
+    <mkdir dir="${dist}"/>
+    <copy file="${basedir}/manifest.mf" tofile="${basedir}/version_manifest.mf"/>
+    <mkdir dir="${build}/classes/dtds"/>
+    <copy todir="${build}/classes/dtds">
+      <fileset dir="${basedir}/src/dtds">
+        <include name="**/*.dtd"/>
+      </fileset>
+    </copy>
+    <manifest file="${basedir}/version_manifest.mf" encoding="utf-8" mode="update">
+      <attribute name="Bundle-Version" value="${version}"/>
+    </manifest>
+    <jar jarfile="${dist}/${artifact}.jar" basedir="${build}/classes" excludes="**/log4j.properties"
+         manifest="${basedir}/version_manifest.mf">
+      <fileset file="${basedir}/history.txt"/>
+    </jar>
+    <delete file="${basedir}/version_manifest.mf"/>
+  </target>
+
+  <target name="doc" description="Generate documentation" depends="build">
+    <property name="docapi" location="${build}/api"/>
+    <mkdir dir="${docapi}"/>
+    <javadoc destdir="${docapi}" classpathref="classpath">
+      <fileset dir="${src}" includes="${doc.class.path}"/>
+    </javadoc>
+    <zip destfile="${dist}/${artifact}-javadoc.zip" basedir="${docapi}" includes="**/*"/>
+  </target>
+
+  <target name="publish" description="Publish artifact to ivy" depends="build,doc">
+    <zip destfile="${dist}/${artifact}-sources.zip" basedir="${src}" includes="**/*"/>
+    <echo message="Publishing to resolver ${publisher} with config ${configuration} and status ${status}"/>
+    <ivy:publish resolver="${publisher}" pubrevision="${version}" overwrite="true" update="true" conf="${configuration}" status="${status}" artifactspattern="${dist}/[artifact].[ext]"/>
+  </target>
+
+</project>
