@@ -1,0 +1,28 @@
+<ivy-module version="2.0">
+
+  <info organisation="${ivy-organization}" module="${ivy-module}"/>
+
+  <configurations>
+    <conf name="jedit"  description="jedit"/>
+    <conf name="lib"  description="lib"/>
+    <conf name="dev"  description="dev"/>
+    <conf name="ser"  description="ser"/>
+  </configurations>
+
+  <dependencies>
+
+    <dependency org="mobi.eyeline.msag" name="jedit" rev="1.0.0" conf="jedit->default"/>
+
+    <dependency org="javax.servlet" name="jstl" rev="1.2" conf="lib->default"/>
+    <dependency org="taglibs" name="standard" rev="1.1.2" conf="lib->default"/>
+    <dependency org="ru.sibinco.lib" name="sibinco-lib" rev="1.0.0" conf="lib->default"/>
+    <dependency org="log4j" name="log4j" rev="1.2.17" conf="lib->default"/>
+
+    <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" conf="dev->default"/>
+    <dependency org="javax.servlet.jsp" name="jsp-api" rev="2.2" conf="dev->default"/>
+
+    <dependency org="xerces" name="xercesImpl" rev="2.11.0" conf="ser->default"/>
+
+  </dependencies>
+
+</ivy-module>

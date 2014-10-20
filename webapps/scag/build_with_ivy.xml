@@ -1,0 +1,167 @@
+<project default="update" basedir="." name="MSA Gateway web application IVY" xmlns:ivy="antlib:org.apache.ivy.ant">
+
+  <property environment="env"/>
+  <property name="build" location="${basedir}/.build"/>
+  <property name="java_src" location="${basedir}/WEB-INF/src"/>
+  <property name="java_out" location="${build}/classes/msag"/>
+  <property name="exploded" location="${build}/exploded/msag"/>
+  <property name="java_lib" location="${exploded}/WEB-INF/lib"/>
+  <property name="perfmon_path" value="ru/sibinco/scag/perfmon"/>
+  <property name="perfmon_src" location="${java_src}/${perfmon_path}"/>
+  <property name="perfmon_out" location="${java_out}/${perfmon_path}"/>
+
+  <property name="svcmon_path" value="ru/sibinco/scag/svcmon"/>
+  <property name="svcmon_src" location="${java_src}/${svcmon_path}"/>
+  <property name="svcmon_out" location="${java_out}/${svcmon_path}"/>
+
+  <property name="scmon_path" value="ru/sibinco/scag/scmon"/>
+  <property name="scmon_src" location="${java_src}/${scmon_path}"/>
+  <property name="scmon_out" location="${java_out}/${scmon_path}"/>
+
+  <property name="sibinco_lib" location="${build}/libs/lib/sibinco-lib.jar"/>
+  <property name="log4j_jar" location="${build}/libs/lib/log4j.jar"/>
+  <property name="servlet_jar" location="${build}/libs/dev/servlet-api.jar"/>
+  <property name="jsp_jar" location="${build}/libs/dev/jsp-api.jar"/>
+  <property name="jstl_jar" location="${build}/libs/lib/jstl.jar"/>
+  <property name="xerces_jar" location="${build}/libs/ser/xercesImpl.jar"/>
+
+  <path id="lib">
+    <fileset dir="${build}/libs/lib" includes="*.jar"/>
+  </path>
+
+  <path id="libdev">
+    <fileset dir="${build}/libs/libdev" includes="*.jar"/>
+  </path>
+
+  <path id="libser">
+    <fileset dir="${build}/libs/libser" includes="*.jar"/>
+  </path>
+
+  <path id="liball">
+    <path refid="lib"/>
+    <path refid="libdev"/>
+    <path refid="libser"/>
+  </path>
+
+  <target name="prebuild">
+    <mkdir dir="${build}/libs/jedit"/>
+    <mkdir dir="${build}/libs/lib"/>
+    <mkdir dir="${build}/libs/libdev"/>
+    <mkdir dir="${build}/libs/libser"/>
+    <ivy:settings file="${user.home}/.ivy2/ivysettings.xml"/>
+    <ivy:retrieve pattern="${build}/libs/jedit/[artifact]-[revision].[ext]" type="jar" conf="jedit"/>
+    <ivy:retrieve pattern="${build}/libs/lib/[artifact].[ext]" type="jar, bundle" conf="lib"/>
+    <ivy:retrieve pattern="${build}/libs/libdev/[artifact]-[revision].[ext]" type="jar" conf="dev"/>
+    <ivy:retrieve pattern="${build}/libs/libser/[artifact]-[revision].[ext]" type="jar" conf="ser"/>
+  </target>
+
+  <target name="compile" depends="prebuild" description="compile the sources">
+    <mkdir dir="${java_out}"/>
+
+    <javac srcdir="${java_src}" destdir="${java_out}" target="1.6" classpathref="liball" includeantruntime="false"/>
+
+    <native2ascii encoding="UTF-8" src="${java_src}/locales" dest="${java_out}/locales" excludes="*.xml"/>
+    <native2ascii encoding="UTF-8" src="${perfmon_src}/applet" dest="${perfmon_out}/applet" excludes="*.java"/>
+    <native2ascii encoding="UTF-8" src="${svcmon_src}/applet" dest="${svcmon_out}/applet" excludes="*.java"/>
+    <native2ascii encoding="UTF-8" src="${scmon_src}/applet" dest="${scmon_out}/applet" excludes="*.java"/>
+
+    <mkdir dir="${java_out}/dtds"/>
+    <copydir src="${java_src}/dtds" dest="${java_out}/dtds"/>
+
+  </target>
+
+  <target name="build" depends="compile" description="generate the distribution">
+    <mkdir dir="${java_lib}"/>
+    <mkdir dir="${exploded}"/>
+
+    <jar jarfile="${java_lib}/scag.jar">
+      <fileset dir="${java_out}">
+        <exclude name="${perfmon_path}/applet/**"/>
+        <exclude name="${svcmon_path}/applet/**"/>
+        <exclude name="${scmon_path}/applet/**"/>
+        <exclude name="**/locales/**"/>
+      </fileset>
+
+      <!--fileset dir="${java_out}" excludes="${svcmon_path}/applet/**"/-->
+
+    </jar>
+
+    <unjar src="${sibinco_lib}" dest="${exploded}/unjar_tmp"/>
+    <mkdir dir="${exploded}/stat/monitor"/>
+    <jar jarfile="${exploded}/stat/monitor/perfmon.jar">
+      <fileset dir="${java_out}">
+        <include name="${perfmon_path}/applet/**/*.class"/>
+        <include name="${perfmon_path}/applet/*.properties"/>
+        <include name="${perfmon_path}/PerfSnap.class"/>
+        <include name="${perfmon_path}/PerfSnap*.class"/>
+        <include name="ru/sibinco/scag/util/RemoteResourceBundle.class"/>
+      </fileset>
+      <fileset dir="${exploded}/unjar_tmp">
+        <include name="ru/sibinco/lib/backend/applet/**"/>
+        <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
+      </fileset>
+    </jar>
+
+    <mkdir dir="${exploded}/endpoints/services/monitor"/>
+    <jar jarfile="${exploded}/endpoints/services/monitor/svcmon.jar">
+      <fileset dir="${java_out}">
+        <include name="${svcmon_path}/applet/**/*.class"/>
+        <include name="${svcmon_path}/applet/**/*.properties"/>
+        <include name="${svcmon_path}/snap/**"/>
+        <include name="${svcmon_path}/SvcSnap.class"/>
+        <include name="ru/sibinco/scag/util/RemoteResourceBundle.class"/>
+      </fileset>
+      <fileset dir="${exploded}/unjar_tmp">
+        <include name="ru/sibinco/lib/backend/applet/**"/>
+        <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
+      </fileset>
+    </jar>
+
+    <mkdir dir="${exploded}/endpoints/centers/monitor"/>
+    <jar jarfile="${exploded}/endpoints/centers/monitor/scmon.jar">
+      <fileset dir="${java_out}">
+        <include name="${scmon_path}/applet/**/*.class"/>
+        <include name="${scmon_path}/applet/**/*.properties"/>
+        <include name="${scmon_path}/ScSnap.class"/>
+        <include name="${scmon_path}/snap/**"/>
+        <include name="ru/sibinco/scag/util/RemoteResourceBundle.class"/>
+      </fileset>
+      <fileset dir="${exploded}/unjar_tmp">
+        <include name="ru/sibinco/lib/backend/applet/**"/>
+        <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
+      </fileset>
+    </jar>
+    <delete dir="${exploded}/unjar_tmp"/>
+
+    <copy todir="${exploded}/rules/rules" preservelastmodified="yes">
+      <fileset dir="${build}/libs/jedit" includes="jedit.jar" />
+    </copy>
+
+    <copy todir="${exploded}" preservelastmodified="yes">
+      <fileset dir="." includes="**/*.jsp **/*.js **/*.html **/*.htm **/*.gif **/*.bmp **/*.jpg **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd **/*.png **/*.config"/>
+    </copy>
+
+    <delete file="${build}/exploded/msag/build.xml"/>
+    <delete file="${build}/exploded/msag/build_with_ivy.xml"/>
+
+    <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
+      <fileset dir="${basedir}/WEB-INF/lib"  includes="*.jar"/>
+      <fileset file="${sibinco_lib}"/>
+    </copy>
+
+    <mkdir dir="${exploded}/WEB-INF/classes/locales"/>
+    <copy todir="${exploded}/WEB-INF/classes/locales" preservelastmodified="yes">
+      <fileset dir="${java_out}/locales" includes="*.properties"/>
+    </copy>
+  </target>
+
+  <target name="distr" depends="build">
+    <mkdir dir="${build}/distr"/>
+    <war basedir="${build}/exploded/msag" destfile="${build}/distr/msag.war" webxml="${build}/exploded/msag/WEB-INF/web.xml">
+      <manifest>
+        <attribute name="Implementation-Version" value="${env.RELEASE_VERSION}"/>
+      </manifest>
+    </war>
+  </target>
+
+</project>
