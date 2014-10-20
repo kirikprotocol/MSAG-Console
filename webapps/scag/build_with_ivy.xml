@@ -143,6 +143,7 @@
 
     <delete file="${build}/exploded/msag/build.xml"/>
     <delete file="${build}/exploded/msag/build_with_ivy.xml"/>
+    <delete file="${build}/exploded/msag/ivy.xml"/>
 
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${basedir}/WEB-INF/lib"  includes="*.jar"/>
