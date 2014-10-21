@@ -50,7 +50,7 @@
     <mkdir dir="${build}/libs/libser"/>
     <ivy:settings file="${user.home}/.ivy2/ivysettings.xml"/>
     <ivy:retrieve pattern="${build}/libs/jedit/[artifact]-[revision].[ext]" type="jar" conf="jedit"/>
-    <ivy:retrieve pattern="${build}/libs/lib/[artifact]-[revision].[ext]" type="jar, bundle" conf="lib"/>
+    <ivy:retrieve pattern="${build}/libs/lib/[artifact].[ext]" type="jar, bundle" conf="lib"/>
     <ivy:retrieve pattern="${build}/libs/libdev/[artifact]-[revision].[ext]" type="jar" conf="dev"/>
     <ivy:retrieve pattern="${build}/libs/libser/[artifact]-[revision].[ext]" type="jar" conf="ser"/>
   </target>
