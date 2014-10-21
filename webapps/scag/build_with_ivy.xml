@@ -145,11 +145,6 @@
     <delete file="${build}/exploded/msag/build_with_ivy.xml"/>
     <delete file="${build}/exploded/msag/ivy.xml"/>
 
-    <!--copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
-      <fileset dir="${basedir}/WEB-INF/lib"  includes="*.jar"/>
-      <fileset file="${sibinco_lib}"/>
-    </copy-->
-
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${build}/libs/lib"  includes="*.jar"/>
     </copy>
@@ -158,6 +153,18 @@
     <copy todir="${exploded}/WEB-INF/classes/locales" preservelastmodified="yes">
       <fileset dir="${java_out}/locales" includes="*.properties"/>
     </copy>
+
+    <mkdir dir="${build}/exploded/msag/rules/rules/xsd"/>
+    <copy todir="${build}/exploded/msag/rules/rules/xsd"
+          preservelastmodified="yes"
+          flatten="yes">
+      <fileset dir="../../config/templates">
+        <include name="scag2/rules/xsd/*"/>
+      </fileset>
+    </copy>
+
+    <copy file="${build}/libs/jedit.jar" todir="${build}/exploded/msag/rules/rules"/>
+
   </target>
 
   <target name="distr" depends="build">
