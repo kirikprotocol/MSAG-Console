@@ -18,7 +18,7 @@
     <dependency org="ru.sibinco.lib" name="sibinco-lib" rev="1.0.0" conf="lib->default"/>
     <dependency org="log4j" name="log4j" rev="1.2.17" conf="lib->default"/>
 
-    <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" conf="dev->default"/>
+    <dependency org="javax.servlet" name="javax.servlet-api" rev="3.0.1" conf="dev->default"/>
     <dependency org="javax.servlet.jsp" name="jsp-api" rev="2.2" conf="dev->default"/>
 
     <dependency org="xerces" name="xercesImpl" rev="2.11.0" conf="ser->default"/>
