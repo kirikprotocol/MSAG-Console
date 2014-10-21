@@ -165,6 +165,10 @@
 
     <copy file="${build}/libs/jedit/jedit.jar" todir="${build}/exploded/msag/rules/rules"/>
 
+    <copy todir="${build}/exploded/msag/applet">
+      <fileset dir="../jedit/dirs" includes="**/*"/>
+    </copy>
+
   </target>
 
   <target name="distr" depends="build">
