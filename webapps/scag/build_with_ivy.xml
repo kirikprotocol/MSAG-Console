@@ -144,6 +144,8 @@
     <delete file="${build}/exploded/msag/build.xml"/>
     <delete file="${build}/exploded/msag/build_with_ivy.xml"/>
     <delete file="${build}/exploded/msag/ivy.xml"/>
+    <delete file="${build}/exploded/msag/history.txt"/>
+    <delete file="${build}/exploded/msag/ChangeList.txt"/>
 
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${build}/libs/lib"  includes="*.jar"/>
@@ -165,6 +167,8 @@
 
     <copy file="${build}/libs/jedit/jedit.jar" todir="${build}/exploded/msag/rules/rules"/>
 
+    <copy file="${basedir}/history.txt" todir="${build}/exploded/msag/META-INF"/>
+
     <copy todir="${build}/exploded/msag/applet">
       <fileset dir="../jedit/dirs" includes="**/*"/>
     </copy>
@@ -178,6 +182,10 @@
         <attribute name="Implementation-Version" value="${env.RELEASE_VERSION}"/>
       </manifest>
     </war>
+
+
   </target>
+
+
 
 </project>
