@@ -186,6 +186,9 @@
 
     <ear destfile="${build}/distr/msag.ear" appxml="${basedir}/application.xml">
       <fileset dir="${build}/distr" includes="*.war"/>
+      <manifest>
+        <attribute name="Implementation-Version" value="${env.RELEASE_VERSION}"/>
+      </manifest>
     </ear>
   </target>
 
