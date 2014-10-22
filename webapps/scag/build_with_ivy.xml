@@ -146,6 +146,7 @@
     <delete file="${build}/exploded/msag/ivy.xml"/>
     <delete file="${build}/exploded/msag/history.txt"/>
     <delete file="${build}/exploded/msag/ChangeList.txt"/>
+    <delete file="${build}/exploded/msag/application.xml"/>
 
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${build}/libs/lib"  includes="*.jar"/>
@@ -183,9 +184,9 @@
       </manifest>
     </war>
 
-
+    <ear destfile="${build}/distr/msag.ear" appxml="${basedir}/application.xml">
+      <fileset dir="${build}/distr" includes="*.war"/>
+    </ear>
   </target>
-
-
 
 </project>
