@@ -7,7 +7,7 @@
   <context-param>
     <description>Application config file</description>
     <param-name>AppConfigFile</param-name>
-    <param-value>conf/webconfig.xml</param-value>
+    <param-value>config/msag_webconfig.xml</param-value>
   </context-param>
 
   <context-param>
