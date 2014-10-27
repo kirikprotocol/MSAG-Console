@@ -16,9 +16,31 @@ public class InitListener implements ServletContextListener {
   @Override
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try{
-      String configFileName = servletContextEvent.getServletContext().getInitParameter("AppConfigFile");
-      if (log.isInfoEnabled()) log.debug("use context init parameter 'AppConfigFile': "+configFileName);
-      Config config = new Config(new File(configFileName));
+      String configDir = System.getProperty("msag.console.config.dir");
+      if (configDir == null){
+        String message = "Couldn't find system property 'msag.console.config.dir'.";
+        log.error(message);
+        throw new IllegalArgumentException(message);
+      }
+
+      if (configDir.isEmpty()){
+        String message = "System property 'msag.console.config.dir' is empty.";
+        log.error(message);
+        throw new IllegalArgumentException(message);
+      }
+
+      String configFileString = configDir+File.separator+"webconfig.xml";
+
+      File configFile = new File(configFileString);
+      boolean exists = configFile.exists();
+      if (!exists){
+        String message = "MSAG Console configuration file '"+configFileString+"' doesn't exists.";
+        log.error(message);
+        throw new IllegalArgumentException(message);
+      }
+
+      log.info("Use MSAG Console configuration file: "+configFileString);
+      Config config = new Config(configFile);
 
       String usersFileName = config.getString("users_config_file");
       if (log.isInfoEnabled()) log.debug("use configuration parameter 'users_config_file': "+usersFileName);

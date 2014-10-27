@@ -14,6 +14,7 @@ import ru.sibinco.scag.Constants;
 import javax.servlet.*;
 import javax.servlet.jsp.jstl.core.Config;
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -31,7 +32,9 @@ public class SCAGFilter implements Filter {
         Functions.setLocaleEncoding("UTF-8");
         this.config = config;
         try {
-            appContext = SCAGAppContext.getInstance(config.getServletContext().getInitParameter("AppConfigFile"));
+            String configDir = System.getProperty("msag.console.config.dir");
+            String configFileString = configDir + File.separator + "webconfig.xml";
+            appContext = SCAGAppContext.getInstance(configFileString);
             setdefaultLocale();
         } catch (Throwable t) {
             logger.fatal("Could not initialize application", t);
