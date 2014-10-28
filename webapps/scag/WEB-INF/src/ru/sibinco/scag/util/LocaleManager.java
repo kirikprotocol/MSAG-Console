@@ -14,21 +14,17 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
 import org.apache.log4j.Logger;
 
-
-/**
- * Created by IntelliJ IDEA.
- * User: dym
- * Date: 08.06.2006
- * Time: 12:54:01
- * To change this template use File | Settings | File Templates.
- */
 public class LocaleManager {
+
+  @SuppressWarnings("FieldCanBeLocal")
   private Logger logger = Logger.getLogger(LocaleManager.class);
+
   private final File configFile;
   private final ArrayList localesList;
 
   public LocaleManager(String config) throws Throwable, IOException, ParserConfigurationException, SAXException {
       localesList = new ArrayList();
+      if (logger.isInfoEnabled()) logger.info("Use locales file '"+config+"'.");
       configFile = new File(config);
       try {
           load();
