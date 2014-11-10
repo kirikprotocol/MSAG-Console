@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<application xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             version="6" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/application_6.xsd">
+<application
+    xmlns="http://java.sun.com/xml/ns/javaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+                      http://java.sun.com/xml/ns/javaee/application_5.xsd"
+    version="5">
 
-  <application-name>MSAG Console</application-name>
-
-  <initialize-in-order>true</initialize-in-order>
+  <description>MSAG Console</description>
+  <display-name>MSAG Console</display-name>
 
   <module>
     <web>
