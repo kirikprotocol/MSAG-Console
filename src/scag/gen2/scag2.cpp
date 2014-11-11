@@ -367,7 +367,7 @@ void Scag::init( unsigned mynode )
              0
 #endif
              );
-        sm->Init( findConfigFile("../conf/smpp.xml") );
+        sm->Init( findConfigFile("./conf/smpp.xml") );
         smppInited_ = true;
         smsc_log_info(log, "Smpp Manager started");
     } catch(Exception& e) {
