@@ -151,6 +151,8 @@
     <delete file="${build}/exploded/msag/WEB-INF/ids.xml"/>
     <delete file="${build}/exploded/msag/WEB-INF/locales.xml"/>
     <delete file="${build}/exploded/msag/WEB-INF/jaas.config"/>
+    <delete file="${build}/exploded/msag/WEB-INF/lib/jstl.jar"/>
+    <delete file="${build}/exploded/msag/WEB-INF/lib/standard.jar"/>
 
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${build}/libs/lib"  includes="*.jar"/>
