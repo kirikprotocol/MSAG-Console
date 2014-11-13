@@ -16,6 +16,7 @@ namespace scag { namespace bill { namespace infrastruct {
 using namespace smsc::util;
 using namespace smsc::logger;
 using smsc::core::buffers::Hash;
+using smsc::core::buffers::IntHash;
 
 XERCES_CPP_NAMESPACE_USE
 

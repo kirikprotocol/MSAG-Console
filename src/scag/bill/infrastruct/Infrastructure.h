@@ -10,6 +10,7 @@
 namespace scag { namespace bill { namespace infrastruct {
 
 using namespace smsc::sms;
+using smsc::core::synchronization::Mutex;
 
 class Infrastructure
 {
