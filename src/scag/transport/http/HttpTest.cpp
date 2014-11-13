@@ -197,7 +197,11 @@ HttpManagerConfig HttpManCfg(
     10, //int connectionTimeout;
     //unsigned int maxHeaderLength;
     "0.0.0.0",  //const char *host;
-    5001       //int port;
+    5001,       //int port;
+    true,
+    8080,
+    "certif",
+    10
 );
 
 //void load_config(const ConfigView & cv)

@@ -7,6 +7,8 @@
 
 namespace scag { namespace transport { namespace http {
 
+using smsc::core::synchronization::Mutex;
+
     class HttpProcessor 
     {
     public:

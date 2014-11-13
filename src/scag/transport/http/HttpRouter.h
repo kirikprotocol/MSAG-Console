@@ -11,6 +11,8 @@
 #include <core/buffers/Array.hpp>
 #include <core/buffers/XHash.hpp>
 #include <core/buffers/IntHash.hpp>
+#include "core/buffers/Hash.hpp"
+#include <core/synchronization/Mutex.hpp>
 #include <util/crc32.h>
 
 #include <logger/Logger.h>
@@ -27,7 +29,10 @@ using smsc::sms::Address;
 using smsc::core::buffers::Array;
 using smsc::core::buffers::XHash;
 using smsc::core::buffers::IntHash;
+using smsc::core::buffers::Hash;
+using smsc::core::buffers::HashInvalidKeyException;
 using smsc::util::crc32;
+using smsc::core::synchronization::Mutex;
 
 class RouteNotFoundException{};
 

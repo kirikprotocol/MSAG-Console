@@ -8,6 +8,7 @@
 #include <util/Exception.hpp>
 
 #include <core/buffers/IntHash.hpp>
+#include <core/buffers/Hash.hpp>
 #include <logger/Logger.h>
 
 #include "RouterTypes.h"
@@ -18,6 +19,8 @@ namespace scag { namespace transport { namespace http {
 using namespace smsc::util;
 using namespace smsc::logger;
 using smsc::core::buffers::Hash;
+using smsc::core::buffers::HashInvalidKeyException;
+
 
 XERCES_CPP_NAMESPACE_USE
 
