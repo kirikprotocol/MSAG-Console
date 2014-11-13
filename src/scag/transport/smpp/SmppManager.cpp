@@ -88,7 +88,8 @@ public:
         sync::MutexGuard rsmg(routerSwitchMtx);
         ref=routeMan;
       }
-      if(!ref->lookup(srcidx,source,dest,info))return 0;
+      std::vector< std::string > traceit;
+      if(!ref->lookup(srcidx,source,dest,info,&traceit))return 0;
     }
     MutexGuard mg(regMtx);
     SmppEntity** ptr=registry.GetPtr(info.smeSystemId.c_str());
@@ -1449,7 +1450,8 @@ void SmppManagerImpl::pushCommand(SmppCommand& cmd)
 void SmppManagerImpl::reloadTestRoutes(const RouteConfig& rcfg)
 {
   auto_ptr<RouteManager> router(new RouteManager());
-  loadRoutes(router.get(),rcfg,true);
+  std::vector<std::string> traceit;
+  loadRoutes(router.get(),rcfg,&traceit);
   ResetTestRouteManager(router.release());
 }
 
