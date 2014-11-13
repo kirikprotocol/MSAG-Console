@@ -15,7 +15,7 @@ namespace pvss {
 smsc::logger::Logger* ProfileBackup::log_ = 0;
 
 ProfileBackup::ProfileBackup( ProfileLog* dblog ) :
-dblog_(dblog)
+dblog_(dblog),jlen_(0),extendedExpDump_(false)
 {
     if (!log_) {
         smsc::core::synchronization::MutexGuard mg(mtx);
@@ -72,6 +72,9 @@ void ProfileBackup::delProperty( Property* prop, bool logOnly )
 
 void ProfileBackup::expireProperty( const char* profkey, const Property& prop )
 {
+  if(extendedExpDump_)
+    addLogMsg(PROPFIX, prop.toString());
+  else
     smsc_log_info(dblog_,"E key=%s name=%s", profkey, prop.getName());
 }
 

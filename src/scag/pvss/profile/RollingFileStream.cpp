@@ -103,7 +103,7 @@ bool RollingFileStreamReader::RFR::readRecordData( size_t filePos,
                                             crcRead, crc32 );
                 }
             }
-             */
+            */
             // get the next file name
             nextFile = buf+pos;
         }
@@ -192,15 +192,24 @@ std::string RollingFileStreamReader::readNextFile( const char* fullName )
 RollingFileStream::RollingFileStream( const char* name,
                                       const char* prefix,
                                       const char* finalSuffix,
-                                      unsigned  interval ) :
+                                      unsigned  interval,
+                                      bool dumpMode) :
 ProfileLogStream(name),
 prefix_(prefix), finalSuffix_(finalSuffix),
-interval_(interval)
+interval_(interval),
+dumpMode_(dumpMode)
 {
     if (!log_) { log_ = smsc::logger::Logger::getInstance("rollfile"); }
 }
 
-
+RollingFileStream::~RollingFileStream(){
+  if(dumpMode_){
+    time_t now = time(0);
+    if(now==startTime_) ++now;
+    smsc::core::synchronization::MutexGuard mg(lock_);
+    doRollover( now, prefix_.c_str(), false );
+  }
+}
 
 time_t RollingFileStream::extractTime( const char* filename,
                                        const char* prefix,
@@ -495,7 +504,7 @@ void RollingFileStream::collectUnfinishedLogs( const char* prefix,
 }
 
 
-void RollingFileStream::doRollover( time_t now, const char* pathPrefix )
+void RollingFileStream::doRollover( time_t now, const char* pathPrefix, bool createNewFile )
 {
     assert(file_.isOpened());
     TmpBuf<char,1024> buf;
@@ -538,6 +547,10 @@ void RollingFileStream::doRollover( time_t now, const char* pathPrefix )
     }
     if ( -1 == rename(oldname.c_str(),(oldname+finalSuffix_).c_str()) ) {
         smsc_log_warn(log_,"rename('%s') exc: errno=%d",oldname.c_str(),errno);
+    }
+    if(!createNewFile){
+      file_.Close();
+      smsc::core::buffers::File::Unlink(newfileName);
     }
 }
 

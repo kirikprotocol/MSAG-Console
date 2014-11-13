@@ -43,7 +43,10 @@ public:
     RollingFileStream( const char* name,
                        const char* prefix,
                        const char* finalSuffix,
-                       unsigned    interval );
+                       unsigned    interval,
+                       bool dumpMode=false);
+
+    virtual ~RollingFileStream();
 
     /// return 0 on failure
     static time_t extractTime( const char* filename,
@@ -56,17 +59,17 @@ public:
                               size_t bufsize,
                               ::tm& ltm, std::string& catname );
 
+    virtual void init();
 protected:
     virtual size_t formatPrefix( char* buf, size_t bufsize, const char* catname ) const throw();
     virtual void write( const char* buf, size_t bufsize );
 
-    virtual void init();
     virtual void update( ProfileLogStream& ps );
 
     virtual void postInitFix( volatile bool& isStopping );
-    virtual time_t tryToRoll( time_t now );
+    virtual time_t tryToRoll( time_t now ); ///doRollover if now > rollTime
 
-    void doRollover( time_t now, const char* pathPrefix );
+    void doRollover( time_t now, const char* pathPrefix, bool createNewFile = true );
 
     void collectUnfinishedLogs( const char* prefix, std::vector< time_t >& list ) const;
     void makeFileSuffix( char* buf, size_t bufsize, time_t now ) const throw();
@@ -83,6 +86,7 @@ private:
     std::string                  prefix_;
     std::string                  finalSuffix_;
     unsigned                     interval_;
+    bool                         dumpMode_; ///we in mode to dump storage (pvss --dump)
                                  
     time_t                       startTime_;
     smsc::core::buffers::File    file_;

@@ -84,6 +84,8 @@ public:
     /// or, alternatively, flush important logs to the logger
     void flushLogs( const Profile& prof );
 
+    void setExtendedExpDump(bool val){extendedExpDump_=val;}
+
 private:
     inline void addLogMsg( PvssOpType optype, const std::string& message )
     {
@@ -106,6 +108,8 @@ private:
     std::vector< PropTime >    fixedPolicies_;      // added, timepol
     std::vector< LogMsg >      journal_;
     size_t                     jlen_;
+
+    bool                       extendedExpDump_;  ///dump expired props with params/values
 };
 
 }
