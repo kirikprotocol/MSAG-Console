@@ -13,7 +13,8 @@ export dir=$1
 export file=$2
 export ext=$3
 export depflags=-xM1
-if [ "x$CXX" == "xgcc" -o "x$CXX" == "xg++" -o "x$CXX" == "xc++" ] ; then
+CXXBASE=`basename $CXX`
+if [ "x$CXXBASE" == "xgcc" -o "x$CXXBASE" == "xg++" -o "x$CXXBASE" == "xc++" -o "x$CXXBASE" == "xclang++" ] ; then
    export depflags=-MM
 fi
 if mkdeps ; then

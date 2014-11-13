@@ -474,7 +474,7 @@ int main(int argc, char* argv[]) {
         } catch (...) {
             smsc_log_warn(logger, "Parameter <PVSS.storageQueueSize> missed. Default value is %d", maxWaitingCount);
         }
-
+        //smsc_log_warn(logger, "Parameter <PVSS.storageQueueSize> %d", maxWaitingCount);
         unsigned maxSpeed = 0;
         try {
             maxSpeed = persConfig.getInt("maxSpeed");
@@ -529,8 +529,17 @@ int main(int argc, char* argv[]) {
 
         ConfigView abntStorageConfig(manager, "PVSS.AbonentStorage");
         ConfigView disksConfig(manager, "PVSS.AbonentStorage.disks");
+        ConfigView DiskIOConstraintsConfig(manager,"PVSS.AbonentStorage.DiskIOConstraints");
+
+        /*CStrSet *strSet=DiskIOConstraintsConfig.getIntParamNames();
+        smsc_log_info(logger,"main DiskIOConstraints params number:%d",strSet->size());
+        for(CStrSet::iterator it=strSet->begin();it!=strSet->end();++it)
+    	{
+    		smsc_log_info(logger,"main DiskIOConstraints name param:%s",(*it).c_str());
+    	}*/
 
         AbonentStorageConfig abntCfg(abntStorageConfig, "AbonentStorage", logger);
+        abntCfg.fillDiskIOConstraints(DiskIOConstraintsConfig,"AbonentStorage.DiskIOConstraints",logger);
         abntCfg.checkAtStart = checkIndex;
 
         std::auto_ptr<CStrSet> disks(disksConfig.getSectionNames());
@@ -568,9 +577,9 @@ int main(int argc, char* argv[]) {
 
             const bool enabled = persConfig.getBool("snmp.enabled");
             if (enabled) {
-                std::string socket;
+                std::string socket_str;
                 try {
-                    socket = smsc::util::config::ConfString(persConfig.getString("snmp.socket")).str();
+                	socket_str = smsc::util::config::ConfString(persConfig.getString("snmp.socket")).str();
                 } catch (...) {
                 }
                 int cacheTimeout = 10;
@@ -588,7 +597,7 @@ int main(int argc, char* argv[]) {
                 }
                  */
                 smsc_log_info(logger,"creating snmpwrapper @ '%s'", socket.c_str());
-                snmp.reset(new scag2::snmp::SnmpWrapper(socket));
+                snmp.reset(new scag2::snmp::SnmpWrapper(0,socket));
                 snmp->initPvss( counterListCtor,
                                 counterListDtor,
                                 cacheTimeout );

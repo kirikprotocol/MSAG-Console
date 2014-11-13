@@ -4,7 +4,9 @@
 #
 use strict;
 
-open(my $mkf,'>makefile.inc') || die "Failed to open makefile.inc for writing:'$!'";
+my $makefile="$ENV{SMSC_MAKEFILEDIR}makefile.inc";
+
+open(my $mkf,">$makefile") || die "Failed to open $makefile for writing:'$!'";
 
 
 my $mods=readmodules('modules-list');
@@ -207,6 +209,7 @@ sub generate{
         my $rawlibs=$libs;
         $libs=~s/(\$\((\w+)\))/if(exists($ENV{$2})){$ENV{$2}}else{$1}/ge;
         my $libdeps;
+        my $extraDeps=[];
         for my $l(split(/\s+/,$libs))
         {
           if($l=~/^\@(.*)/)
@@ -227,12 +230,23 @@ sub generate{
             next;
           }
           $libdeps.=' $(SMSC_BUILDDIR)/lib/lib'.$l.'.a';
+          if(-f "$lp/module-deps")
+          {
+            loadModDeps($extraDeps,"$lp/module-deps");
+          }
+        }
+        for my $xd(@$extraDeps)
+        {
+          my $l=$xd->{mod};
+          $libdeps.=' $(SMSC_BUILDDIR)/lib/lib'.$l.'.a' unless $l=~/^-l|^\$/;
+          $l="-l$l" unless $l=~/^-l|^\$/;
+          $rawlibs.=" $l";
         }
         $libdeps=' '.join(' ',reverse(split(/ /,$libdeps)));
         $rawlibs=~s/\@\S+//g;
         $moddeps.=' $(SMSC_BUILDDIR)/bin/'.$binname;
         my $ldflags=readstring($dirname.'/.ldflags');
-        print $mkf '$(SMSC_BUILDDIR)/bin/'.$binname.': $(SMSC_BUILDDIR)/obj/'.$moddir.'/'.$srcname.'.o'.$libdeps." makefile.inc\n";
+        print $mkf '$(SMSC_BUILDDIR)/bin/'.$binname.': $(SMSC_BUILDDIR)/obj/'.$moddir.'/'.$srcname.'.o'.$libdeps." $makefile\n";
         print $mkf "\t\@mkdir -p `dirname \$@`\n";
         print $mkf "\t\@\$(ECHO) '\$(LNKCLR)Linking \$\@\$(CLREND)'\n" unless $silent;
         print $mkf "\t\$(PFX)\$(INSTRUMENTATION) \$(CXX) $verboseflags \$(CXXFLAGS) $ldflags -o \$@ \$< \$(LDFLAGS) $rawlibs\n\n";
@@ -251,8 +265,8 @@ sub generate{
     if(@dirlist)
     {
       my @objs=@dirlist;
-      s/\.\w+$/.o/for@objs;
-      $_='$(SMSC_BUILDDIR)/obj/'.$moddir.'/'.$_ for@objs;
+      s/\.\w+$/.o/ for @objs;
+      $_='$(SMSC_BUILDDIR)/obj/'.$moddir.'/'.$_ for @objs;
       
       push @files,'$(SMSC_BUILDDIR)/lib/'.$modlib;
       
@@ -327,10 +341,10 @@ sub generate{
       }
       generate($dirname,$mods);
     }
-    
+
     $moddeps.=' '.readstring($dirname.'/.depends') if -f $dirname.'/.depends';
     $allmoddeps.=' '.readstring($dirname.'/.depends') if -f $dirname.'/.depends';
-    
+
     if (-x $dirname.'/regtest.sh')
     {
         if ( $moddeps ) {
@@ -352,6 +366,47 @@ sub generate{
   }
 }
 
+sub loadModDeps{
+  my ($xd,$fn)=@_;
+  my $base=$fn;
+  $base=~s/\/\w+$//;
+  $base=~s/\//-/g;
+  my $idx={};
+  for my $d(@$xd)
+  {
+    $idx->{$d->{mod}}=$d;
+  }
+  open(my $f,$fn) || die "Failed to open $fn:$!";
+  my $line;
+  while($line=<$f>)
+  {
+    $line=~s/\s//g;
+    next if length($line)==0;
+    next if $line=~/^#/;
+    my $forceCopy=$line=~s/^!//;
+    $line=$base.$1 if $line=~/^\.(.*)/;
+    if(exists($idx->{$line}))
+    {
+      for(my $i=0;$i<scalar(@$xd);++$i)
+      {
+        if($xd->[$i]->{mod} eq $line)
+        {
+          push @$xd,$forceCopy?{mod=>$line}:splice(@$xd,$i,1);
+          last;
+        }
+      }
+      next;
+    }
+    push @$xd,{mod=>$line};
+    my $path=$line;
+    $path=~s!-!/!g;
+    $path=~s/\$\((\w+)\)/$ENV{$1}/ge;
+    if(-f $path.'/module-deps')
+    {
+      loadModDeps($xd,$path.'/module-deps');
+    }
+  }
+}
 
 sub srcrule{
   my ($dirname,$srcname,$files)=@_;

@@ -112,9 +112,9 @@ then # Regenerate BuildId file
   echo "#define $2_BUILD_DATE  \"$BUILD_DATE\"" >> $BUILD_PATH/$BUILDID_FILE
   if [ x$GENERATE_VERSIONS = "xtrue" ]
   then
-    MAJOR=`echo $BUILD_NUM | sed 's/.\([0-9]\)[0-9][0-9][0-9]/\1/'`
-    MINOR=`echo $BUILD_NUM | sed 's/.[0-9]\([0-9]\)[0-9][0-9]/\1/'`
-    FIX=`echo $BUILD_NUM | sed 's/.[0-9][0-9]\([0-9][0-9]\)/\1/'`
+    MAJOR=`echo $BUILD_NUM | sed 's/[A-Z][A-Z]*\([0-9]\)[0-9][0-9][0-9]/\1/'`
+    MINOR=`echo $BUILD_NUM | sed 's/[A-Z][A-Z]*[0-9]\([0-9]\)[0-9][0-9]/\1/'`
+    FIX=`echo $BUILD_NUM | sed 's/[A-Z][A-Z]*[0-9][0-9]\([0-9][0-9]\)/\1/'`
     echo "#define $2_VER_MAJOR  $MAJOR" >> $BUILD_PATH/$BUILDID_FILE
     echo "#define $2_VER_MINOR  $MINOR" >> $BUILD_PATH/$BUILDID_FILE
     echo "#define $2_VER_FIX  $FIX" >> $BUILD_PATH/$BUILDID_FILE
