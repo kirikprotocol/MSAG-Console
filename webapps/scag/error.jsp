@@ -6,7 +6,18 @@
                  java.util.Locale,
                  java.security.Principal"%>
 <%@page isErrorPage="true"%>
-<%@include file="/WEB-INF/inc/header.jspf"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/xml" prefix="x"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/sql" prefix="sql"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@taglib prefix="smf" uri="/scag/func"%>
+<%@taglib prefix="sm"    tagdir="/WEB-INF/tags"%>
+<%@taglib prefix="sm-mm" tagdir="/WEB-INF/tags/main_menu"%>
+<%@taglib prefix="sm-pm" tagdir="/WEB-INF/tags/page_menu"%>
+<%@taglib prefix="sm-ed" tagdir="/WEB-INF/tags/edit"%>
+<%@taglib prefix="sm-ep" tagdir="/WEB-INF/tags/edit/properties"%>
+<%@taglib prefix="sm-et" tagdir="/WEB-INF/tags/edit/tree"%>
 <%
   if (exception != null && exception instanceof JspException) {
     JspException e = (JspException) exception;
