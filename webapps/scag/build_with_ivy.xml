@@ -184,19 +184,28 @@
   </target>
 
   <target name="distr" depends="build">
-    <mkdir dir="${build}/distr"/>
-    <war basedir="${build}/exploded/msag" destfile="${build}/distr/msag.war" webxml="${build}/exploded/msag/WEB-INF/web.xml">
+    <mkdir dir="${build}/distr/tomcat"/>
+    <war basedir="${build}/exploded/msag" destfile="${build}/distr/tomcat/msag.war" webxml="${build}/exploded/msag/WEB-INF/web.xml">
       <manifest>
         <attribute name="Implementation-Version" value="${env.RELEASE_VERSION}"/>
       </manifest>
     </war>
 
-    <ear destfile="${build}/distr/msag-${env.RELEASE_VERSION}.ear" appxml="${basedir}/application.xml">
-      <fileset dir="${build}/distr" includes="*.war"/>
+    <mkdir dir="${build}/distr/weblogic"/>
+    <delete file="${build}/exploded/msag/META-INF/context.xml"/>
+    <war basedir="${build}/exploded/msag" destfile="${build}/distr/weblogic/msag.war" webxml="${build}/exploded/msag/WEB-INF/web.xml">
+      <manifest>
+        <attribute name="Implementation-Version" value="${env.RELEASE_VERSION}"/>
+      </manifest>
+    </war>
+
+    <ear destfile="${build}/distr/weblogic/msag-${env.RELEASE_VERSION}.ear" appxml="${basedir}/application.xml">
+      <fileset dir="${build}/distr/weblogic" includes="*.war"/>
       <manifest>
         <attribute name="Weblogic-Application-Version" value="${env.RELEASE_VERSION}"/>
       </manifest>
     </ear>
+    <delete file="${build}/distr/weblogic/msag.war"/>
   </target>
 
 </project>
