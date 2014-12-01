@@ -11,5 +11,5 @@ mkdir $WORKSPACE/.distr/services/msag/bin || true
 cp $WORKSPACE/.build/msag/bin/liblogger.so $WORKSPACE/.distr/lib
 cp $WORKSPACE/.build/msag/bin/scag/msag $WORKSPACE/.distr/services/msag/bin
 if [ "-$XERCES_HOME" != "-" ] ; then
-cp $XERCES_HOME/lib/liblogger.so $WORKSPACE/.distr/lib
+cp $XERCES_HOME/lib/libxerces-c-3.1.so $WORKSPACE/.distr/lib
 fi
