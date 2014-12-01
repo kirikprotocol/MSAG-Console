@@ -21,6 +21,8 @@
 #include "StatisticsManager.h"
 #include "scag/config/base/ConfigManager2.h"
 
+#include "StatCountersEnum.hpp"
+
 //#include "scag/util/singleton/Singleton2.h"
 // #include "scag/util/properties/Properties2.h"
 // using namespace util::properties;
@@ -28,8 +30,6 @@
 //using namespace scag2::util::singleton;
 using namespace scag::stat::sacc;
 using namespace smsc::core::buffers;
-
-#include "StatCountersEnum.hpp"
 
 namespace scag2 {
 namespace stat {

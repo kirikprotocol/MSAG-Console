@@ -17,6 +17,7 @@
 #include "SnmpAgent.hpp"
 #include <signal.h>
 #include "scag/version.h"
+#include "scag/counter/impl/HashCountManager.h"
 
 static char const ident[] = "$Id$";
 

@@ -4,6 +4,7 @@
 #include "core/synchronization/Event.hpp"
 #include "logger/Logger.h"
 #include "scag/bill/impl/BillingManager.h"
+#include "scag/config/base/ConfigException.h"
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/config/base/ConfigView.h"
 #include "scag/lcm/impl/LongCallManagerImpl.h"
@@ -32,7 +33,10 @@
 #include "scag/counter/impl/TemplateManagerImpl.h"
 #include "scag/counter/impl/ConfigReader.h"
 #include "scag/stat/impl/StatisticsManager.h"
+
+#ifdef SNMP
 #include "scag/snmp/smestattable/smeStatTable_subagent.hpp"
+#endif
 
 namespace {
 
@@ -41,6 +45,7 @@ using namespace scag2::transport;
 using namespace scag2::transport::smpp;
 using namespace scag2::transport::http;
 using namespace scag2::sessions;
+using namespace scag::config;
 
 class FromSessionQueue : public SCAGCommandQueue
 {
@@ -343,7 +348,7 @@ void Scag::init( unsigned mynode )
         }
         else
         {
-          smsc_log_debug(log, "snmp enabled in config.xml");
+          smsc_log_debug(log, "snmp disabled in config.xml");
         }
     } catch (std::exception& e) {
         smsc_log_warn(log, "cannot initialize snmp: %s", e.what());
