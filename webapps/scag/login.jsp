@@ -2,7 +2,8 @@
 <c:if test="${param.access_denied}">
  <c:redirect url="/access_denied.jsp"/>
 </c:if>
-<sm:page form_uri="j_security_check" form_method="post" title="login.title">
+<jsp:useBean id="uri" type="String" scope="request"/>
+<sm:page form_uri="<%= (uri == null ? "index.jsp" : uri) + (request.getQueryString() == null ? "" : "?" + request.getQueryString()) %>" form_method="post" title="login.title">
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="jsubmit" value="login.item.value" title="login.item.title"/>
