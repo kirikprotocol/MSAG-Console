@@ -141,6 +141,7 @@ public abstract class TabledBeanImpl extends SCAGBean implements TabledBean {
     }
 
     public void setMbEdit(String mbEdit) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbEdit' to '"+mbEdit+"'.");
         this.mbEdit = mbEdit;
     }
 
@@ -149,6 +150,7 @@ public abstract class TabledBeanImpl extends SCAGBean implements TabledBean {
     }
 
     public void setMbAdd(String mbAdd) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbAdd' to '"+mbAdd+"'.");
         this.mbAdd = mbAdd;
     }
 
