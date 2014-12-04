@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class AuthFilter implements Filter {
@@ -105,7 +106,8 @@ public class AuthFilter implements Filter {
       return;
     }
 
-    userLoginData = new UserLoginData("admin", new HashSet<String>(){{add("super_admin");}}, new HashSet<String>());
+    Set<String> roles = new HashSet<String>(){{add("gw, super_admin, management, routing, stat");}};
+    userLoginData = new UserLoginData("admin", roles, new HashSet<String>());
     session.setAttribute(USER_LOGIN_DATA, userLoginData);
     if (cat.isDebugEnabled()) cat.debug("Set attribute '"+USER_LOGIN_DATA+"' to session.");
 
