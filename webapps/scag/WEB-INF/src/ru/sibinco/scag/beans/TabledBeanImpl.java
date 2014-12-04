@@ -43,11 +43,11 @@ public abstract class TabledBeanImpl extends SCAGBean implements TabledBean {
         }
         pageSize = Integer.parseInt(String.valueOf(session.getAttribute(PAGE_SIZE)));
 
-        if (mbEdit != null)
+        if (mbEdit != null && !mbEdit.isEmpty())
             throw new EditException(mbEdit);
-        if (mbAdd != null)
+        if (mbAdd != null && !mbAdd.isEmpty())
             throw new AddException();
-        if (mbDelete != null) {
+        if (mbDelete != null && !mbDelete.isEmpty()) {
             try {
                 delete();
             } finally {
