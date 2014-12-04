@@ -81,6 +81,7 @@ public class AuthFilter implements Filter {
 
     String username = request.getParameter(USERNAME);
     String password = request.getParameter(PASSWORD);
+    if (cat.isDebugEnabled()) cat.debug("Found request parameters user: '"+username+"', password='"+password+"'.");
 
     if (username == null || password == null) {
       request.setAttribute("uri", uri);

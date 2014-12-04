@@ -46,4 +46,11 @@ public class UserLoginData {
   public boolean isURIPermitted(String uri){
     return true;
   }
+
+  public String toString(){
+    return "UserLoginData{"
+        +"name='"+name+"'}";
+
+
+  }
 }

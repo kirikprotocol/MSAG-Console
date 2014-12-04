@@ -15,8 +15,8 @@
       <div class=error><div class="header"><fmt:message>login.label.error</fmt:message></div><fmt:message>login.label.error.comment</fmt:message></div>
     </c:if>
     <sm-ep:properties title="login.properties">
-      <sm-ep:txt title="login.txt.login" name="j_username" validation="nonEmpty"/>
-      <sm-ep:txt title="login.txt.password" name="j_password" validation="nonEmpty" type="password"/>
+      <sm-ep:txt title="login.txt.login" name="username" validation="nonEmpty"/>
+      <sm-ep:txt title="login.txt.password" name="password" validation="nonEmpty" type="password"/>
     </sm-ep:properties>
   </jsp:body>
 </sm:page>
