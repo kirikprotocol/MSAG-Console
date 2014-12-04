@@ -176,7 +176,18 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setId(final String id) {
       if (logger.isDebugEnabled()) logger.debug("id: "+id);
-        this.id = Long.decode(id).longValue();
+      if (id == null || id.isEmpty()){
+        this.id = -1;
+        return;
+      }
+
+      Long decoded = Long.decode(id);
+      if (decoded == null){
+        this.id = -1;
+        return;
+      }
+
+      this.id = decoded;
     }
 
     public String getName() {
