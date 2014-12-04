@@ -35,7 +35,7 @@ public class SCAGFilter implements Filter {
             String configDir = System.getProperty("msag.console.config.dir");
             String configFileString = configDir + File.separator + "webconfig.xml";
             appContext = SCAGAppContext.getInstance(configFileString);
-            setdefaultLocale();
+            setDefaultLocale();
         } catch (Throwable t) {
             logger.fatal("Could not initialize application", t);
             throw new ServletException("Could not initialize application", t);
@@ -50,8 +50,7 @@ public class SCAGFilter implements Filter {
         appContext = null;
     }
 
-    public void doFilter(final ServletRequest req, final ServletResponse resp, final FilterChain chain) throws ServletException, IOException
-    {
+    public void doFilter(final ServletRequest req, final ServletResponse resp, final FilterChain chain) throws ServletException, IOException{
         if (logger == null) logger = Logger.getLogger(this.getClass());
         if (config == null) {
             logger.fatal("Not initialized");
@@ -65,13 +64,11 @@ public class SCAGFilter implements Filter {
             /*if (logger.isDebugEnabled()){
                 logger.debug("Requested URL:" + request.getRequestURL());
             }*/
-        } else if (logger.isDebugEnabled()){
-            //logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + "| "+ req.toString() );
         }
         chain.doFilter(req, resp);
     }
 
-    private void setdefaultLocale() throws Throwable {
+    private void setDefaultLocale() throws Throwable {
       String language_country = config.getServletContext().getInitParameter("javax.servlet.jsp.jstl.fmt.locale");
       ArrayList localesList;
       try {

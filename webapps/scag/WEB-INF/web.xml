@@ -24,8 +24,38 @@
     <filter-class>ru.sibinco.scag.beans.SCAGFilter</filter-class>
   </filter>
 
+  <filter>
+    <filter-name>auth</filter-name>
+    <filter-class>ru.sibinco.scag.web.security.AuthFilter</filter-class>
+    <init-param>
+      <param-name>login-page</param-name>
+      <param-value>/login.jsp</param-value>
+    </init-param>
+    <init-param>
+      <param-name>welcome-page</param-name>
+      <param-value>/index.jsp</param-value>
+    </init-param>
+    <init-param>
+      <param-name>access-denied-page</param-name>
+      <param-value>/access_denied.jsp</param-value>
+    </init-param>
+    <init-param>
+      <param-name>pass-by</param-name>
+      <param-value>(/content/images/.*)|(/content/scripts/.*)|(/content/styles/.*)|(/content/styles/menu/.*)</param-value>
+    </init-param>
+    <init-param>
+      <param-name>admin.user.password</param-name>
+      <param-value>password</param-value>
+    </init-param>
+  </filter>
+
   <filter-mapping>
     <filter-name>SCAG</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <filter-mapping>
+    <filter-name>auth</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 
@@ -106,7 +136,7 @@
   </jsp-config>
 
   <!--Constrains-->
-  <security-constraint>
+  <!--security-constraint>
     <web-resource-collection>
       <web-resource-name>general administration</web-resource-name>
       <url-pattern>/gw/status/*</url-pattern>
@@ -209,7 +239,7 @@
 
   <security-role>
     <role-name>stat</role-name>
-  </security-role>
+  </security-role-->
 
   <display-name>SCA Gateway</display-name>
   <description>SCA GatewayAdministrationApplication</description>
