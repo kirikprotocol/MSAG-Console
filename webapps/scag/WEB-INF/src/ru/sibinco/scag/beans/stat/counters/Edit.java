@@ -2,28 +2,21 @@ package ru.sibinco.scag.beans.stat.counters;
 
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.stat.counters.*;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.DoneException;
+import ru.sibinco.scag.web.security.AuthFilter;
+import ru.sibinco.scag.web.security.UserLoginData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Principal;
+import javax.servlet.http.HttpSession;
 import java.util.*;
 
-/**
- * Copyright (c) EyeLine Communications
- * All rights reserved.
- * <p/>
- * User: makar
- * Date: 02.02.2010
- * Time: 16:19:13
- */
-public class Edit extends EditBean
-{
-    private Principal userPrincipal = null;
+public class Edit extends EditBean{
+
+    private String userName = null;
     private Counter counter = new Counter();
 
     private ConfigParam configParams[] = new ConfigParam[0];
@@ -61,7 +54,7 @@ public class Edit extends EditBean
             String key, name, value, type;
             while (e.hasMoreElements()) {
                 key = (String) e.nextElement();
-                //logger.debug("Paremeter key: "+key);
+                //logger.debug("Parameter key: "+key);
                 if (key.startsWith("parameter")&&(key.endsWith("name"))) {
                     name = request.getParameter(key);
                     //logger.debug("Parameter name: "+ name);
@@ -78,12 +71,16 @@ public class Edit extends EditBean
         
 
         super.process(request, response);
-        userPrincipal = request.getUserPrincipal();
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+
+        HttpSession session = request.getSession();
+        UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+        userName = userLoginData.getName();
+
+        if (userName == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user name");
+        User user = (User) appContext.getUserManager().getUsers().get(userName);
         if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userName + "'");
 
         if (isAdd()){
             final Set<String> cas = appContext.getCountersManager().getCATables().keySet();
@@ -125,7 +122,7 @@ public class Edit extends EditBean
 
         counters.remove(getEditId());
         counters.put(id, counter);
-        countersManager.createUpdateCounter(getLoginedPrincipal().getName(), isAdd(), counter, appContext, oldCounter);
+        countersManager.createUpdateCounter(getUserName(), isAdd(), counter, appContext, oldCounter);
         
         throw new DoneException();
     }

@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2006 SibInco Inc. All Rights Reserved.
- */
-
 package ru.sibinco.scag.beans.services;
 
 import ru.sibinco.scag.Constants;
@@ -9,19 +5,14 @@ import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.beans.*;
+import ru.sibinco.scag.web.security.AuthFilter;
+import ru.sibinco.scag.web.security.UserLoginData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.util.*;
 
-/**
- * The <code>Edit</code> class represents
- * <p><p/>
- * Date: 06.02.2006
- * Time: 14:25:11
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
- */
 public class Edit extends TabledEditBeanImpl {
     private long id = -1;
     private String name;
@@ -50,7 +41,11 @@ public class Edit extends TabledEditBeanImpl {
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
-        userLogin = request.getUserPrincipal().getName();
+
+        HttpSession session = request.getSession();
+        UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+        userLogin = userLoginData.getName();
+
         if (getMbCancel() != null) {
             storeToSessionGetFlagParent( request, Constants.GSP_TRUE );
             throw new CancelException();
@@ -62,7 +57,7 @@ public class Edit extends TabledEditBeanImpl {
         }
         load();
         if (mbDelete != null) {
-            loginedPrincipal = request.getUserPrincipal();
+          userName = userLoginData.getName();
         }
         if (!isAdd()) {
             super.process(request, response);
@@ -114,19 +109,19 @@ public class Edit extends TabledEditBeanImpl {
                 final String serviceIdStr = checked[i];
                 final Long serviceId = Long.decode(serviceIdStr);
                 toRemove.add(serviceId);
-                appContext.getRuleManager().removeRulesForService(getLoginedPrincipal().getName(), serviceIdStr);
+                appContext.getRuleManager().removeRulesForService(getUserName(), serviceIdStr);
             }
             final List toRemoveSmppRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(checked);
             final List toRemoveHttpRoutes = appContext.getHttpRoutingManager().getRoteIdsByServiceIds(checked);
             if (toRemoveSmppRoutes.size() > 0) {
-                appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(),
+                appContext.getScagRoutingManager().deleteRoutes(getUserName(),
                         toRemoveSmppRoutes);
             }
             if (toRemoveHttpRoutes.size() > 0) {
-                appContext.getHttpRoutingManager().deleteRoutes(getLoginedPrincipal().getName(),
+                appContext.getHttpRoutingManager().deleteRoutes(getUserName(),
                         toRemoveSmppRoutes);
             }
-            appContext.getServiceProviderManager().deleteServices(getLoginedPrincipal().getName(),
+            appContext.getServiceProviderManager().deleteServices(getUserName(),
                     toRemove, serviceProvider, appContext);
         }
     }

@@ -732,7 +732,7 @@ function assignOpener() {
 
 function refreshSCAGStatusObject()
 {
-   <%if (request.getUserPrincipal() != null) {%>
+   <%if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {%>
         serviceStatusDataSource.update();
         window.setTimeout(refreshSCAGStatusObject, 10000);
    <%}%>
@@ -740,7 +740,7 @@ function refreshSCAGStatusObject()
 
 function refreshSCAGStatusObject()
 {
-   <%if (request.getUserPrincipal() != null) {%>
+   <%if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {%>
         serviceStatusDataSource.update();
         window.setTimeout(refreshSCAGStatusObject, 5000);
    <%}%>
@@ -748,7 +748,7 @@ function refreshSCAGStatusObject()
 
 function refreshTdcSCAGStatusObject()
 {
-   <%if (request.getUserPrincipal() != null) {%>
+   <%if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {%>
 //   document.all.tdcSCAGStatusObject.DataURL = document.all.tdcSCAGStatusObject.DataURL;
 //   document.all.tdcSCAGStatusObject.reset();
 //   window.setTimeout(refreshTdcSCAGStatusObject, 5000);

@@ -1,3 +1,5 @@
+<%@ tag import="ru.sibinco.scag.web.security.AuthFilter" %>
+<%@ tag import="ru.sibinco.scag.web.security.UserLoginData" %>
 <%@
  tag body-content="empty" %><%@
 taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
@@ -15,7 +17,8 @@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
    		String code = exc.getMessage();
       String nested = exc.getCause() == null ? "" : "<br>Nested: \"" + exc.getCause().getMessage() + "\" (" + exc.getCause().getClass().getName() + ")";
       String param = exc.getParam() == null ? "" : ": " + exc.getParam();
-   		String msg = appContext.getLocaleString(appContext.getUserPreferences(request.getUserPrincipal()).getLocale(), code);
+      UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+      String msg = appContext.getLocaleString(appContext.getUserPreferences(userLoginData.getName()).getLocale(), code);
        if (msg == null) msg = code;
 
        String text = msg + param + nested;

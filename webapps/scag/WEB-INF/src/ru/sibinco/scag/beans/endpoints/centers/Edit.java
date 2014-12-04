@@ -14,26 +14,19 @@ import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.web.security.AuthFilter;
+import ru.sibinco.scag.web.security.UserLoginData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Principal;
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
-/**
- * The <code>Edit</code> class represents
- * <p><p/>
- * Date: 15.07.2005
- * Time: 12:10:30
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
- */
-public class Edit extends EditBean
-{
+public class Edit extends EditBean{
+
     public static final long ALL_PROVIDERS = -1;
     private String id = null;
     private String password = null;
@@ -58,18 +51,18 @@ public class Edit extends EditBean
     private int uid = -1;
     private String addressRange = "";
     private long userProviderId = ALL_PROVIDERS;
-    private Principal userPrincipal = null;
+    private String userName = null;
     private int inQueueLimit = 0;
     private int outQueueLimit = 0;
     private int maxSmsPerSec = 0;
 
     private void init() throws SCAGJspException {
         SCAGAppContext appContext = getAppContext();
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        if (userName == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user name");
+        User user = (User) appContext.getUserManager().getUsers().get(userName);
         if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userName + "'");
 
         userProviderId = user.getProviderId();
         administrator = (userProviderId == ALL_PROVIDERS);
@@ -102,7 +95,9 @@ public class Edit extends EditBean
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
-        userPrincipal = request.getUserPrincipal();
+        HttpSession session = request.getSession();
+        UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+        userName = userLoginData.getName();
         super.process(request, response);
         this.init();
     }
@@ -174,7 +169,7 @@ public class Edit extends EditBean
         centers.remove(getEditId());
         centers.put(id, center);
 
-        appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),
+        appContext.getSmppManager().createUpdateCenter(getUserName(),
                 isAdd(), isEnabled(), center, appContext, oldCenter);
         throw new DoneException();
     }

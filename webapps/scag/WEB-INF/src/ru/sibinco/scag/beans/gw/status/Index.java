@@ -76,7 +76,7 @@ public class Index extends TabledBeanImpl {
             logger.error("Could not stop Scag", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_STOP_GATEWAY, e);
         }
-        StatusManager.getInstance().addStatMessages(new StatMessage(getLoginedPrincipal().getName(),
+        StatusManager.getInstance().addStatMessages(new StatMessage(getUserName(),
                 "Status MSAG", "Service MSAG stoped"));
         }
     }
@@ -89,7 +89,7 @@ public class Index extends TabledBeanImpl {
             logger.error("Could not start Scag", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_START_GATEWAY, e);
         }
-        StatusManager.getInstance().addStatMessages(new StatMessage(getLoginedPrincipal().getName(),
+        StatusManager.getInstance().addStatMessages(new StatMessage(getUserName(),
                 "Status MSAG", "Service MSAG started"));
         }
     }

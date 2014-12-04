@@ -5,6 +5,8 @@
                  ru.sibinco.scag.backend.users.ScagUser,
                  java.util.Map" %>
 <%@ page import="ru.sibinco.scag.Constants"%>
+<%@ page import="ru.sibinco.scag.web.security.AuthFilter" %>
+<%@ page import="ru.sibinco.scag.web.security.UserLoginData" %>
 <html>
 <head>
     <link rel="STYLESHEET" type="text/css" href="content/styles/common.css">
@@ -17,8 +19,10 @@
     UserPreferences prefs = new UserPreferences();
     if (appContext != null) {
         try {
-            if (request.getUserPrincipal()!=null)
-              prefs = ((ScagUser)appContext.getUserManager().getUsers().get(request.getUserPrincipal().getName())).getPrefs();
+            if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {
+              UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+              prefs = ((ScagUser) appContext.getUserManager().getUsers().get(userLoginData.getName())).getPrefs();
+            }
             port = appContext.getConfig().getInt("scmon.appletport");
         } catch (Throwable e) {
             e.printStackTrace();

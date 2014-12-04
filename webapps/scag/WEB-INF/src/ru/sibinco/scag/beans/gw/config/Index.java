@@ -14,13 +14,7 @@ import ru.sibinco.scag.beans.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
-import java.io.IOException;
-import java.security.Principal;
 
-
-/**
- * Created by IntelliJ IDEA. User: igork Date: 03.03.2004 Time: 18:39:37
- */
 public class Index extends EditBean {
 
     private Map params = new HashMap();
@@ -281,13 +275,11 @@ public class Index extends EditBean {
     }
 
     private String getUserName(SCAGAppContext appContext) throws SCAGJspException {
-            Principal userPrincipal = loginedPrincipal;
-
-            if (userPrincipal == null)
-                throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-            User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+            if (userName == null)
+                throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user name");
+            User user = (User) appContext.getUserManager().getUsers().get(userName);
             if (user == null)
-                throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+                throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userName + "'");
             return user.getName();
         }
 

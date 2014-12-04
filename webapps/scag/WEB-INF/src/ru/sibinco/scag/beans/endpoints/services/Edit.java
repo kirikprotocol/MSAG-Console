@@ -17,21 +17,11 @@ import ru.sibinco.scag.beans.SCAGJspException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
-/**
- * The <code>Edit</code> class represents
- * <p><p/>
- * Date: 15.07.2005
- * Time: 15:59:36
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
- */
 public class Edit extends EditBean {
 
     public static final long ALL_PROVIDERS = -1;
@@ -59,12 +49,12 @@ public class Edit extends EditBean {
     private void init() throws SCAGJspException {
 
         SCAGAppContext context = getAppContext();
-        Principal userPrincipal = super.getLoginedPrincipal();
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) context.getUserManager().getUsers().get(userPrincipal.getName());
+        String userName = super.getUserName();
+        if (userName == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user name");
+        User user = (User) context.getUserManager().getUsers().get(userName);
         if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userName + "'");
 
         userProviderId = user.getProviderId();
         administrator = (userProviderId == ALL_PROVIDERS);
@@ -155,7 +145,7 @@ public class Edit extends EditBean {
 //        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj, inQueueLimit, maxSmsPerSec);
         final Scag scag = appContext.getScag();
         logger.debug( "services/Edit save() 151");
-        appContext.getSmppManager().createUpdateServicePoint(getLoginedPrincipal().getName(),
+        appContext.getSmppManager().createUpdateServicePoint(getUserName(),
                 svc, isAdd(), isEnabled(), appContext, oldSvc);
         throw new DoneException();
     }

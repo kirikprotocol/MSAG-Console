@@ -26,7 +26,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
       super.process(request, response);
       if (mbDisconnect!=null && checked.length!=0) {
-        appContext.getSmppManager().disconnectServices(getLoginedPrincipal().getName(), checked, appContext);
+        appContext.getSmppManager().disconnectServices(getUserName(), checked, appContext);
       }
     }
 
@@ -35,7 +35,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
     }
 
     protected void delete() throws SCAGJspException {
-        appContext.getSmppManager().deleteServicePoints(getLoginedPrincipal().getName(),
+        appContext.getSmppManager().deleteServicePoints(getUserName(),
                 checkedSet, appContext);
     }
 

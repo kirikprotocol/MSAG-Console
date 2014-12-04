@@ -316,7 +316,7 @@ public class Index extends EditBean {
         appContext.getHttpRoutingManager().setRoutesChanged(true);
         appContext.getHttpRoutingManager().setRoutesSaved(true);
 
-        StatMessage message = new StatMessage(super.getLoginedPrincipal().getName(), "HTT Routes", messageText);
+        StatMessage message = new StatMessage(super.getUserName(), "HTT Routes", messageText);
         appContext.getHttpRoutingManager().addStatMessages(message);
         StatusManager.getInstance().addStatMessages(message);
 

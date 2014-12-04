@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2006 SibInco Inc. All Rights Reserved.
- */
-
 package ru.sibinco.scag.beans.services.service;
 
 import ru.sibinco.lib.SibincoException;
@@ -17,20 +13,14 @@ import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.beans.*;
 import ru.sibinco.scag.beans.rules.RuleState;
 import ru.sibinco.scag.util.Utils;
+import ru.sibinco.scag.web.security.AuthFilter;
+import ru.sibinco.scag.web.security.UserLoginData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.*;
 
-/**
- * The <code>Edit</code> class represents
- * <p><p/>
- * Date: 22.02.2006
- * Time: 15:15:03
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
- */
 public class Edit extends TabledEditBeanImpl {
 
     private long id = -1;
@@ -102,7 +92,11 @@ public class Edit extends TabledEditBeanImpl {
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
-        loginedPrincipal = request.getUserPrincipal();
+
+        HttpSession session = request.getSession();
+        UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+        userName = userLoginData.getName();
+
         path = Utils.getPath(request);
         if (getMbCancel() != null) {
             String path = Utils.getPath(request);
@@ -131,7 +125,7 @@ public class Edit extends TabledEditBeanImpl {
             logger.info("services/service/Edit:process: ( getEditId() == null ) = " + getEditId());
             servIdForRout = Long.decode(getParentId());
         }
-        HttpSession session = request.getSession();
+
         if (session.getAttribute(TabledBeanImpl.PAGE_SIZE) == null) {
             session.setAttribute(TabledBeanImpl.PAGE_SIZE, new Integer(25));
         } else {
@@ -268,16 +262,16 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     private void setDefaultHttpRoute(Long serviceId) {
-        appContext.getHttpRoutingManager().setDefaultHttpRoute(getLoginedPrincipal().getName(),checkedSet,serviceId);
+        appContext.getHttpRoutingManager().setDefaultHttpRoute(getUserName(), checkedSet, serviceId);
     }
 
     private void deleteHttpRoute() {
-       appContext.getHttpRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), checkedSet);
+       appContext.getHttpRoutingManager().deleteRoutes(getUserName(), checkedSet);
     }
 
 
     protected void delete() throws SCAGJspException {
-        appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), checkedSet);
+        appContext.getScagRoutingManager().deleteRoutes(getUserName(), checkedSet);
     }
 
     protected void save() throws SCAGJspException {
@@ -302,7 +296,7 @@ public class Edit extends TabledEditBeanImpl {
                     Service service = new Service(getName(), getDescription());
                     serviceProviderId = Long.decode(getParentId());
 //                    editId = parentId;
-                    id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), serviceProviderId.longValue(), service);
+                    id = serviceProvidersManager.createService(getUserName(), serviceProviderId.longValue(), service);
 //                    parentId = String.valueOf(id);
             } else {
                 logger.error( "services/service/Edit:save():new service:name '" + name + "' is not unique" );
@@ -320,7 +314,7 @@ public class Edit extends TabledEditBeanImpl {
                     oldService = service.copy();
                     service.setName(getName());
                     service.setDescription(getDescription());
-                    serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
+                    serviceProvidersManager.updateService(getUserName(), Long.decode(getEditId()).longValue(), service);
             } else {
                 serviceProviderId = Long.decode(getParentId());
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
@@ -328,7 +322,7 @@ public class Edit extends TabledEditBeanImpl {
                 oldService = service.copy();
                 service.setName(getName());
                 service.setDescription(getDescription());
-                serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
+                serviceProvidersManager.updateService(getUserName(), Long.decode(getParentId()).longValue(), service);
             }
         }
         appContext.getServiceProviderManager().reloadServices(appContext,(getEditId() == null)?true:false,id, serviceProviderId, oldService);
@@ -391,7 +385,7 @@ public class Edit extends TabledEditBeanImpl {
         if (ruleState.getLocked())
             throw new SCAGJspException(ru.sibinco.scag.Constants.errors.rules.COULD_NOT_REMOVE_RULE_IS_EDITING);
         try {
-            appContext.getRuleManager().removeRule(Long.toString(id), transport, RuleManager.NON_TERM_MODE, getLoginedPrincipal().getName());
+            appContext.getRuleManager().removeRule(Long.toString(id), transport, RuleManager.NON_TERM_MODE, getUserName());
         } catch (SibincoException se) {
             logger.error("Couldn't remove rule",se);
             throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);

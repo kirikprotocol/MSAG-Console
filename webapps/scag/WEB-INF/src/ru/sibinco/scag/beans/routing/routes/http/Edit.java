@@ -298,7 +298,7 @@ public class Edit extends EditBean {
         appContext.getHttpRoutingManager().setRoutesChanged(true);
         appContext.getHttpRoutingManager().setRoutesSaved(true);
 
-        StatMessage message = new StatMessage(super.getLoginedPrincipal().getName(), "Routes", messageText);
+        StatMessage message = new StatMessage(super.getUserName(), "Routes", messageText);
         appContext.getHttpRoutingManager().addStatMessages(message);
         StatusManager.getInstance().addStatMessages(message);
 

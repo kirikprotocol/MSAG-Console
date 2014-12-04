@@ -19,15 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.*;
-import java.security.Principal;
 
-/**
- * Created by IntelliJ IDEA.
- * User: makar
- * Date: 11.08.2004
- * Time: 14:32:38
- * To change this template use File | Settings | File Templates.
- */
 public class Index extends SCAGBean {
     private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
     private static final String ALL_PROVIDERS = "ALL PROVIDERS";
@@ -52,15 +44,14 @@ public class Index extends SCAGBean {
 
     private void init() throws SCAGJspException {
         SCAGAppContext context = getAppContext();
-        Principal userPrincipal = super.getLoginedPrincipal();
-        if (userPrincipal == null)
+        String userName = super.getUserName();
+        if (userName == null)
             throw new SCAGJspException(
-                    Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) context.getUserManager().getUsers().get(userPrincipal.getName());
+                    Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user name");
+        User user = (User) context.getUserManager().getUsers().get(userName);
         if (user == null)
             throw new SCAGJspException(
-                    Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
-
+                    Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userName + "'");
 
         query.setTransport(getTransportId());
         userProviderId = user.getProviderId();

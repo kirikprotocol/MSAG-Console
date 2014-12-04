@@ -101,15 +101,15 @@ public class Index extends TabledBeanImpl implements TabledBean {
     }
 
     protected void delete() {
-        appContext.getScagRoutingManager().deleteSubjects(getLoginedPrincipal().getName(), checkedSet);
+        appContext.getScagRoutingManager().deleteSubjects(getUserName(), checkedSet);
     }
 
     protected void deleteHttpSite() throws SCAGJspException{
-        appContext.getHttpRoutingManager().deleteSubjectsSite(getLoginedPrincipal().getName(), checkedSet);
+        appContext.getHttpRoutingManager().deleteSubjectsSite(getUserName(), checkedSet);
     }
 
     protected void deleteHttpSubject() throws SCAGJspException{
-        appContext.getHttpRoutingManager().deleteSubjects(getLoginedPrincipal().getName(), checkedSet);
+        appContext.getHttpRoutingManager().deleteSubjects(getUserName(), checkedSet);
     }
 
     public int getTransportId() {

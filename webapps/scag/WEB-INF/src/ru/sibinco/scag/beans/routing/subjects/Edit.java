@@ -27,7 +27,6 @@ import ru.sibinco.scag.util.Graph;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Principal;
 import java.util.*;
 
 
@@ -375,12 +374,12 @@ public class Edit extends EditBean {
     }
 
     private User getUser(SCAGAppContext appContext) throws SCAGJspException {
-        Principal userPrincipal = super.getLoginedPrincipal();
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        String userName = super.getUserName();
+        if (userName == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user name");
+        User user = (User) appContext.getUserManager().getUsers().get(userName);
         if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userName + "'");
         return user;
     }
 

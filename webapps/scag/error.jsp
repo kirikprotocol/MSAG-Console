@@ -3,8 +3,7 @@
                  ru.sibinco.lib.SibincoException,
                  ru.sibinco.scag.beans.SCAGJspException,
                  ru.sibinco.scag.util.LocaleMessages,
-                 java.util.Locale,
-                 java.security.Principal"%>
+                 java.util.Locale"%>
 <%@page isErrorPage="true"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/xml" prefix="x"%>

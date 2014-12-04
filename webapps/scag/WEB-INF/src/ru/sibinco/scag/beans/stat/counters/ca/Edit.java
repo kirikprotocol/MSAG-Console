@@ -9,10 +9,12 @@ import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.backend.stat.counters.CATable;
+import ru.sibinco.scag.web.security.AuthFilter;
+import ru.sibinco.scag.web.security.UserLoginData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Principal;
+import javax.servlet.http.HttpSession;
 import java.util.*;
 
 /**
@@ -25,7 +27,7 @@ import java.util.*;
  */
 public class Edit  extends EditBean
 {
-    private Principal userPrincipal = null;
+    private String userName = null;
     private CATable ca_table = new CATable();
 
     private ConfigParam configParams[] = new ConfigParam[0];
@@ -106,12 +108,14 @@ public class Edit  extends EditBean
         requestParams = request.getParameterMap();
         super.process(request, response);
 
-        userPrincipal = request.getUserPrincipal();
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        HttpSession session = request.getSession();
+        UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+        userName = userLoginData.getName();
+        if (userName == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user name");
+        User user = (User) appContext.getUserManager().getUsers().get(userName);
         if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userName + "'");
         
     }
 
@@ -156,7 +160,7 @@ public class Edit  extends EditBean
 
         caTableHashMap.remove(getEditId());
         caTableHashMap.put(id, ca_table);
-        countersManager.createUpdateCATable(getLoginedPrincipal().getName(), isAdd(), ca_table, appContext, oldCATable);
+        countersManager.createUpdateCATable(getUserName(), isAdd(), ca_table, appContext, oldCATable);
       
         throw new DoneException();
     }

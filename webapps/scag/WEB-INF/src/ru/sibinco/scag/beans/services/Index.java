@@ -74,21 +74,21 @@ public class Index extends TabledBeanImpl {
                         appContext.getServiceProviderManager().getServiceProviders().get(providerId);
                 for (Iterator iterator = serviceProvider.getServices().keySet().iterator(); iterator.hasNext();) {
                     String serviceIdStr = (iterator.next()).toString();
-                    appContext.getRuleManager().removeRulesForService(getLoginedPrincipal().getName(), serviceIdStr);
+                    appContext.getRuleManager().removeRulesForService(getUserName(), serviceIdStr);
                     serviceIds.add(serviceIdStr);
                 }
             }
             final List toRemoveSmppRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(
                     (String[]) serviceIds.toArray(new String[serviceIds.size()]));
             if (toRemoveSmppRoutes.size() > 0) {
-                appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), toRemoveSmppRoutes);
+                appContext.getScagRoutingManager().deleteRoutes(getUserName(), toRemoveSmppRoutes);
             }
             final List toRemoveHttpRoutes = appContext.getHttpRoutingManager().getRoteIdsByServiceIds(
                     (String[]) serviceIds.toArray(new String[serviceIds.size()]));
             if (toRemoveHttpRoutes.size() > 0) {
-                appContext.getHttpRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), toRemoveHttpRoutes);
+                appContext.getHttpRoutingManager().deleteRoutes(getUserName(), toRemoveHttpRoutes);
             }
-            appContext.getServiceProviderManager().deleteServiceProviders(getLoginedPrincipal().getName(), toRemove, appContext);
+            appContext.getServiceProviderManager().deleteServiceProviders(getUserName(), toRemove, appContext);
 
         }
     }

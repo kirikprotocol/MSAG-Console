@@ -1,14 +1,17 @@
 package ru.sibinco.scag.web.security;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class UserLoginData {
 
   private String name;
 
-  private Set<String> roles;
+  private String password;
 
-  private Set<String> uris;
+  private Set<String> roles = new HashSet<String>();
+
+  private Set<String> uris = new HashSet<String>();
 
   public UserLoginData() {}
 
@@ -49,8 +52,14 @@ public class UserLoginData {
 
   public String toString(){
     return "UserLoginData{"
-        +"name='"+name+"'}";
+        +"name='"+name+"', "
+        +"roles="+roles
+        +"}";
 
 
+  }
+
+  public boolean isUserInRole(String role){
+    return roles.contains(role);
   }
 }

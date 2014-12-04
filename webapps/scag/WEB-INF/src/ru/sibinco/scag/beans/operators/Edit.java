@@ -67,14 +67,14 @@ public class Edit extends EditBean {
             if( isAdd() ) {
 
                     try {
-                        id = operatorManager.createOperator(getLoginedPrincipal().getName(), getName(), getDescription(), srcMasks);
+                        id = operatorManager.createOperator(getUserName(), getName(), getDescription(), srcMasks);
                     } catch (SibincoException e) {
                         logger.debug("Couldn't create new operator", e);
                         throw new SCAGJspException(Constants.errors.operators.COULD_NOT_CREATE_OPERATOR, e);
                     }
             } else {
                 try {
-                    oldOperator = operatorManager.updateOperator(getLoginedPrincipal().getName(), id, getName(), getDescription(), srcMasks);
+                    oldOperator = operatorManager.updateOperator(getUserName(), id, getName(), getDescription(), srcMasks);
                 } catch (SibincoException e) {
                     logger.debug("Couldn't update operator", e);
                     throw new SCAGJspException(Constants.errors.operators.COULD_NOT_UPDATE_OPERATOR, e);

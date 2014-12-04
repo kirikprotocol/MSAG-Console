@@ -7,6 +7,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
@@ -14,18 +15,20 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.*;
 
-public class XmlAuthenticator implements Authenticator{
+public class XmlAuthenticator implements Authenticator, RoleMapper{
 
   private static final Logger log = Logger.getLogger(XmlAuthenticator.class);
 
-  private Map<String, MSAGPrincipal> users;
+  private Map<String, String> user2password;
+  private Map<String, Set<String>> user2roles;
 
   public XmlAuthenticator(final File usersFile) throws ParserConfigurationException, SAXException, IOException {
     try {
       if (log.isInfoEnabled()) log.info("Try to initialize file '" + usersFile.getAbsolutePath() + "' ...");
       Document document = parse(new FileReader(usersFile));
       NodeList usersNodeList = document.getElementsByTagName("user");
-      users = new HashMap<String, MSAGPrincipal>();
+      user2password = new HashMap<String, String>();
+      user2roles = new HashMap<String, Set<String>>();
       for (int i = 0; i < usersNodeList.getLength(); i++) {
         Element userElem = (Element) usersNodeList.item(i);
         String name = userElem.getAttribute("login");
@@ -36,9 +39,10 @@ public class XmlAuthenticator implements Authenticator{
           Element roleElem = (Element) rolesNodeList.item(j);
           roles.add(roleElem.getAttribute("name"));
         }
-        users.put(name, new MSAGPrincipal(name, password, roles));
+        user2password.put(name, password);
+        user2roles.put(name, roles);
       }
-      if (log.isInfoEnabled()) log.info("Initialized success with " + users.values().size() + " users.");
+      if (log.isInfoEnabled()) log.info("Initialized success with " + user2password.values().size() + " users.");
     } catch (IOException e) {
       log.error("Couldn't load users from file "+usersFile+"'.", e);
       throw e;
@@ -51,20 +55,20 @@ public class XmlAuthenticator implements Authenticator{
     }
   }
 
-  public MSAGPrincipal authenticate(final String login, final String password){
-    MSAGPrincipal principal = users.get(login);
-    if (principal == null) {
+  public boolean authenticate(final String login, final String password){
+    String configuredPassword = user2password.get(login);
+    if (configuredPassword == null) {
       log.warn("XmlAuthenticator.authenticate('" + login + "', '" + password + "') FAILED - User not found.");
-      return null;
+      return false;
     }
 
-    if (!password.equals(principal.getPassword())) {
+    if (!password.equals(configuredPassword)) {
       log.warn("XmlAuthenticator.authenticate('" + login + "', '" + password + "') FAILED - Incorrect password.");
-      return null;
+      return false;
     }
 
-    if (log.isDebugEnabled()) log.debug("Authenticate '" + login + "' with roles: " + principal.getRoles());
-    return principal;
+    if (log.isDebugEnabled()) log.debug("Authenticate '" + login + "' with roles: " + user2roles.get(login));
+    return true;
   }
 
   private Document parse(final Reader input) throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException, NullPointerException{
@@ -74,6 +78,11 @@ public class XmlAuthenticator implements Authenticator{
     builder.setEntityResolver(new DtdsEntityResolver());
     final InputSource source = new InputSource(input);
     return builder.parse(source);
+  }
+
+  @Override
+  public Set<String> getRoles(String userName) {
+    return null;
   }
 
   private class DtdsEntityResolver implements EntityResolver{

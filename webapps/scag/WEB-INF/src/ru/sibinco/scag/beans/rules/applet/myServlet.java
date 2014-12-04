@@ -19,6 +19,8 @@ import java.util.LinkedList;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.log4j.Logger;
+import ru.sibinco.scag.web.security.AuthFilter;
+import ru.sibinco.scag.web.security.UserLoginData;
 
 /**
  * Created by IntelliJ IDEA.
@@ -222,7 +224,9 @@ public class myServlet extends HttpServlet
     PrintWriter out = res.getWriter();
     BufferedReader r=req.getReader();
     try {
-      li=appContext.getRuleManager().updateRule(r,file,transport, RuleManager.NON_TERM_MODE, req.getUserPrincipal().getName());
+      HttpSession session = req.getSession();
+      UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+      li=appContext.getRuleManager().updateRule(r,file,transport, RuleManager.NON_TERM_MODE, userLoginData.getName());
       res = checkError(li, res);
       out.print("true");out.flush();out.close();
     }  catch (SibincoException e) {
@@ -249,7 +253,9 @@ public class myServlet extends HttpServlet
     LinkedList li;
     BufferedReader r=req.getReader();
     try {
-       li = appContext.getRuleManager().AddRule(r,file,transport,RuleManager.NON_TERM_MODE, req.getUserPrincipal().getName());
+       HttpSession session = req.getSession();
+       UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+       li = appContext.getRuleManager().AddRule(r,file,transport,RuleManager.NON_TERM_MODE, userLoginData.getName());
        res = checkError(li, res);
        out.print("true");out.flush();out.close();
     } catch (SibincoException e) {

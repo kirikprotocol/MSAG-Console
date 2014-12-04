@@ -164,7 +164,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   </div>
 <!--end of calendar-->
 
-<%if (request.getUserPrincipal() != null) {%>
+<%if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {%>
   <script >
   var serviceStatusDataSource = new StringTableDataSource({url: '<%=request.getContextPath()%>/gw/status/status.jsp'});
   var observer = new ElementObserver({elementId: 'SCAGStatusSpan', field: 'status' });
@@ -222,7 +222,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
            <tr>
              <th background="content/images/smsc_17.jpg" nowrap><c:if test="${!empty title}"><fmt:message>${title}<c:if test="${!empty param.editId}"><fmt:param value="${param.editId}"/></c:if></fmt:message></c:if></th>
              <td align="right">&nbsp;
-                <%if (request.getUserPrincipal() != null) {%>
+                <%if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {%>
                     <span id="SCAGStatusSpan"></span>
                 <%}%>
              </td>

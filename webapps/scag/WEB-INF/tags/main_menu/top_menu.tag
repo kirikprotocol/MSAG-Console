@@ -1,3 +1,5 @@
+<%@ tag import="ru.sibinco.scag.web.security.AuthFilter" %>
+<%@ tag import="ru.sibinco.scag.web.security.UserLoginData" %>
 <%--<jsp:useBean id="topMenu" class="ru.sibinco.scag.beans.menu.TopMenu" scope="session"/>--%>
 
 <!--link rel="stylesheet" type="text/css" href="<%=request.getContextPath()%>content/styles/main_menu.css" /-->
@@ -20,8 +22,9 @@
       for(java.util.Iterator it = menu.iterator(); it.hasNext();i++){
         ru.sibinco.scag.beans.menu.MenuItem menuItem = (ru.sibinco.scag.beans.menu.MenuItem)it.next();
 
-        if (request.getUserPrincipal() != null) {
-          if (!isUserInRoleForMenu(menuItem,request)) continue;
+        if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {
+          UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+          if (!isUserInRoleForMenu(menuItem, userLoginData)) continue;
         }
 
         String menuItemName = "menu_"+i;
@@ -33,11 +36,11 @@
     out.println("}");
   }
 
-  boolean isUserInRoleForMenu(ru.sibinco.scag.beans.menu.MenuItem menuItem, HttpServletRequest request) {
+  boolean isUserInRoleForMenu(ru.sibinco.scag.beans.menu.MenuItem menuItem, UserLoginData userLoginData) {
           boolean isUserInRoleForMenu = false;
           String[] menuItemRoles =  menuItem.getRoles();
           for (int j = 0; j < menuItemRoles.length; j++) {
-            if (request.isUserInRole(menuItemRoles[j])) {
+            if (userLoginData.isUserInRole(menuItemRoles[j])) {
               isUserInRoleForMenu = true;
               break;
             }
@@ -73,8 +76,10 @@
     for(java.util.Iterator it = menu.iterator(); it.hasNext();i++){
       ru.sibinco.scag.beans.menu.MenuItem menuItem = (ru.sibinco.scag.beans.menu.MenuItem)it.next();
 
-      if (request.getUserPrincipal() != null) {
-          if (!isUserInRoleForMenu(menuItem,request)) continue;
+      HttpSession session = request.getSession();
+      if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {
+        UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+          if (!isUserInRoleForMenu(menuItem, userLoginData)) continue;
       }
 
       if(menuItem.getSubMenu() == null){

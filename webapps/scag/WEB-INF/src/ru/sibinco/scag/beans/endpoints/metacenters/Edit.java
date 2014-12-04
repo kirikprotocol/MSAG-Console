@@ -20,22 +20,15 @@ import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.CancelException;
+import ru.sibinco.scag.web.security.AuthFilter;
+import ru.sibinco.scag.web.security.UserLoginData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Principal;
+import javax.servlet.http.HttpSession;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
-/**
- * The <code>Edit</code> class represents
- * <p><p/>
- * Date: 15.07.2005
- * Time: 15:59:36
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
- */
 public class Edit extends EditBean {
 
     public static final String SELECTED_SME_PREFFIX = "selected_sme_";
@@ -186,8 +179,9 @@ public class Edit extends EditBean {
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
-        loginedPrincipal = request.getUserPrincipal();
-        userName = loginedPrincipal.getName();
+        HttpSession session = request.getSession();
+        UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
+        userName = userLoginData.getName();
         if (getMbCancel() != null){
             throw new CancelException();
         }
