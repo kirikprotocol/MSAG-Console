@@ -80,6 +80,11 @@ public class AuthFilter implements Filter {
       }
     }
 
+    if(shortUri.equals(welcomePage)){
+      chain.doFilter(req, resp);
+      return;
+    }
+
     String username = request.getParameter(USERNAME);
     String password = request.getParameter(PASSWORD);
     if (cat.isDebugEnabled()) cat.debug("Found request parameters user: '"+username+"', password='"+password+"'.");
