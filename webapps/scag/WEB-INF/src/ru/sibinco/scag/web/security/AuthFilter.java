@@ -69,6 +69,7 @@ public class AuthFilter implements Filter {
 
     UserLoginData userLoginData = (UserLoginData) session.getAttribute(USER_LOGIN_DATA);
     if (userLoginData != null) {
+      if (cat.isDebugEnabled()) cat.debug("Found in session "+userLoginData+".");
       if(userLoginData.isURIPermitted(shortUri) || shortUri.equals(welcomePage) || shortUri.equals("/")){
         chain.doFilter(req, resp);
         return;
@@ -84,9 +85,10 @@ public class AuthFilter implements Filter {
     if (cat.isDebugEnabled()) cat.debug("Found request parameters user: '"+username+"', password='"+password+"'.");
 
     if (username == null || password == null) {
+      if (cat.isDebugEnabled()) cat.debug("Couldn't find user name or password request parameters.");
       request.setAttribute("uri", uri);
       request.getRequestDispatcher(loginPage).forward(request, response);
-      cat.debug("Access to page uri='" + shortUri + "' has been denied.");
+      if (cat.isDebugEnabled()) cat.debug("Access to page uri='" + shortUri + "' has been denied.");
       return;
     }
 
