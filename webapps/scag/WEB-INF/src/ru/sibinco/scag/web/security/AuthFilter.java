@@ -106,7 +106,10 @@ public class AuthFilter implements Filter {
       return;
     }
 
-    Set<String> roles = new HashSet<String>(){{add("gw, super_admin, management, routing, stat");}};
+    Set<String> roles = new HashSet<String>(){
+      {add("gw"); add("super_admin"); add("management"); add("routing"); add("stat");}
+    };
+
     userLoginData = new UserLoginData("admin", roles, new HashSet<String>());
     session.setAttribute(USER_LOGIN_DATA, userLoginData);
     if (cat.isDebugEnabled()) cat.debug("Set attribute '"+USER_LOGIN_DATA+"' to session.");
