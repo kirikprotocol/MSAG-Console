@@ -212,6 +212,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setAdd(boolean add) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'add' to '"+add+"'.");
         this.add = add;
     }
 
