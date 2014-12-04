@@ -8,7 +8,7 @@
     <jsp:doBody/>
     <td width="100%">&nbsp;</td>
     <%
-      if (session != null || session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null){
+      if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null){
         UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
         %><td><a ID=MENU0_LOGOUT href="logout.jsp">Logout&nbsp;"<%=userLoginData.getName()%>"</a></td><%
       }

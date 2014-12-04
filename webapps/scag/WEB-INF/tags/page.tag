@@ -207,7 +207,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
         }
       %>
             <%
-                if (session != null || session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null){
+                if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null){
                   UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
             %>
                    <td background="content/images/smsc_14.jpg"><a ID="MENU0_LOGOUT" href="logout.jsp"><fmt:message>common.logout</fmt:message>&nbsp;"<%=userLoginData.getName()%>"</a></td>
