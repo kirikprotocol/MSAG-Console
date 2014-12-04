@@ -180,11 +180,12 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setId(final String id) {
+      if (logger.isDebugEnabled()) logger.debug("id: "+id);
         this.id = Long.decode(id).longValue();
     }
 
     public String getName() {
-        if(name != null)name.trim();
+        if (name != null) name = name.trim();
         return name;
     }
 

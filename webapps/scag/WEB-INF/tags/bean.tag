@@ -17,7 +17,10 @@
         request.setAttribute("bean", bean);
         //System.out.println("class = " + bean.getClass().getName() + ", bean = " + bean);
         jspContext.setAttribute("bean", bean); //!pageContext
-        BeanUtils.populate(bean, request.getParameterMap());
+%>
+<jsp:setProperty name="bean" property="*"/>
+
+<%
         bean.process(request, response);
     } catch (ru.sibinco.scag.beans.CancelException e) {
         response.sendRedirect(path);
