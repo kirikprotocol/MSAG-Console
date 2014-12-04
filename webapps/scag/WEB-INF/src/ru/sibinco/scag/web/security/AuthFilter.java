@@ -59,6 +59,7 @@ public class AuthFilter implements Filter {
     HttpSession session = req.getSession();
     String uri = req.getRequestURI();
     String shortUri = uri.substring(req.getContextPath().length());
+    if (cat.isDebugEnabled()) cat.debug("uri: '"+uri+"', shortUri: '"+shortUri+"'");
 
     if (passBy != null && passBy.matcher(shortUri).matches()) {
       //cat.debug("Resource with uri=" + shortUri + " allowed due to pass-by");
@@ -73,7 +74,7 @@ public class AuthFilter implements Filter {
         return;
       } else {
         request.getRequestDispatcher(accessDeniedPage).forward(request, response);
-        cat.warn("access to page uri=" + shortUri + " denied");
+        cat.warn("Access to page uri='" + shortUri + "' has been denied.");
         return;
       }
     }
@@ -98,6 +99,7 @@ public class AuthFilter implements Filter {
 
     userLoginData = new UserLoginData("admin", new HashSet<String>(){{add("super_admin");}}, new HashSet<String>());
     session.setAttribute(USER_LOGIN_DATA, userLoginData);
+    if (cat.isDebugEnabled()) cat.debug("Set attribute '"+USER_LOGIN_DATA+"' to session.");
 
     if(userLoginData.isURIPermitted(shortUri) || shortUri.equals(welcomePage) || shortUri.equals("/")){
       chain.doFilter(req, resp);
