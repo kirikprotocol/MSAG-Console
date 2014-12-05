@@ -174,7 +174,7 @@
 
     <copy file="${build}/libs/jedit/jedit.jar" todir="${build}/exploded/msag/rules/rules"/>
 
-    <copy file="${basedir}/WEB-INF/lib/commons-beanutils-1.9.2-fixed.jar" todir="${build}/exploded/msag/WEB-INF/lib/commons-beanutils-1.9.2-fixed.jar"/>
+    <copy file="${basedir}/WEB-INF/lib/commons-beanutils-1.9.2-fixed.jar" todir="${build}/exploded/msag/WEB-INF/lib"/>
 
     <copy file="${basedir}/history.txt" todir="${build}/exploded/msag/META-INF"/>
 
