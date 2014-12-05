@@ -88,7 +88,7 @@
   <body style="margin:0px 0px 0px 0px;" onLoad="openjEditWindow()" onunload="toClose()">
     <applet code="org.gjt.sp.jedit.jEdit.class" width="100%" height="100%" archive="jedit.jar" name=jedit ID=jedit>
        <param name="noplugins" value="-noplugins">
-       <param name="homedir" value="webapps/msag/applet">
+       <param name="homedir" value="applet">
        <param name="username" value="rules">
        <param name="servletUrl" value="${pageContext.request.contextPath}/applet/myServlet">
        <param name="ping_host" value="<%=((SCAGAppContext)request.getAttribute("appContext")).getLiveConnect().getPingHost()%>">
