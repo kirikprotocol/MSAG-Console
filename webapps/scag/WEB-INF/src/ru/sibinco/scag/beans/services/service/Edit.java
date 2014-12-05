@@ -118,7 +118,7 @@ public class Edit extends TabledEditBeanImpl {
             deleteHttpRoute();
         }
         Long servIdForRout;
-        if( getEditId() != null ) {
+        if (editId != null && !editId.isEmpty()) {
             logger.info("services/service/Edit:process: ( getEditId() != null ) = " + getEditId());
             servIdForRout = (!editChild ? Long.decode(getEditId()) : Long.decode(getParentId()));
         } else {
