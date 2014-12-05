@@ -203,7 +203,7 @@ public class Edit extends TabledEditBeanImpl {
             logger.debug( "services/service/Edit:editRuleMMS" );
             setPermissionRule( Transport.MMS_TRANSPORT_NAME, true );
         }
-        if (getEditId() != null && !editChild) {
+        if (editId != null && !editId.isEmpty() && !editChild) {
             super.process(request, response);
         }
 
