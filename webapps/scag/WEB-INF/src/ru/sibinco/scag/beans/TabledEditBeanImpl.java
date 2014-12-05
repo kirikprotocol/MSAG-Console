@@ -26,6 +26,7 @@ public abstract class TabledEditBeanImpl extends TabledBeanImpl {
     }
 
     public void setEditId(String editId) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'editId' to '"+editId+"'.");
         this.editId = editId;
     }
 
@@ -34,6 +35,7 @@ public abstract class TabledEditBeanImpl extends TabledBeanImpl {
     }
 
     public void setAdd(boolean add) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'add' to '"+add+"'.");
         this.add = add;
     }
 
@@ -42,6 +44,7 @@ public abstract class TabledEditBeanImpl extends TabledBeanImpl {
     }
 
     public void setMbSave(String mbSave) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbSave' to '"+mbSave+"'.");
         this.mbSave = mbSave;
     }
 
@@ -50,6 +53,7 @@ public abstract class TabledEditBeanImpl extends TabledBeanImpl {
     }
 
     public void setMbCancel(String mbCancel) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbCancel' to '"+mbCancel+"'.");
         this.mbCancel = mbCancel;
     }
 }

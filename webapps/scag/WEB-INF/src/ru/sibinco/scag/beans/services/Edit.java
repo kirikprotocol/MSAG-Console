@@ -46,17 +46,17 @@ public class Edit extends TabledEditBeanImpl {
         UserLoginData userLoginData = (UserLoginData) session.getAttribute(AuthFilter.USER_LOGIN_DATA);
         userLogin = userLoginData.getName();
 
-        if (getMbCancel() != null) {
+        if (mbCancel != null && !mbCancel.isEmpty()) {
             storeToSessionGetFlagParent( request, Constants.GSP_TRUE );
             throw new CancelException();
-        } else if (getMbSave() != null) {
+        } else if (mbSave != null && !mbSave.isEmpty()) {
             storeToSessionGetFlagParent( request, Constants.GSP_TRUE );
             save();
-        } else if (getMbAddChild() != null) {
+        } else if (mbAddChild != null && !mbAddChild.isEmpty()) {
             throw new AddChildException("service", Long.toString(id));
         }
         load();
-        if (mbDelete != null) {
+        if (mbDelete != null && !mbDelete.isEmpty()) {
           userName = userLoginData.getName();
         }
         if (!isAdd()) {
@@ -221,6 +221,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setMbSave(String mbSave) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbSave' to '"+mbSave+"'.");
         this.mbSave = mbSave;
     }
 
@@ -229,6 +230,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setMbCancel(String mbCancel) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbCancel' to '"+mbCancel+"'.");
         this.mbCancel = mbCancel;
     }
 
@@ -237,6 +239,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setMbAddChild(String mbAddChild) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbAddChild' to '"+mbAddChild+"'.");
         this.mbAddChild = mbAddChild;
     }
 
@@ -261,6 +264,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setChildEitId(String childEitId) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'childEditId' to '"+childEitId+"'.");
         this.childEitId = childEitId;
     }
 
