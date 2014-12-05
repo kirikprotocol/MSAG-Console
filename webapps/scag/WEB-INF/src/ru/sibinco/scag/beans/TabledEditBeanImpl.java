@@ -1,20 +1,8 @@
-/*
- * Copyright (c) 2006 SibInco Inc. All Rights Reserved.
- */
-
 package ru.sibinco.scag.beans;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * The <code>TabledEditBeanImpl</code> class represents
- * <p><p/>
- * Date: 26.02.2006
- * Time: 17:07:30
- *
- * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
- */
 public abstract class TabledEditBeanImpl extends TabledBeanImpl {
 
     private String editId = null;
@@ -27,11 +15,8 @@ public abstract class TabledEditBeanImpl extends TabledBeanImpl {
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
         super.process(request, response);
 
-
-        if (getMbCancel() != null)
-            throw new CancelException();
-        if (getMbSave() != null)
-            save();
+        if (mbCancel != null && !mbCancel.isEmpty()) throw new CancelException();
+        if (mbSave != null && !mbSave.isEmpty()) save();
     }
 
     protected abstract void save() throws SCAGJspException;
