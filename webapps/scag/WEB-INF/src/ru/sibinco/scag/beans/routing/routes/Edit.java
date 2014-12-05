@@ -422,6 +422,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
 
     public void setId(final String id) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'id' to '"+id+"'.");
+        if (id != null && id.isEmpty()) return;
         this.id = id;
     }
 
@@ -470,6 +472,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     }
 
     public void setSrcSmeId(final String srcSmeId) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'srcSmeId' to '"+srcSmeId+"'.");
+        if (srcSmeId != null && srcSmeId.isEmpty()) return;
         this.srcSmeId = srcSmeId;
     }
 
@@ -502,6 +506,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     }
 
     public void setSlicing(final String slicing) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'slicing' to '"+slicing+"'.");
+        if (slicing != null && slicing.isEmpty()) return;
         this.slicing = slicing;
     }
 
@@ -510,6 +516,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     }
 
     public void setSlicedRespPolicy(final String slicedRespPolicy) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'slicedRespPolicy' to '"+slicedRespPolicy+"'.");
+        if (slicedRespPolicy!=null && slicedRespPolicy.isEmpty()) return;
         this.slicedRespPolicy = slicedRespPolicy;
     }
 
@@ -637,6 +645,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     }
 
     public void setParentId(String parentId) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'parentId' to '"+parentId+"'.");
+        if (parentId != null && parentId.isEmpty()) return;
         this.parentId = parentId;
     }
 

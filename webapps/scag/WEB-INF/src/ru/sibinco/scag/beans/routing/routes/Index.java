@@ -335,6 +335,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbApply(String mbApply) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbApply' to '"+mbApply+"'.");
+        if (mbApply != null && mbApply.isEmpty()) return;
         this.mbApply = mbApply;
     }
 
@@ -343,6 +345,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbRestore(String mbRestore) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbRestore' to '"+mbRestore+"'.");
+        if (mbRestore != null && mbRestore.isEmpty()) return;
         this.mbRestore = mbRestore;
     }
 
@@ -351,6 +355,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbLoadSaved(String mbLoadSaved) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbLoadSaved' to '"+mbLoadSaved+"'.");
+        if (mbLoadSaved != null && mbLoadSaved.isEmpty()) return;
         this.mbLoadSaved = mbLoadSaved;
     }
 
@@ -387,6 +393,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setRestoreDate(String restoreDate) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'restoreDate' to '"+restoreDate+"'.");
+        if (restoreDate != null && restoreDate.isEmpty()) return;
         this.restoreDate = restoreDate;
     }
 
@@ -395,6 +403,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbLoad(String mbLoad) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbLoad' to '"+mbLoad+"'.");
+        if (mbLoad != null && mbLoad.isEmpty()) return;
         this.mbLoad = mbLoad;
     }
 
@@ -403,6 +413,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbSave(String mbSave) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbSave' to '"+mbSave+"'.");
+        if (mbSave != null && mbSave.isEmpty()) return;
         this.mbSave = mbSave;
     }
 
@@ -435,6 +447,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbApplyHttp(String mbApplyHttp) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbApplyHttp' to '"+mbApplyHttp+"'.");
+        if (mbApplyHttp != null && mbApplyHttp.isEmpty()) return;
         this.mbApplyHttp = mbApplyHttp;
     }
 
@@ -443,6 +457,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbLoadSavedHttp(String mbLoadSavedHttp) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbLoadSavedHttp' to '"+mbLoadSavedHttp+"'.");
+        if (mbLoadSavedHttp != null && mbLoadSavedHttp.isEmpty()) return;
         this.mbLoadSavedHttp = mbLoadSavedHttp;
     }
 
@@ -451,6 +467,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbLoadHttp(String mbLoadHttp) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbLoadHttp' to '"+mbLoadHttp+"'.");
+        if (mbLoadHttp != null && mbLoadHttp.isEmpty()) return;
         this.mbLoadHttp = mbLoadHttp;
     }
 
@@ -459,6 +477,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbSaveHttp(String mbSaveHttp) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbSaveHttp' to '"+mbSaveHttp+"'.");
+        if (mbSaveHttp != null && mbSaveHttp.isEmpty()) return;
         this.mbSaveHttp = mbSaveHttp;
     }
 
@@ -467,6 +487,8 @@ public class Index extends TabledBeanImpl {
     }
 
     public void setMbRestoreHttp(String mbRestoreHttp) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbRestoreHttp' to '"+mbRestoreHttp+"'.");
+        if (mbRestoreHttp != null && mbRestoreHttp.isEmpty()) return;
         this.mbRestoreHttp = mbRestoreHttp;
     }
 

@@ -222,6 +222,7 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setMbSave(String mbSave) {
         if (logger.isDebugEnabled()) logger.debug("Set 'mbSave' to '"+mbSave+"'.");
+        if (mbSave != null && mbSave.isEmpty()) return;
         this.mbSave = mbSave;
     }
 
@@ -231,6 +232,7 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setMbCancel(String mbCancel) {
         if (logger.isDebugEnabled()) logger.debug("Set 'mbCancel' to '"+mbCancel+"'.");
+        if (mbCancel != null && mbCancel.isEmpty()) return;
         this.mbCancel = mbCancel;
     }
 
@@ -240,6 +242,7 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setMbAddChild(String mbAddChild) {
         if (logger.isDebugEnabled()) logger.debug("Set 'mbAddChild' to '"+mbAddChild+"'.");
+        if (mbAddChild != null && mbAddChild.isEmpty()) return;
         this.mbAddChild = mbAddChild;
     }
 
@@ -265,6 +268,7 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setChildEitId(String childEitId) {
         if (logger.isDebugEnabled()) logger.debug("Set 'childEditId' to '"+childEitId+"'.");
+        if (childEitId != null && childEitId.isEmpty()) return;
         this.childEitId = childEitId;
     }
 
