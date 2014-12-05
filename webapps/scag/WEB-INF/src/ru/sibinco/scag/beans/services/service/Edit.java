@@ -399,16 +399,17 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public String getName() {
-        if(name != null) name.trim();
+        if(name != null) name = name.trim();
         return name;
     }
 
     public void setName(String name) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'name' to '"+name+"'.");
         this.name = name;
     }
 
     public String getDescription() {
-        if(description != null) description.trim();
+        if(description != null) description = description.trim();
         return description;
     }
 
@@ -421,6 +422,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setEditId(String editId) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'editId' to '"+editId+"'.");
         this.editId = editId;
     }
 
@@ -429,6 +431,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setMbSave(String mbSave) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbSave' to '"+mbSave+"'.");
         this.mbSave = mbSave;
     }
 
@@ -437,6 +440,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setDeleteRuleSMPP(String deleteRuleSMPP) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'deleteRuleSMPP' to '"+deleteRuleSMPP+"'.");
         this.deleteRuleSMPP = deleteRuleSMPP;
     }
 
@@ -445,6 +449,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setDeleteRuleHTTP(String deleteRuleHTTP) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'deleteRuleHTTP' to '"+deleteRuleHTTP+"'.");
         this.deleteRuleHTTP = deleteRuleHTTP;
     }
 
@@ -453,6 +458,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setDeleteRuleMMS(String deleteRuleMMS) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'deleteRuleMMS' to '"+deleteRuleMMS+"'.");
         this.deleteRuleMMS = deleteRuleMMS;
     }
 
@@ -461,6 +467,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setMbCancel(String mbCancel) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbCancel' to '"+mbCancel+"'.");
         this.mbCancel = mbCancel;
     }
 
@@ -473,6 +480,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setParentId(String parentId) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'parentId' to '"+parentId+"'.");
         this.parentId = parentId;
     }
 
@@ -481,6 +489,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setEditChild(boolean editChild) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'editChild' to '"+editChild+"'.");
         this.editChild = editChild;
     }
 
@@ -489,6 +498,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setMbAddSmppRoute(String mbAddSmppRoute) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbAddSmppRoute' to '"+mbAddSmppRoute+"'.");
         this.mbAddSmppRoute = mbAddSmppRoute;
     }
 
@@ -497,6 +507,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setChildEitId(String childEitId) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'childEitId' to '"+childEitId+"'.");
         this.childEitId = childEitId;
     }
 
@@ -505,6 +516,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setHttpRuteItems(List httpRuteItems) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'httpRuteItems' to '"+httpRuteItems+"'.");
         this.httpRuteItems = httpRuteItems;
     }
 
@@ -513,6 +525,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setMbAddHttpRoute(String mbAddHttpRoute) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbAddHttpRoute' to '"+mbAddHttpRoute+"'.");
         this.mbAddHttpRoute = mbAddHttpRoute;
     }
 
@@ -521,6 +534,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setTotalHttpSize(int totalHttpSize) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'totalHttpSize' to '"+totalHttpSize+"'.");
         this.totalHttpSize = totalHttpSize;
     }
 
@@ -529,6 +543,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setMbDeleteHttpRoute(String mbDeleteHttpRoute) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbDeleteHttpRoute' to '"+mbDeleteHttpRoute+"'.");
         this.mbDeleteHttpRoute = mbDeleteHttpRoute;
     }
 
@@ -537,6 +552,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setMbDefaultHttpRoute(String mbDefaultHttpRoute) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'mbDefaultHttpRoute' to '"+mbDefaultHttpRoute+"'.");
         this.mbDefaultHttpRoute = mbDefaultHttpRoute;
     }
 
@@ -553,14 +569,17 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setEditRuleSMPP(String editRuleSMPP) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'editRuleSMPP' to '"+editRuleSMPP+"'.");
         this.editRuleSMPP = editRuleSMPP;
     }
 
     public void setEditRuleHTTP(String editRuleHTTP) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'editRuleHTTP' to '"+editRuleHTTP+"'.");
         this.editRuleHTTP = editRuleHTTP;
     }
 
     public void setEditRuleMMS(String editRuleMMS) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'editRuleMMS' to '"+editRuleMMS+"'.");
         this.editRuleMMS = editRuleMMS;
     }
 
@@ -577,18 +596,22 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setId(long id) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'id' to '"+id+"'.");
         this.id = id;
     }
 
     public void setUnlockRuleSMPP(String unblockRuleSMPP) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'unblockRuleSMPP' to '"+unblockRuleSMPP+"'.");
         this.unlockRuleSMPP = unblockRuleSMPP;
     }
 
     public void setUnlockRuleHTTP(String unblockRuleHTTP) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'unblockRuleHTTP' to '"+unblockRuleHTTP+"'.");
         this.unlockRuleHTTP = unblockRuleHTTP;
     }
 
     public void setUnlockRuleMMS(String unlockRuleMMS) {
+        if (logger.isDebugEnabled()) logger.debug("Set 'unlockRuleMMS' to '"+unlockRuleMMS+"'.");
         this.unlockRuleMMS = unlockRuleMMS;
     }
 
