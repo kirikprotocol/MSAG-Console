@@ -11,4 +11,8 @@
     <exact-match>false</exact-match>
   </library-ref>
 
+  <session-descriptor>
+    <cookie-http-only>false</cookie-http-only>
+  </session-descriptor>
+
 </weblogic-web-app>
