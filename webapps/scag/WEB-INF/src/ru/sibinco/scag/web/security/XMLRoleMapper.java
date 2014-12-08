@@ -13,17 +13,17 @@ public class XMLRoleMapper implements RoleMapper{
   private static final Logger log = Logger.getLogger(XMLRoleMapper.class);
 
   private Map<String, Set<String>> user2roles;
-  private Map<String, Set<String>> role2uris;
+  private Map<String, Set<String>> role2URIPatterns;
 
   public XMLRoleMapper(Document userXmlDocument, Document webXmlDocument){
     user2roles = getRoles(userXmlDocument);
-    role2uris = getURIs(webXmlDocument);
+    role2URIPatterns = getURIPatterns(webXmlDocument);
     if (log.isDebugEnabled()) log.debug("XML role mapper has been initialized.");
   }
 
-  public XMLRoleMapper(Document userXmlDocument, Map<String, Set<String>> role2uris){
+  public XMLRoleMapper(Document userXmlDocument, Map<String, Set<String>> role2URIPatterns){
     user2roles = getRoles(userXmlDocument);
-    this.role2uris = role2uris;
+    this.role2URIPatterns = role2URIPatterns;
     if (log.isDebugEnabled()) log.debug("XML role mapper has been initialized.");
   }
 
@@ -46,7 +46,7 @@ public class XMLRoleMapper implements RoleMapper{
     return user2roles;
   }
 
-  private Map<String, Set<String>> getURIs(Document webXmlDocument){
+  private Map<String, Set<String>> getURIPatterns(Document webXmlDocument){
     Map<String, Set<String>> role2uris = new HashMap<String, Set<String>>();
     NodeList scList = webXmlDocument.getElementsByTagName("security-constraint");
     if (log.isDebugEnabled()) log.debug("Found "+scList.getLength()+" 'security-constraint' tags.");
@@ -113,12 +113,24 @@ public class XMLRoleMapper implements RoleMapper{
 
   @Override
   public Set<String> getRolesAllowedForURI(String uri) {
-    return role2uris.get(uri);
+    Set<String> roles = new HashSet<String>();
+    for(String role: role2URIPatterns.keySet()){
+      Set<String> uriPatterns = role2URIPatterns.get(role);
+      for(String uriPattern: uriPatterns){
+        if (uriPattern.endsWith("\\*")){
+          if (uri.startsWith(uriPattern)) roles.add(role);
+        } else {
+          if (uriPattern.equals(uri)) roles.add(role);
+        }
+      }
+    }
+    if (log.isDebugEnabled()) log.debug("Roles allowed for uri '"+uri+"': "+Arrays.toString(roles.toArray()));
+    return roles;
   }
 
   @Override
   public Map<String, Set<String>> getURIsForRoles() {
-    return role2uris;
+    return role2URIPatterns;
   }
 
 }

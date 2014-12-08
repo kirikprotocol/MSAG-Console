@@ -66,10 +66,24 @@ public class AuthFilter implements Filter {
       return;
     }
 
+    RoleMapper roleMapper = WebContext.getRoleMapper();
+
     UserLoginData userLoginData = (UserLoginData) session.getAttribute(USER_LOGIN_DATA);
     if (userLoginData != null) {
       if (cat.isDebugEnabled()) cat.debug("Found in session "+userLoginData+".");
-      if(userLoginData.isURIPermitted(shortUri) || shortUri.equals(welcomePage) || shortUri.equals("/")){
+
+      Set<String> userRoles = userLoginData.getRoles();
+      Set<String> rolesAllowedForURI = roleMapper.getRolesAllowedForURI(shortUri);
+      boolean uriPermitted = false;
+      for(String userRole : userRoles) {
+        if (rolesAllowedForURI.contains(userRole)) {
+          if (cat.isDebugEnabled()) cat.debug("User role '"+userRole+"' is allowed for short uri '"+shortUri+"'.");
+          uriPermitted = true;
+          break;
+        }
+      }
+
+      if(uriPermitted || shortUri.equals(welcomePage) || shortUri.equals("/")){
         chain.doFilter(req, resp);
         return;
       } else {
@@ -105,10 +119,9 @@ public class AuthFilter implements Filter {
       return;
     }
 
-    RoleMapper roleMapper = WebContext.getRoleMapper();
     Set<String> roles = roleMapper.getUserRoles(username);
 
-    userLoginData = new UserLoginData(username, roles, new HashSet<String>());
+    userLoginData = new UserLoginData(username, roles);
     session.setAttribute(USER_LOGIN_DATA, userLoginData);
     if (cat.isDebugEnabled()) cat.debug("Set attribute '"+USER_LOGIN_DATA+"' to session.");
 

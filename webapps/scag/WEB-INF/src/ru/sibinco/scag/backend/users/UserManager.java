@@ -62,8 +62,8 @@ public class UserManager {
         WebContext.setAuthenticator(authenticator);
 
         RoleMapper oldRoleMapper = WebContext.getRoleMapper();
-        Map<String, Set<String>> role2uris = oldRoleMapper.getURIsForRoles();
-        RoleMapper newRoleMapper = new XMLRoleMapper(usersXmlDocument, role2uris);
+        Map<String, Set<String>> role2URIPatterns = oldRoleMapper.getURIsForRoles();
+        RoleMapper newRoleMapper = new XMLRoleMapper(usersXmlDocument, role2URIPatterns);
         WebContext.setRoleMapper(newRoleMapper);
 
         hsDaemon.store(configFile);

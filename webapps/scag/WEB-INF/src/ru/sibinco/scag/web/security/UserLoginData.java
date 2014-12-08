@@ -11,14 +11,11 @@ public class UserLoginData {
 
   private Set<String> roles = new HashSet<String>();
 
-  private Set<String> uris = new HashSet<String>();
-
   public UserLoginData() {}
 
-  public UserLoginData(String name, Set<String> roles, Set<String> uris){
+  public UserLoginData(String name, Set<String> roles){
     this.name = name;
     this.roles = roles;
-    this.uris = uris;
   }
 
   public String getName() {
@@ -36,14 +33,6 @@ public class UserLoginData {
 
   public void setRoles(Set<String> roles) {
     this.roles = roles;
-  }
-
-  public Set<String> getUris() {
-    return uris;
-  }
-
-  public void setUris(Set<String> uris) {
-    this.uris = uris;
   }
 
   public boolean isURIPermitted(String uri){
