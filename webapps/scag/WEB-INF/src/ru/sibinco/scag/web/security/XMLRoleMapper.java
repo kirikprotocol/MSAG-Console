@@ -52,11 +52,13 @@ public class XMLRoleMapper implements RoleMapper{
   private Map<String, Set<String>> getURIs(Document webXmlDocument){
     Map<String, Set<String>> role2uris = new HashMap<String, Set<String>>();
     NodeList scList = webXmlDocument.getElementsByTagName("security-constraint");
+    if (log.isDebugEnabled()) log.debug("Found "+scList.getLength()+" 'security-constraint' tags.");
     for (int i = 0; i < scList.getLength(); i++) {
       Node nNode = scList.item(i);
       if (nNode.getNodeType() == Node.ELEMENT_NODE) {
         Element scElement = (Element) nNode;
         NodeList childNodes = scElement.getChildNodes();
+        if (log.isDebugEnabled()) log.debug("Found "+childNodes.getLength()+" children nodes in 'security-constraint' tag.");
         for (int j = 0; j < scList.getLength(); j++) {
           Node childNode = childNodes.item(j);
           String role = null;
@@ -65,28 +67,31 @@ public class XMLRoleMapper implements RoleMapper{
             Element childElement = (Element) childNode;
             String tagName = childElement.getTagName();
             if (tagName.equals("web-resource-collection")){
+              if (log.isDebugEnabled()) log.debug("Found 'web-resource-collection' tag.");
               NodeList childNodes1 = childElement.getChildNodes();
-              for (int k = 0; k < scList.getLength(); k++) {
+              for (int k = 0; k < childNodes1.getLength(); k++) {
                 Node childNode1 = childNodes1.item(k);
                 if (childNode1.getNodeType() == Node.ELEMENT_NODE){
                   Element childElement1 = (Element) childNode1;
                   if (childElement1.getTagName().equals("url-pattern")){
                     String urlPattern = childElement1.getNodeValue();
-                    if (log.isDebugEnabled()) log.debug("found url-pattern: "+urlPattern);
+                    if (log.isDebugEnabled()) log.debug("Found url-pattern: "+urlPattern);
                     uriPatterns.add(urlPattern);
                   }
                 }
               }
             }
             if (tagName.equals("auth-constraint")){
+              if (log.isDebugEnabled()) log.debug("Found 'auth-constraint' tag.");
               NodeList childNodes1 = childElement.getChildNodes();
-              for (int k = 0; k < scList.getLength(); k++) {
+              for (int k = 0; k < childNodes1.getLength(); k++) {
                 Node childNode1 = childNodes1.item(k);
                 if (childNode1.getNodeType() == Node.ELEMENT_NODE){
                   Element childElement1 = (Element) childNode1;
                   if (childElement1.getTagName().equals("role-name")){
                     role = childElement1.getNodeValue();
-                    if (log.isDebugEnabled()) log.debug("found role: "+role);
+                    if (log.isDebugEnabled()) log.debug("Found role: "+role);
+                    break;
                   }
                 }
               }
