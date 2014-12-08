@@ -3,6 +3,7 @@ package ru.sibinco.scag.web.security;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.HashMap;
@@ -51,7 +52,53 @@ public class XMLRoleMapper implements RoleMapper{
   private Map<String, Set<String>> getURIs(Document webXmlDocument){
     Map<String, Set<String>> role2uris = new HashMap<String, Set<String>>();
     NodeList scList = webXmlDocument.getElementsByTagName("security-constraint");
-
+    for (int i = 0; i < scList.getLength(); i++) {
+      Node nNode = scList.item(i);
+      if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+        Element scElement = (Element) nNode;
+        NodeList childNodes = scElement.getChildNodes();
+        for (int j = 0; j < scList.getLength(); j++) {
+          Node childNode = childNodes.item(j);
+          String role = null;
+          Set<String> uriPatterns = new HashSet<String>();
+          if (childNode.getNodeType() == Node.ELEMENT_NODE){
+            Element childElement = (Element) childNode;
+            String tagName = childElement.getTagName();
+            if (tagName.equals("web-resource-collection")){
+              NodeList childNodes1 = childElement.getChildNodes();
+              for (int k = 0; k < scList.getLength(); k++) {
+                Node childNode1 = childNodes1.item(k);
+                if (childNode1.getNodeType() == Node.ELEMENT_NODE){
+                  Element childElement1 = (Element) childNode1;
+                  if (childElement1.getTagName().equals("url-pattern")){
+                    String urlPattern = childElement1.getNodeValue();
+                    if (log.isDebugEnabled()) log.debug("found url-pattern: "+urlPattern);
+                    uriPatterns.add(urlPattern);
+                  }
+                }
+              }
+            }
+            if (tagName.equals("auth-constraint")){
+              NodeList childNodes1 = childElement.getChildNodes();
+              for (int k = 0; k < scList.getLength(); k++) {
+                Node childNode1 = childNodes1.item(k);
+                if (childNode1.getNodeType() == Node.ELEMENT_NODE){
+                  Element childElement1 = (Element) childNode1;
+                  if (childElement1.getTagName().equals("role-name")){
+                    role = childElement1.getNodeValue();
+                    if (log.isDebugEnabled()) log.debug("found role: "+role);
+                  }
+                }
+              }
+            }
+          }
+          if (role != null) {
+            role2uris.put(role, uriPatterns);
+            if (log.isDebugEnabled()) log.debug("Added role --> uri patterns: "+role+" --> "+uriPatterns);
+          }
+        }
+      }
+    }
     return role2uris;
   }
 

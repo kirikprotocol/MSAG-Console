@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>general administration</web-resource-name>
+      <url-pattern>/gw/status/*</url-pattern>
+      <url-pattern>/gw/config/*</url-pattern>
+      <url-pattern>/gw/logging/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>gw</role-name>
+    </auth-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>super admin(edit user)</web-resource-name>
+      <url-pattern>/gw/users/*</url-pattern>
+      <url-pattern>/gw/status/status.jsp</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>super_admin</role-name>
+    </auth-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>management</web-resource-name>
+      <url-pattern>/services/*</url-pattern>
+      <url-pattern>/rules/*</url-pattern>
+      <url-pattern>/operators/*</url-pattern>
+      <url-pattern>/gw/status/status.jsp</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>management</role-name>
+    </auth-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>msag routing related pages</web-resource-name>
+      <url-pattern>/routing/*</url-pattern>
+      <url-pattern>/endpoints/*</url-pattern>
+      <url-pattern>/gw/status/status.jsp</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>routing</role-name>
+    </auth-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>scag statistics</web-resource-name>
+      <url-pattern>/stat/*</url-pattern>
+      <url-pattern>/endpoints/services/monitor/*</url-pattern>
+      <url-pattern>/endpoints/centers/monitor/*</url-pattern>
+      <url-pattern>/gw/status/status.jsp</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>stat</role-name>
+    </auth-constraint>
+  </security-constraint>
+
+</web-app>

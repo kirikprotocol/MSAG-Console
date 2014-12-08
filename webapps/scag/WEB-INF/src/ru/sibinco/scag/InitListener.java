@@ -54,7 +54,7 @@ public class InitListener implements ServletContextListener {
       Authenticator authenticator = new XmlAuthenticator(usersXmlDocument);
 
       ServletContext sc = servletContextEvent.getServletContext();
-      InputStream is = sc.getResourceAsStream("WEB-INF/web.xml");
+      InputStream is = sc.getResourceAsStream("WEB-INF/constrains.xml");
       if (log.isDebugEnabled()) log.debug("Try to parse web.xml from input stream ...");
       Document webXmlDocument = XMLDocumentParser.parse(is);
       if (log.isDebugEnabled()) log.debug("Try to initialize xml role mapper ...");
