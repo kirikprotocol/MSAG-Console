@@ -55,11 +55,17 @@ public class UserManager {
 
     public synchronized void apply() throws IOException, ParserConfigurationException, SAXException, SibincoException {
         store();
+
         Document usersXmlDocument = XMLDocumentParser.parse(new FileReader(configFile));
+
         Authenticator authenticator =  new XmlAuthenticator(usersXmlDocument);
-        RoleMapper roleMapper = new XMLRoleMapper(usersXmlDocument);
         WebContext.setAuthenticator(authenticator);
-        WebContext.setRoleMapper(roleMapper);
+
+        RoleMapper oldRoleMapper = WebContext.getRoleMapper();
+        Map<String, Set<String>> role2uris = oldRoleMapper.getURIsForRoles();
+        RoleMapper newRoleMapper = new XMLRoleMapper(usersXmlDocument, role2uris);
+        WebContext.setRoleMapper(newRoleMapper);
+
         hsDaemon.store(configFile);
     }
 

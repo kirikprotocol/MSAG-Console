@@ -23,6 +23,12 @@ public class XMLRoleMapper implements RoleMapper{
     if (log.isDebugEnabled()) log.debug("XML role mapper has been initialized.");
   }
 
+  public XMLRoleMapper(Document userXmlDocument, Map<String, Set<String>> role2uris){
+    user2roles = getRoles(userXmlDocument);
+    this.role2uris = role2uris;
+    if (log.isDebugEnabled()) log.debug("XML role mapper has been initialized.");
+  }
+
   private Map<String, Set<String>> getRoles(Document userXmlDocument){
     Map<String, Set<String>> user2roles = new HashMap<String, Set<String>>();
     NodeList usersNodeList = userXmlDocument.getElementsByTagName("user");
@@ -57,6 +63,11 @@ public class XMLRoleMapper implements RoleMapper{
   @Override
   public Set<String> getRolesAllowedForURI(String uri) {
     return role2uris.get(uri);
+  }
+
+  @Override
+  public Map<String, Set<String>> getURIsForRoles() {
+    return role2uris;
   }
 
 }
