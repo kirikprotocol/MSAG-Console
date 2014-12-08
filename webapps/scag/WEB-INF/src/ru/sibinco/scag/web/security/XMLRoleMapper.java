@@ -6,10 +6,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class XMLRoleMapper implements RoleMapper{
 
@@ -99,7 +96,7 @@ public class XMLRoleMapper implements RoleMapper{
           }
           if (role != null) {
             role2uris.put(role, uriPatterns);
-            if (log.isDebugEnabled()) log.debug("Added role --> uri patterns: "+role+" --> "+uriPatterns);
+            if (log.isDebugEnabled()) log.debug("Added role --> uri patterns: "+role+" --> "+ Arrays.toString(uriPatterns.toArray()));
           }
         }
       }
