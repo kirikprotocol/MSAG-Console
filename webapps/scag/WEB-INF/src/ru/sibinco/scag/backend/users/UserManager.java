@@ -9,18 +9,13 @@ import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.installation.HSDaemon;
-import ru.sibinco.scag.jaas.Authenticator;
-import ru.sibinco.scag.jaas.XmlAuthenticator;
+import ru.sibinco.scag.web.security.*;
 import ru.sibinco.scag.web.WebContext;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.*;
 
-
-/**
- * Created by igork Date: 03.03.2004 Time: 19:20:19
- */
 public class UserManager {
 
     private Logger logger = Logger.getLogger(this.getClass());
@@ -60,8 +55,11 @@ public class UserManager {
 
     public synchronized void apply() throws IOException, ParserConfigurationException, SAXException, SibincoException {
         store();
-        Authenticator authenticator =  new XmlAuthenticator(configFile);
+        Document usersXmlDocument = XMLDocumentParser.parse(new FileReader(configFile));
+        Authenticator authenticator =  new XmlAuthenticator(usersXmlDocument);
+        RoleMapper roleMapper = new XMLRoleMapper(usersXmlDocument);
         WebContext.setAuthenticator(authenticator);
+        WebContext.setRoleMapper(roleMapper);
         hsDaemon.store(configFile);
     }
 

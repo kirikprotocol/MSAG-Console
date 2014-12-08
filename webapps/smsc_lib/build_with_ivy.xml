@@ -1,4 +1,4 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="build" default="build" basedir=".">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="sibinco-lib" default="build" basedir=".">
   <property file="${basedir}/version.properties"/>
   <property file="${user.home}/.ivy2/build.properties"/>
   <property name="doc.class.path" value="**/*.java"/>

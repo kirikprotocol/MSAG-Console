@@ -1,13 +1,17 @@
 package ru.sibinco.scag;
 
 import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
 import ru.sibinco.lib.backend.util.config.Config;
-import ru.sibinco.scag.jaas.Authenticator;
-import ru.sibinco.scag.jaas.XmlAuthenticator;
+import ru.sibinco.scag.web.security.*;
 import ru.sibinco.scag.web.WebContext;
+
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.io.File;
+import java.io.FileReader;
+import java.io.InputStream;
 
 public class InitListener implements ServletContextListener {
 
@@ -45,10 +49,18 @@ public class InitListener implements ServletContextListener {
       String usersFileName = config.getString("users_config_file");
       if (log.isInfoEnabled()) log.debug("use configuration parameter 'users_config_file': "+usersFileName);
       File usersFile = new File(usersFileName);
+      if (log.isInfoEnabled()) log.info("Try to initialize file '" + usersFile.getAbsolutePath() + "' ...");
+      Document usersXmlDocument = XMLDocumentParser.parse(new FileReader(usersFile));
+      Authenticator authenticator = new XmlAuthenticator(usersXmlDocument);
 
-      Authenticator authenticator = new XmlAuthenticator(usersFile);
+      ServletContext sc = servletContextEvent.getServletContext();
+      InputStream is = sc.getResourceAsStream("WEB-INF/web.xml");
+      if (log.isDebugEnabled()) log.debug("Try to parse web.xml from input stream ...");
+      Document webXmlDocument = XMLDocumentParser.parse(is);
+      if (log.isDebugEnabled()) log.debug("Try to initialize xml role mapper ...");
+      RoleMapper roleMapper = new XMLRoleMapper(usersXmlDocument, webXmlDocument);
 
-      WebContext.init(authenticator);
+      WebContext.init(authenticator, roleMapper);
 
     } catch (Exception e) {
       log.error("Couldn't initialize servlet context: "+e.getMessage(), e);

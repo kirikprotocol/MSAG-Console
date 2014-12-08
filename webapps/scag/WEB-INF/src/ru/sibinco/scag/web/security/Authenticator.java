@@ -1,6 +1,4 @@
-package ru.sibinco.scag.jaas;
-
-import ru.sibinco.scag.web.security.UserLoginData;
+package ru.sibinco.scag.web.security;
 
 public interface Authenticator {
 
