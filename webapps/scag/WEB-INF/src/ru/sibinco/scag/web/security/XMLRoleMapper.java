@@ -74,7 +74,7 @@ public class XMLRoleMapper implements RoleMapper{
                 if (childNode1.getNodeType() == Node.ELEMENT_NODE){
                   Element childElement1 = (Element) childNode1;
                   if (childElement1.getTagName().equals("url-pattern")){
-                    String urlPattern = childElement1.getNodeValue();
+                    String urlPattern = childElement1.getTextContent();
                     if (log.isDebugEnabled()) log.debug("Found url-pattern: "+urlPattern);
                     uriPatterns.add(urlPattern);
                   }
@@ -89,7 +89,7 @@ public class XMLRoleMapper implements RoleMapper{
                 if (childNode1.getNodeType() == Node.ELEMENT_NODE){
                   Element childElement1 = (Element) childNode1;
                   if (childElement1.getTagName().equals("role-name")){
-                    role = childElement1.getNodeValue();
+                    role = childElement1.getTextContent();
                     if (log.isDebugEnabled()) log.debug("Found role: "+role);
                     break;
                   }
