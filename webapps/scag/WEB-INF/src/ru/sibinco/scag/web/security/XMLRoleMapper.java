@@ -56,10 +56,12 @@ public class XMLRoleMapper implements RoleMapper{
         Element scElement = (Element) nNode;
         NodeList childNodes = scElement.getChildNodes();
         if (log.isDebugEnabled()) log.debug("Found "+childNodes.getLength()+" children nodes in 'security-constraint' tag.");
+
+        String role = null;
+        Set<String> uriPatterns = new HashSet<String>();
+
         for (int j = 0; j < scList.getLength(); j++) {
           Node childNode = childNodes.item(j);
-          String role = null;
-          Set<String> uriPatterns = new HashSet<String>();
           if (childNode.getNodeType() == Node.ELEMENT_NODE){
             Element childElement = (Element) childNode;
             String tagName = childElement.getTagName();
@@ -94,10 +96,10 @@ public class XMLRoleMapper implements RoleMapper{
               }
             }
           }
-          if (role != null) {
-            role2uris.put(role, uriPatterns);
-            if (log.isDebugEnabled()) log.debug("Added role --> uri patterns: "+role+" --> "+ Arrays.toString(uriPatterns.toArray()));
-          }
+        }
+        if (role != null) {
+          role2uris.put(role, uriPatterns);
+          if (log.isDebugEnabled()) log.debug("Added role --> uri patterns: "+role+" --> "+ Arrays.toString(uriPatterns.toArray()));
         }
       }
     }
