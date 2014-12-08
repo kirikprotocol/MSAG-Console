@@ -18,6 +18,7 @@
     <dependency org="ru.sibinco.lib" name="sibinco-lib" rev="1.0.0" conf="lib->default"/>
     <dependency org="log4j" name="log4j" rev="1.2.17" conf="lib->default"/>
     <dependency org="commons-logging" name="commons-logging" rev="1.1.3" conf="lib->default"/>
+    <dependency org="commons-collections" name="commons-collections" rev="3.2.1" conf="lib->default"/>
 
     <dependency org="javax.servlet" name="javax.servlet-api" rev="3.0.1" conf="dev->default"/>
     <dependency org="javax.servlet.jsp" name="jsp-api" rev="2.2" conf="dev->default"/>
