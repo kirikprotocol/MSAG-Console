@@ -1,5 +1,7 @@
 package ru.sibinco.scag.web.security;
 
+import ru.sibinco.scag.web.WebContext;
+
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,8 +23,6 @@ public class AuthFilter implements Filter {
   private String loginPage;
   private static String accessDeniedPage;
   private static String welcomePage;
-
-  private String adminUserPassword;
 
   @Override
   public void init(FilterConfig config) throws ServletException {
@@ -49,8 +49,6 @@ public class AuthFilter implements Filter {
       cat.error("welcome-page is not defined in config");
       throw new ServletException("welcome-page is not defined in config");
     }
-
-    adminUserPassword = config.getInitParameter("admin.user.password");
   }
 
   @Override
@@ -98,7 +96,8 @@ public class AuthFilter implements Filter {
       return;
     }
 
-    if (!username.equals("admin") || !password.equals(adminUserPassword)){
+    Authenticator authenticator = WebContext.getAuthenticator();
+    if (!authenticator.authenticate(username, password)){
       request.setAttribute("uri", uri);
       request.setAttribute("showLanguageSelector", "true");
       request.getRequestDispatcher(loginPage).forward(request, response);
@@ -106,11 +105,10 @@ public class AuthFilter implements Filter {
       return;
     }
 
-    Set<String> roles = new HashSet<String>(){
-      {add("gw"); add("super_admin"); add("management"); add("routing"); add("stat");}
-    };
+    RoleMapper roleMapper = WebContext.getRoleMapper();
+    Set<String> roles = roleMapper.getUserRoles(username);
 
-    userLoginData = new UserLoginData("admin", roles, new HashSet<String>());
+    userLoginData = new UserLoginData(username, roles, new HashSet<String>());
     session.setAttribute(USER_LOGIN_DATA, userLoginData);
     if (cat.isDebugEnabled()) cat.debug("Set attribute '"+USER_LOGIN_DATA+"' to session.");
 

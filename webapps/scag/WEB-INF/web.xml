@@ -43,10 +43,6 @@
       <param-name>pass-by</param-name>
       <param-value>(/content/images/.*)|(/content/scripts/.*)|(/content/styles/.*)|(/content/styles/menu/.*)</param-value>
     </init-param>
-    <init-param>
-      <param-name>admin.user.password</param-name>
-      <param-value>password</param-value>
-    </init-param>
   </filter>
 
   <filter-mapping>
