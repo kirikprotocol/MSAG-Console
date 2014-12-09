@@ -7,6 +7,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class XMLRoleMapper implements RoleMapper{
 
@@ -117,14 +118,18 @@ public class XMLRoleMapper implements RoleMapper{
     for(String role: role2URIPatterns.keySet()){
       Set<String> uriPatterns = role2URIPatterns.get(role);
       for(String uriPattern: uriPatterns){
-        if (log.isDebugEnabled()) log.debug("uriPattern: "+uriPattern);
-        if (uriPattern.endsWith("\\*")){
+        String regex = wildcardToRegex(uriPattern);
+        if (log.isDebugEnabled()) log.debug("uriPattern: '"+uriPattern+"', regex: '"+regex+"'");
+        if (Pattern.matches(wildcardToRegex(uriPattern), uri)){
+          roles.add(role);
+        }
+        /*if (uriPattern.endsWith("\\*")){
           String prefix = uriPattern.substring(0, uriPattern.length()-1);
           if (log.isDebugEnabled()) log.debug("prefix from uriPattern with wildcard: "+prefix);
           if (uri.startsWith(prefix)) roles.add(role);
         } else {
           if (uriPattern.equals(uri)) roles.add(role);
-        }
+        }*/
       }
     }
     if (log.isDebugEnabled()) log.debug("Roles allowed for uri '"+uri+"': "+Arrays.toString(roles.toArray()));
@@ -134,6 +139,34 @@ public class XMLRoleMapper implements RoleMapper{
   @Override
   public Map<String, Set<String>> getURIsForRoles() {
     return role2URIPatterns;
+  }
+
+  public static String wildcardToRegex(String wildcard){
+    StringBuffer s = new StringBuffer(wildcard.length());
+    s.append('^');
+    for (int i = 0, is = wildcard.length(); i < is; i++) {
+      char c = wildcard.charAt(i);
+      switch(c) {
+        case '*':
+          s.append(".*");
+          break;
+        case '?':
+          s.append(".");
+          break;
+        // escape special regexp-characters
+        case '(': case ')': case '[': case ']': case '$':
+        case '^': case '.': case '{': case '}': case '|':
+        case '\\':
+          s.append("\\");
+          s.append(c);
+          break;
+        default:
+          s.append(c);
+          break;
+      }
+    }
+    s.append('$');
+    return(s.toString());
   }
 
 }
