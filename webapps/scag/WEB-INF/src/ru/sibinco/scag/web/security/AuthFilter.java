@@ -21,8 +21,9 @@ public class AuthFilter implements Filter {
   public static final String USERNAME = "username";
 
   private String loginPage;
-  private static String accessDeniedPage;
-  private static String welcomePage;
+  private String logoutPage;
+  private String accessDeniedPage;
+  private String welcomePage;
 
   @Override
   public void init(FilterConfig config) throws ServletException {
@@ -36,6 +37,12 @@ public class AuthFilter implements Filter {
     if (loginPage == null) {
       cat.error("login-page is not defined in config");
       throw new ServletException("login-page is not defined in config");
+    }
+
+    logoutPage = config.getInitParameter("logout-page");
+    if (logoutPage == null) {
+      cat.error("logout-page is not defined in config");
+      throw new ServletException("logout-page is not defined in config");
     }
 
     accessDeniedPage = config.getInitParameter("access-denied-page");
@@ -83,7 +90,7 @@ public class AuthFilter implements Filter {
         }
       }
 
-      if(uriPermitted || shortUri.equals(welcomePage) || shortUri.equals("/")){
+      if(uriPermitted || shortUri.equals(welcomePage) || shortUri.equals(logoutPage) || shortUri.equals("/")){
         chain.doFilter(req, resp);
         return;
       } else {

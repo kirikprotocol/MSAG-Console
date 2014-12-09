@@ -32,6 +32,10 @@
       <param-value>/login.jsp</param-value>
     </init-param>
     <init-param>
+      <param-name>logout-page</param-name>
+      <param-value>/logout.jsp</param-value>
+    </init-param>
+    <init-param>
       <param-name>welcome-page</param-name>
       <param-value>/index.jsp</param-value>
     </init-param>
