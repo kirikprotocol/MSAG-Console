@@ -117,8 +117,11 @@ public class XMLRoleMapper implements RoleMapper{
     for(String role: role2URIPatterns.keySet()){
       Set<String> uriPatterns = role2URIPatterns.get(role);
       for(String uriPattern: uriPatterns){
+        if (log.isDebugEnabled()) log.debug("uriPattern: "+uriPattern);
         if (uriPattern.endsWith("\\*")){
-          if (uri.startsWith(uriPattern)) roles.add(role);
+          String prefix = uriPattern.substring(0, uriPattern.length()-1);
+          if (log.isDebugEnabled()) log.debug("prefix from uriPattern with wildcard: "+prefix);
+          if (uri.startsWith(prefix)) roles.add(role);
         } else {
           if (uriPattern.equals(uri)) roles.add(role);
         }
