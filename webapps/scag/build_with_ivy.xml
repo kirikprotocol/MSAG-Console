@@ -199,7 +199,7 @@
       </manifest>
     </war>
 
-    <ear destfile="${build}/distr/weblogic/msag-${env.RELEASE_VERSION}.ear" appxml="${basedir}/application.xml">
+    <ear destfile="${build}/distr/weblogic/msag-console-${env.RELEASE_VERSION}.ear" appxml="${basedir}/application.xml">
       <fileset dir="${build}/distr/weblogic" includes="*.war"/>
       <manifest>
         <attribute name="Weblogic-Application-Version" value="${env.RELEASE_VERSION}"/>
