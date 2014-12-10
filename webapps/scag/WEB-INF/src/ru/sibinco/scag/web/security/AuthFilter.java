@@ -65,7 +65,7 @@ public class AuthFilter implements Filter {
     HttpSession session = req.getSession();
     String uri = req.getRequestURI();
     String shortUri = uri.substring(req.getContextPath().length());
-    if (cat.isDebugEnabled()) cat.debug("uri: '"+uri+"', shortUri: '"+shortUri+"'");
+    //if (cat.isDebugEnabled()) cat.debug("uri: '"+uri+"', shortUri: '"+shortUri+"'");
 
     if (passBy != null && passBy.matcher(shortUri).matches()) {
       //cat.debug("Resource with uri=" + shortUri + " allowed due to pass-by");
