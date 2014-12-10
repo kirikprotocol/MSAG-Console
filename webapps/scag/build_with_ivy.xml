@@ -177,9 +177,9 @@
 
     <copy file="${basedir}/history.txt" todir="${build}/exploded/msag/META-INF"/>
 
-    <copy todir="${build}/exploded/msag/applet">
+    <!--copy todir="${build}/exploded/msag/applet">
       <fileset dir="../jedit/dirs" includes="**/*"/>
-    </copy>
+    </copy-->
 
   </target>
 
