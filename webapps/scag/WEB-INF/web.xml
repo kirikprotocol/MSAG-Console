@@ -45,7 +45,7 @@
     </init-param>
     <init-param>
       <param-name>pass-by</param-name>
-      <param-value>(/content/images/.*)|(/content/scripts/.*)|(/content/styles/.*)|(/content/styles/menu/.*)</param-value>
+      <param-value>(/content/images/.*)|(/content/scripts/.*)|(/content/styles/.*)|(/content/styles/menu/.*)|(/applet/.*)</param-value>
     </init-param>
   </filter>
 
