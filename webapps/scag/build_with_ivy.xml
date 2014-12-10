@@ -155,6 +155,8 @@
       <fileset dir="${build}/libs/lib"  includes="*.jar"/>
     </copy>
 
+    <delete file="${build}/exploded/msag/WEB-INF/lib/standard.jar"/>
+
     <mkdir dir="${exploded}/WEB-INF/classes/locales"/>
     <copy todir="${exploded}/WEB-INF/classes/locales" preservelastmodified="yes">
       <fileset dir="${java_out}/locales" includes="*.properties"/>
