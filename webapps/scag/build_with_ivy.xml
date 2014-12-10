@@ -50,7 +50,7 @@
     <mkdir dir="${build}/libs/libser"/>
     <ivy:settings file="${user.home}/.ivy2/ivysettings.xml"/>
     <ivy:retrieve pattern="${build}/libs/jedit/[artifact].[ext]" type="jar" conf="jedit"/>
-    <ivy:retrieve pattern="${build}/libs/lib/[artifact].[ext]" type="jar, bundle" conf="lib"/>
+    <ivy:retrieve pattern="${build}/libs/lib/[artifact]-[revision].[ext]" type="jar, bundle" conf="lib"/>
     <ivy:retrieve pattern="${build}/libs/libdev/[artifact]-[revision].[ext]" type="jar" conf="dev"/>
     <ivy:retrieve pattern="${build}/libs/libser/[artifact]-[revision].[ext]" type="jar" conf="ser"/>
   </target>
@@ -154,9 +154,6 @@
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${build}/libs/lib"  includes="*.jar"/>
     </copy>
-
-    <delete file="${build}/exploded/msag/WEB-INF/lib/jstl.jar"/>
-    <delete file="${build}/exploded/msag/WEB-INF/lib/standard.jar"/>
 
     <mkdir dir="${exploded}/WEB-INF/classes/locales"/>
     <copy todir="${exploded}/WEB-INF/classes/locales" preservelastmodified="yes">
