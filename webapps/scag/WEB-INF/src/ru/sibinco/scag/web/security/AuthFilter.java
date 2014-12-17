@@ -77,14 +77,14 @@ public class AuthFilter implements Filter {
 
     UserLoginData userLoginData = (UserLoginData) session.getAttribute(USER_LOGIN_DATA);
     if (userLoginData != null) {
-      if (cat.isDebugEnabled()) cat.debug("Found in session "+userLoginData+".");
+      //if (cat.isDebugEnabled()) cat.debug("Found in session "+userLoginData+".");
 
       Set<String> userRoles = userLoginData.getRoles();
       Set<String> rolesAllowedForURI = roleMapper.getRolesAllowedForURI(shortUri);
       boolean uriPermitted = false;
       for(String userRole : userRoles) {
         if (rolesAllowedForURI.contains(userRole)) {
-          if (cat.isDebugEnabled()) cat.debug("User role '"+userRole+"' is allowed for short uri '"+shortUri+"'.");
+          //if (cat.isDebugEnabled()) cat.debug("User role '"+userRole+"' is allowed for short uri '"+shortUri+"'.");
           uriPermitted = true;
           break;
         }

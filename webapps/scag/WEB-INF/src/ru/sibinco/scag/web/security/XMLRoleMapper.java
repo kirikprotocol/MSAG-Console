@@ -123,7 +123,7 @@ public class XMLRoleMapper implements RoleMapper{
         if (Pattern.matches(wildcardToRegex(uriPattern), uri)) roles.add(role);
       }
     }
-    if (log.isDebugEnabled()) log.debug("Roles allowed for uri '"+uri+"': "+Arrays.toString(roles.toArray()));
+    //if (log.isDebugEnabled()) log.debug("Roles allowed for uri '"+uri+"': "+Arrays.toString(roles.toArray()));
     return roles;
   }
 
