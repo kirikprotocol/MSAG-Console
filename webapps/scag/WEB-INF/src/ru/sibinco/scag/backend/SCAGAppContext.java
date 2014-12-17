@@ -89,7 +89,6 @@ public class SCAGAppContext {
             idsConfig = new Config(new File(config.getString("ids_file")));
             configManager = new ConfigManager(gwConfigFile,gwConfig);
             tMatrixManager = new TariffMatrixManager();
-            String gwDaemonHost = config.getString("gw daemon.host");
             connectionPool = null;
 
             String instType = config.getString("installation.type");
@@ -126,6 +125,7 @@ public class SCAGAppContext {
                 scagDaemon = null;
                 scagServiceInfo = null;
             }else{
+                String gwDaemonHost = config.getString("gw daemon.host");
                 scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
                 scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
             }
@@ -134,8 +134,9 @@ public class SCAGAppContext {
                 scag = new Scag(scagServiceInfo, (int) gwConfig.getInt("admin.port"));
             } else {
                 if( isCluster() ){
-                    scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
+                    scag = new Scag("localhost", (int) gwConfig.getInt("admin.port"));
                 } else {
+                    String gwDaemonHost = config.getString("gw daemon.host");
                     scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
                 }
             }
