@@ -119,13 +119,13 @@ public class SCAGAppContext {
 //            scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
 //            final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
 
+            String gwDaemonHost = config.getString("gw daemon.host");
             ServiceInfo scagServiceInfo = null;
             if( instType.equals(HSDaemon.typeCluster) ) {
 //                scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
                 scagDaemon = null;
                 scagServiceInfo = null;
             }else{
-                String gwDaemonHost = config.getString("gw daemon.host");
                 scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
                 scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
             }
@@ -134,9 +134,8 @@ public class SCAGAppContext {
                 scag = new Scag(scagServiceInfo, (int) gwConfig.getInt("admin.port"));
             } else {
                 if( isCluster() ){
-                    scag = new Scag("localhost", (int) gwConfig.getInt("admin.port"));
+                    scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
                 } else {
-                    String gwDaemonHost = config.getString("gw daemon.host");
                     scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
                 }
             }
