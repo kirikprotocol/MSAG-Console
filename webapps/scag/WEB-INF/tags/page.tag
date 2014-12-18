@@ -188,7 +188,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       <table cellspacing=0 cellpadding=0>
       <tr>
         <td width=380><IMG SRC="content/images/smsc_06.jpg" HEIGHT=45 width=380 ALT=""></td>
-        <td bgcolor="#161E49"></td>
+        <td background="content/images/smsc_06.jpg"></td>
         <td width=12 background="content/images/smsc_06.jpg"></td>
       </tr>
       </table>
