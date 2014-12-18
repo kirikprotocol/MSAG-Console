@@ -187,9 +187,9 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       <!-- "SMS Service Center" header -->
       <table cellspacing=0 cellpadding=0>
       <tr>
-        <td width=380><IMG SRC="content/images/smsc_06.jpg" HEIGHT=45 width=380 ALT=""></td>
-        <td bgcolor="#161E49"></td>
-        <td width=100 background="content/images/smsc_06.jpg"><span style="color: #6F77A3; font-size: 11px; font-weight:bold; vertical-align: -10px;">Version&nbsp;2.0</span></td>
+        <td width="90%" colspan="3"><IMG SRC="content/images/smsc_06.jpg" HEIGHT=45 width="100%" ALT="">
+          <span style="color: #6F77A3; font-size: 11px; font-weight:bold; vertical-align: -10px; text-align:right;">Version&nbsp;1.0</span>
+        </td>
       </tr>
       </table>
       <!-- main menu -->
