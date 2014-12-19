@@ -188,8 +188,8 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       <table cellspacing=0 cellpadding=0>
       <tr>
         <td width="90%"><IMG SRC="content/images/smsc_06.jpg" HEIGHT=45 width="100%" ALT=""></td>
-        <td bgcolor="#161E49" align="center"><span style="color: #6F77A3; font-size: 11px; font-weight:bold; vertical-align: -10px;">Version&nbsp;1.0</span></td>
-        <td width=12 background="content/images/smsc_06.jpg"></td>
+        <!--td bgcolor="#161E49" align="center"><span style="color: #6F77A3; font-size: 11px; font-weight:bold; vertical-align: -10px;">Version&nbsp;1.0</span></td-->
+        <!--td width=12 background="content/images/smsc_06.jpg"></td-->
       </tr>
       </table>
       <!-- main menu -->
@@ -220,7 +220,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 		<span id="MENU0_NONE"></span>
         <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
            <tr>
-             <th background="content/images/smsc_17.jpg" nowrap><c:if test="${!empty title}"><fmt:message>${title}<c:if test="${!empty param.editId}"><fmt:param value="${param.editId}"/></c:if></fmt:message></c:if></th>
+             <th background="content/images/smsc_6.jpg" nowrap><c:if test="${!empty title}"><fmt:message>${title}<c:if test="${!empty param.editId}"><fmt:param value="${param.editId}"/></c:if></fmt:message></c:if></th>
              <td align="right">&nbsp;
                 <%if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {%>
                     <span id="SCAGStatusSpan"></span>
