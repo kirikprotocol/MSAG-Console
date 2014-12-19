@@ -188,8 +188,8 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       <table cellspacing=0 cellpadding=0>
       <tr>
         <td width="90%"><IMG SRC="content/images/smsc_06.jpg" HEIGHT=45 width="100%" ALT=""></td>
-        <!--td bgcolor="#161E49" align="center"><span style="color: #6F77A3; font-size: 11px; font-weight:bold; vertical-align: -10px;">Version&nbsp;1.0</span></td-->
-        <!--td width=12 background="content/images/smsc_06.jpg"></td-->
+        <td bgcolor="#161E49" align="center"><IMG SRC="content/images/eyeline_logo_backgr.png" HEIGHT=45 width="100%" ALT=""></td>
+        <td width=12 background="content/images/smsc_06.jpg"></td>
       </tr>
       </table>
       <!-- main menu -->
