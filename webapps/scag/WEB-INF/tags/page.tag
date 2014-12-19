@@ -185,7 +185,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       </tr>
       </table>
       <!-- "SMS Service Center" header -->
-      <table cellspacing=0 cellpadding=0>
+      <table cellspacing=0 cellpadding=0 bgcolor="#161E49">
       <tr>
         <td width=390></td>
         <td><span style="color: #6F77A3; font: bold 11px; vertical-align: -10px;"></span></td>
