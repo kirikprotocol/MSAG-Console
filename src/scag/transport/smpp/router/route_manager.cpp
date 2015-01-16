@@ -113,7 +113,7 @@ result_:
 //  __trace2__("(sort)result(P1%cP2)%d",result>0?'>':result<0?'<':'=',
  //     result);
   return (int32_t)result;
-#undef if0ngoto
+#undef ifn0goto
 }
 
 inline
@@ -145,7 +145,7 @@ result_:
      (result==0)?strong?"(strong)":"(weak)":"",
      result);
   return (int32_t)result;
-#undef if0ngoto
+#undef ifn0goto
 }
 
 inline
@@ -177,7 +177,7 @@ result_:
      (result==0)?strong?"(strong)":"(weak)":"",
      result);
   return (int32_t)result;
-#undef if0ngoto
+#undef ifn0goto
 }
 
 int compare_patterns(const void* a1,const void* a2)
