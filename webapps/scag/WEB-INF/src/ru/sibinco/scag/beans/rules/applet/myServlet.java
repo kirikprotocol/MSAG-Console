@@ -428,16 +428,10 @@ public class myServlet extends HttpServlet
         }
         return list;
       case CanonPath:
-        try {
-          String canonicalPath = autosaveFile.getCanonicalPath();
-          list[0] = canonicalPath;
-          if (logger.isDebugEnabled()) logger.debug("command "+CanonPath+", return canonicalPath='"+canonicalPath+"'");
-        } catch (IOException e) {
-          logger.error("Couldn't get canonical path to '"+autosaveFile+"'", e);
-          String path = autosaveFile.getPath();
-          list[0] = path;
-          if (logger.isDebugEnabled()) logger.debug("command "+CanonPath+", return path='"+path+"'");
-        }
+        String configDir = System.getProperty("msag.console.config.dir");
+        String appletDirectory = configDir+File.separator+autosaveFile;
+        list[0] = appletDirectory;
+        if (logger.isDebugEnabled()) logger.debug("command "+CanonPath+", return configDir+File.separator+autosaveFile='"+appletDirectory+"'");
         return list;
       case FileEncoding   : list[0]=System.getProperty("file.encoding"); return list;
       case LineSeparator  : list[0]=System.getProperty("line.separator"); return list;
