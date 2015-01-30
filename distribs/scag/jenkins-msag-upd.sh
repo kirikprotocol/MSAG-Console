@@ -1,7 +1,7 @@
 rm -rf $WORKSPACE/.distr || true
 mkdir $WORKSPACE/.distr || true
 
-echo "25.08.2014 https://bugzilla.aurorisoft.com/show_bug.cgi?id=12782" > $WORKSPACE/.distr/readme.txt
+echo "29.01.2015 https://bugzilla.aurorisoft.com/show_bug.cgi?id=15606" > $WORKSPACE/.distr/readme.txt
 
 mkdir $WORKSPACE/.distr/lib || true
 mkdir $WORKSPACE/.distr/services || true
