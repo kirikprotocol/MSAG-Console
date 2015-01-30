@@ -22,13 +22,7 @@ import org.apache.log4j.Logger;
 import ru.sibinco.scag.web.security.AuthFilter;
 import ru.sibinco.scag.web.security.UserLoginData;
 
-/**
- * Created by IntelliJ IDEA.
- * User: Andrey
- * Date: 13.07.2005
- * Time: 19:12:51
- * To change this template use File | Settings | File Templates.
- */
+
 public class myServlet extends HttpServlet
 {
   protected final Logger logger = Logger.getLogger(this.getClass());
@@ -406,6 +400,7 @@ public class myServlet extends HttpServlet
   }
   private String[] FilesCommand(final File autosaveFile,final int command)
   {
+    if (logger.isDebugEnabled()) logger.debug("file='"+autosaveFile+"', command="+command);
     //LinkedList list=new  LinkedList();
     String result="false";
     String[] list=new String[1];
@@ -432,9 +427,17 @@ public class myServlet extends HttpServlet
         //  System.out.println("myServlet getNotHiddenFiles list[i]= "+list[i]);
         }
         return list;
-      case CanonPath      :
-        try {  list[0]=autosaveFile.getCanonicalPath(); }
-        catch (IOException e) { e.printStackTrace(); list[0]=autosaveFile.getPath(); }
+      case CanonPath:
+        try {
+          String canonicalPath = autosaveFile.getCanonicalPath();
+          list[0] = canonicalPath;
+          if (logger.isDebugEnabled()) logger.debug("command "+CanonPath+", return canonicalPath='"+canonicalPath+"'");
+        } catch (IOException e) {
+          logger.error("Couldn't get canonical path to '"+autosaveFile+"'", e);
+          String path = autosaveFile.getPath();
+          list[0] = path;
+          if (logger.isDebugEnabled()) logger.debug("command "+CanonPath+", return path='"+path+"'");
+        }
         return list;
       case FileEncoding   : list[0]=System.getProperty("file.encoding"); return list;
       case LineSeparator  : list[0]=System.getProperty("line.separator"); return list;
