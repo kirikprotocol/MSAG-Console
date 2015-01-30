@@ -126,6 +126,7 @@ public class jEdit extends Applet
     username = getParameter("username");
     password = getParameter("password");
     jEditHome =getParameter("homedir");
+    System.out.println("Found 'homedir' parameter:" + jEditHome);
     //String userFile = getParameter("file"); //"applet";//+username;
     //args[0]=userFile;
     //System.out.println("userfile= "+userfile);
@@ -3102,7 +3103,10 @@ public class jEdit extends Applet
 
     bufferHash = new HashMap();
     inputHandler = new DefaultInputHandler(null);
+
     jEditHome = MiscUtilities.resolveSymlinks(jEditHome);
+    System.out.println("'homedir' parameter after resolving symlinks: "+jEditHome);
+
 
     // Add an EditBus component that will reload edit modes and
     // macros if they are changed from within the editor
