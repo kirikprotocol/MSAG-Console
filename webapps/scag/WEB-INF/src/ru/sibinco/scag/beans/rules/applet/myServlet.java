@@ -431,7 +431,7 @@ public class myServlet extends HttpServlet
         String configDir = System.getProperty("msag.console.config.dir");
         String appletDirectory = configDir+File.separator+autosaveFile;
         list[0] = appletDirectory;
-        if (logger.isDebugEnabled()) logger.debug("command "+CanonPath+", return configDir+File.separator+autosaveFile='"+appletDirectory+"'");
+        if (logger.isDebugEnabled()) logger.debug("command "+CanonPath+", return appletDirectory='"+appletDirectory+"'");
         return list;
       case FileEncoding   : list[0]=System.getProperty("file.encoding"); return list;
       case LineSeparator  : list[0]=System.getProperty("line.separator"); return list;
