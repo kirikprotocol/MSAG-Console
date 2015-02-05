@@ -16,22 +16,26 @@ namespace snmp {
 class SnmpWrapper 
 {
 public:
-    SnmpWrapper( unsigned node_number, const std::string& socket = "" );
-    ~SnmpWrapper();
-    void sendTrap( const TrapRecord& rec );
-    void initMsag( msagCounterTable_creator_t* creator,
-                   msagCounterTable_destructor_t* destructor,
-                   int cacheTimeout = 10 );
-    void initPvss( msagCounterTable_creator_t* creator,
-                   msagCounterTable_destructor_t* destructor,
-                   int cacheTimeout = 10 );
-    bool isMsag() const { return isMsag_; }
+  SnmpWrapper( unsigned node_number, const std::string& socket = "" );
+  ~SnmpWrapper();
+  void sendTrap( const TrapRecord& rec );
 
+  void initMsag( msagCounterTable_creator_t* creator,
+                 msagCounterTable_destructor_t* destructor,
+                 int cacheTimeout = 10 );
+  void initPvss( msagCounterTable_creator_t* creator,
+                 msagCounterTable_destructor_t* destructor,
+                 int cacheTimeout = 10 );
+  bool isMsag() const { return isMsag_; }
+
+  void shutdownMsag();
+  void shutdownPvss();
 private:
-    smsc::logger::Logger* log_;
-    bool                  isMsag_;
-    SnmpAgent*            snmpAgent;
-    unsigned              node;
+  smsc::logger::Logger* log_;
+  bool                  isMsag_;
+  SnmpAgent::msagStatus status;
+  SnmpAgent*            snmpAgent;
+  unsigned              node;
 };
 
 }

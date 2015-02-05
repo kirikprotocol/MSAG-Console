@@ -23,7 +23,6 @@
 #include "scag/stat/impl/Performance.h"
 
 #include "scag/config/base/ConfigManager2.h"
-#include "scag/transport/smpp/base/SmppManager2.h"
 #include "scag/snmp/smestattable/smeStatTable_subagent.hpp"
 
 

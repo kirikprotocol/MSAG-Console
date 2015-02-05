@@ -160,6 +160,7 @@ void HashCountManager::loadConfigFile()
     }
 }
 
+/*
 void HashCountManager::dumpCounterList( void )
 {
   std::string text = "snmp counter table dump:";
@@ -181,16 +182,10 @@ void HashCountManager::dumpCounterList( void )
       smsc_log_debug(log_, "%d destroyed element", n);
       continue; // skipping destroyed
     }
-/*
-    std::string str = i->second->getName();
-    smsc_log_debug(log_, "%d %s", n, str.c_str());
-    const char* tnm = i->second->getTypeName();
-    smsc_log_debug(log_, "%d %s", n, str.c_str());
-*/
     smsc_log_debug(log_, "%d %s %s %lld", n, i->second->getName().c_str(), i->second->getTypeName(), i->second->getValue());
   }
 }
-
+*/
 
 MsagCounterTableElement* HashCountManager::updateSnmpCounterList( MsagCounterTableElement* list )
 {

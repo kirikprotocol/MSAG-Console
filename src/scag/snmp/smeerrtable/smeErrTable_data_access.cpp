@@ -249,7 +249,20 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
   int       smeErrCode = 0;
   uint64_t  errCount = 0;
   smeErrTable_rowreq_ctx* rec = 0;
-  long smeErrIndex = scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sid);
+
+  long smeErrIndex = 0;
+  if (sysId)
+  {
+    try
+    {
+      smeErrIndex = scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId);
+    }
+    catch(...)
+    {
+      smsc_log_error(log, "smeErrTable_cache_load: error, SmppManager::getSmeIndex('%s') unavailable", sysId);
+      return -4;
+    }
+  }
 
   for(scag2::stat::IntHash<uint64_t>::Iterator iter = counter->cntErrors.First(); iter.Next(smeErrCode, errCount); )
   {

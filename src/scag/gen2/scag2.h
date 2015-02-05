@@ -24,7 +24,7 @@
 
 #ifdef SNMP
 #include "scag/snmp/SnmpTrapThread.h"
-#include "scag/snmp/SnmpAgent.hpp"
+//#include "scag/snmp/SnmpAgent.hpp"
 #endif
 
 namespace scag2

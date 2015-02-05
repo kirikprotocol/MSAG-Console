@@ -681,13 +681,8 @@ void SmppManagerImpl::addRegistryItem(SmppEntityInfo& info)
 
 uint32_t SmppManagerImpl::getSmeIndex(const char* smeSystemId)
 {
-  uint32_t result = 0;
   SmppEntity** ptr = registry.GetPtr(smeSystemId);
-  if (ptr)
-  {
-    result = (*ptr)->info.uniqueId;
-  }
-  return result;
+  return ptr ? (*ptr)->info.uniqueId : 0;
 }
 
 const char* SmppManagerImpl::getSmeSystemId(uint32_t smeIndex)

@@ -36,6 +36,7 @@ extern "C" {
   void* agentlog = 0;
 
   struct timeval  agentStartTime;
+
   static int     status = 0;
   static time_t  statusTime;
 
@@ -109,6 +110,7 @@ extern "C" {
     routeerrtable::ShutdownRouteErrTable();
     smsc_log_debug(log, "snmp agent shutdowned");
   }
+
 
   void SnmpAgent::statusChange(msagStatus newstatus)
   {
@@ -334,7 +336,7 @@ using scag2::snmp::SnmpAgent;
     }
   }
 */
-
+/*
   extern "C"
   void oidLogDump(smsc::logger::Logger* lg, oid* id, size_t oidlen, const char* message)
   {
@@ -346,7 +348,7 @@ using scag2::snmp::SnmpAgent;
     for( int i = 1; i < oidlen; ++i ) { snprintf(buf, 32, ".%u", id[i]); text += buf; }
     smsc_log_debug(lg, "%s oid = [%s]", msg, text.c_str());
   }
-
+*/
   extern "C"
   int statisticsHandler(netsnmp_mib_handler* handler, netsnmp_handler_registration* reginfo,
                         netsnmp_agent_request_info* reqinfo, netsnmp_request_info* requests)
@@ -356,7 +358,7 @@ using scag2::snmp::SnmpAgent;
     smsc_log_debug(log, "statisticsHandler info: handlerName=%s contextName=%s",
       reginfo->handlerName?reginfo->handlerName:"default",
       reginfo->contextName?reginfo->contextName:"default");
-    oidLogDump(log, reginfo->rootoid, reginfo->rootoid_len, "statisticsHandler info:");
+//    oidLogDump(log, reginfo->rootoid, reginfo->rootoid_len, "statisticsHandler info:");
 
     smsc_log_debug(log, "statisticsHandler info: priority=%d range_subid=%d range_ubound=%u timeout=%d, global_cacheid=%d",
         reginfo->priority, reginfo->range_subid, reginfo->range_ubound, reginfo->timeout, reginfo->global_cacheid);
@@ -367,8 +369,8 @@ using scag2::snmp::SnmpAgent;
 
     if ( MODE_GET == reqinfo->mode )
     {
-      oidLogDump(log, reginfo->rootoid, reginfo->rootoid_len, "hello from stats handler;");
-      scag2::counter::Manager::getInstance().dumpCounterList();
+//      oidLogDump(log, reginfo->rootoid, reginfo->rootoid_len, "hello from stats handler;");
+//      scag2::counter::Manager::getInstance().dumpCounterList();
 
 #define requestedOidIs(x) (snmp_oid_compare(x, OID_LENGTH(x), reginfo->rootoid, reginfo->rootoid_len) == 0)
 
@@ -391,7 +393,7 @@ using scag2::snmp::SnmpAgent;
         val.high = perf[index] >> 32;
         val.low  = perf[index] & 0xffffffff;
         snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char*)&val, sizeof(val));
-        smsc_log_debug(((smsc::logger::Logger*)agentlog), "%s req", debuginfo[index]);
+        smsc_log_debug(log, "%s req", debuginfo[index]);
       }
     }
 

@@ -273,12 +273,23 @@ std::string netsnmp_index2str(netsnmp_index oid_idx)
 int fillNextCounter(netsnmp_container* container, const char* sysId, stat::CommonPerformanceCounter* counter)
 {
   const char* sid = sysId ? sysId : noStatData;
-  long smeStatIndex = sysId ? scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId) : 0;
-//  smsc_log_debug(log, "smeStatTable_cache_load: h.Next %s (%d)", sid, smeStatIndex);
+  long smeStatIndex = 0;
 
-  smeStatTable_rowreq_ctx *rec = 0;
+  if (sysId)
+  {
+    try
+    {
+      smeStatIndex = sysId ? scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId) : 0;
+  //  smsc_log_debug(log, "smeStatTable_cache_load: h.Next %s (%d)", sid, smeStatIndex);
+    }
+    catch(...)
+    {
+      smsc_log_error(log, "smeStatTable_cache_load: error, SmppManager::getSmeIndex('%s') unavailable", sysId);
+      return -4;
+    }
+  }
 
-  rec = smeStatTable_allocate_rowreq_ctx();
+  smeStatTable_rowreq_ctx *rec = smeStatTable_allocate_rowreq_ctx();
   if (NULL == rec)
   {
     smsc_log_error(log, "smeStatTable_cache_load: memory allocation failed");
@@ -298,13 +309,13 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
 
   if ( !fillRecord(rec, sid, counter) )
   {
-    smsc_log_error(log, "smeStatTable_cache_load fillRecord error");
+    smsc_log_error(log, "smeStatTable_cache_load: fillRecord error");
     return -3;
   }
 
   int rc = CONTAINER_INSERT(container, rec);
   if ( 0 != rc )
-    smsc_log_error(log, "smeStatTable_cache_load CONTAINER_INSERT returns(%d)", rc);
+    smsc_log_error(log, "smeStatTable_cache_load: CONTAINER_INSERT returns(%d)", rc);
   return rc;
 }
 

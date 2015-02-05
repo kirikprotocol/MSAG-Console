@@ -48,7 +48,7 @@ namespace scag2 {
 namespace snmp {
 
 SnmpWrapper::SnmpWrapper( unsigned node_number, const std::string& socket ) :
-log_(0), isMsag_(true), node(node_number)
+log_(0), isMsag_(true), node(node_number), status(SnmpAgent::UNKN)
 {
     log_ = smsc::logger::Logger::getInstance( "snmp" );
 
@@ -79,18 +79,13 @@ log_(0), isMsag_(true), node(node_number)
 
 SnmpWrapper::~SnmpWrapper()
 {
-  if ( isMsag() ) {
-    if ( snmpAgent )
-    {
-      delete snmpAgent;
-    }
-    snmp_shutdown( ::msagname );
-    snmp_shutdown( ::msagnamed );
-  } else {
-    snmp_shutdown( ::pvssname );
-    snmp_shutdown( ::pvssnamed );
+  if (status != SnmpAgent::SHUT)
+  {
+    if ( isMsag() )
+      shutdownMsag();
+    else
+      shutdownPvss();
   }
-  smsc_log_info(log_,"snmp wrapper shutdowned");
 }
 
 
@@ -221,8 +216,9 @@ void SnmpWrapper::initMsag( msagCounterTable_creator_t* creator,
     smsc_log_debug(log_, "creating snmpAgent @ '%d'", node);
     snmpAgent = new snmp::SnmpAgent(node);
 
+    status = SnmpAgent::INIT;
     if ( snmpAgent )
-      snmpAgent->statusChange(SnmpAgent::INIT);
+      snmpAgent->statusChange(status);
     else
       smsc_log_error(log_,"msag SnmpWrapper::initMsag. can't create snmpAgent");
 
@@ -240,7 +236,29 @@ void SnmpWrapper::initPvss( msagCounterTable_creator_t* creator,
     ::init_pvss();              // initialize mib code
     ::initPvssCounterTable( creator, destructor, cacheTimeout );
     init_snmp( ::pvssname );   // read .conf files
+    status = SnmpAgent::INIT;
     smsc_log_info(log_,"pvss snmp support inited");
+}
+
+void SnmpWrapper::shutdownMsag()
+{
+  status = SnmpAgent::SHUT;
+  if ( snmpAgent )
+  {
+    snmpAgent->statusChange(status);
+    delete snmpAgent;
+  }
+  snmp_shutdown( ::msagname );
+  snmp_shutdown( ::msagnamed );
+  smsc_log_info(log_,"snmp wrapper shutdowned");
+}
+
+void SnmpWrapper::shutdownPvss()
+{
+  status = SnmpAgent::SHUT;
+  snmp_shutdown( ::pvssname );
+  snmp_shutdown( ::pvssnamed );
+  smsc_log_info(log_,"snmp wrapper shutdowned");
 }
 
 }

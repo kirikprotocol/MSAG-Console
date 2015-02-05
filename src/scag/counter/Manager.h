@@ -24,7 +24,7 @@ public:
     virtual ~Manager();
 
     virtual MsagCounterTableElement* updateSnmpCounterList( MsagCounterTableElement* list ) = 0;
-    virtual void dumpCounterList( void ) = 0;
+//    virtual void dumpCounterList( void ) = 0;
 
     inline CounterPtrAny registerAnyCounter( Counter* c )
     {

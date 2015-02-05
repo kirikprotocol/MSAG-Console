@@ -435,6 +435,10 @@ void Scag::init( unsigned mynode )
 void Scag::shutdown()
 {
     // __trace__("shutting down");
+#ifdef SNMP
+    if (snmpthread_.get()) snmpthread_->Stop();
+    if (snmp_.get()) snmp_->shutdownMsag();
+#endif
     smsc_log_info( log, "SCAG is shutting down\n\n");
     if ( pvssInited_ ) {
         lcm::LongCallManager::Instance().pvssClient().shutdown();
@@ -464,9 +468,6 @@ void Scag::shutdown()
     counter::Manager::getInstance().stop();
     smsc_log_debug(log,"counter manager stopped");
 
-#ifdef SNMP
-    if (snmpthread_.get()) snmpthread_->Stop();
-#endif
     // stat::Statistics::Instance().Stop();
     smsc_log_info(log,"All components are stopped");
 }

@@ -19,7 +19,6 @@
 
 #include "util/int.h"
 
-#include "scag/transport/smpp/base/SmppManager2.h"
 #include "scag/stat/impl/StatisticsManager.h"
 #include "scag/stat/impl/StatCountersEnum.hpp"
 #include "core/buffers/Hash.hpp"
