@@ -405,6 +405,7 @@ protected:
     smsc::logger::Logger* limitsLog;
     smsc::logger::Logger* log_dump;
     smsc::core::buffers::Hash<SmppEntity*> registry;
+    smsc::core::buffers::IntHash<const char*> idx_registry;
     smsc::core::buffers::Hash<MetaEntity*> metaRegistry;
     mutable smsc::core::synchronization::RecursiveMutex regMtx;
     SmppSocketManager sm;
@@ -441,9 +442,8 @@ protected:
     snmp::TrapRecordQueue* snmpqueue_;    // not owned
 
     counter::CounterPtrAny queueCount;
-    static const char* emptySystemId;       // first element: systemIdArray[0]
+    static const char* emptySystemId;       // smeSystemId not found string for SNMP counters (smeIndex==0)
     static uint32_t smeUniqueId;            // smeIndex enumerator
-    std::vector<const char*> systemIdArray; // contains all systemIds with index=smeIndex, 0-contains invalid entry
 };
 
 }//smpp

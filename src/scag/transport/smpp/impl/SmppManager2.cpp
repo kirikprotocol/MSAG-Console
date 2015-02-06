@@ -16,6 +16,7 @@
 #include "scag/counter/Manager.h"
 #include "scag/counter/Accumulator.h"
 #include "scag/counter/TimeSnapshot.h"
+#include "sms/sms_const.h"
 
 namespace {
 const char* smppCounterName = "sys.traffic.global.smpp";
@@ -378,11 +379,6 @@ SmppManagerImpl::~SmppManagerImpl()
         }
         metaRegistry.Empty();
     }
-    for (std::vector<const char*>::iterator i=systemIdArray.begin(); i!=systemIdArray.end(); ++i)
-    {
-      if (*i) delete *i;
-    }
-    systemIdArray.clear();
 }
 
 void SmppManagerImpl::Init(const char* cfgFile)
@@ -391,10 +387,6 @@ void SmppManagerImpl::Init(const char* cfgFile)
     throw SCAGException("license counter %s cannot be created",::smppCounterName);
 
   smeUniqueId = 0;
-  systemIdArray.erase(systemIdArray.begin(), systemIdArray.end());
-  if (systemIdArray.capacity() < 500)
-    systemIdArray.reserve(500);
-  systemIdArray.push_back(emptySystemId);
 
   cfgFileName=cfgFile;
   using namespace smsc::util::xml;
@@ -673,10 +665,10 @@ void SmppManagerImpl::ReloadRoutes()
 void SmppManagerImpl::addRegistryItem(SmppEntityInfo& info)
 {
   info.uniqueId = ++smeUniqueId;
-  const char* tmp = new char[34];
+  const char* tmp = new char[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
   strncpy((char*)tmp, info.systemId.c_str(), 34);
   registry.Insert(tmp, new SmppEntity(info));
-  systemIdArray.push_back(tmp);
+  idx_registry.Insert(info.uniqueId, tmp);
 }
 
 uint32_t SmppManagerImpl::getSmeIndex(const char* smeSystemId)
@@ -687,23 +679,35 @@ uint32_t SmppManagerImpl::getSmeIndex(const char* smeSystemId)
 
 const char* SmppManagerImpl::getSmeSystemId(uint32_t smeIndex)
 {
-  int ndx = ( smeIndex > systemIdArray.size()-1 ) ? 0 : smeIndex;
-  return systemIdArray[ndx];
+  const char** ptr = 0;
+  const char* result = 0;
+  try
+  {
+    ptr = idx_registry.GetPtr(smeIndex);
+    result = ptr ? *ptr : result;
+  }
+  catch (...)
+  {
+    result = emptySystemId;
+    smsc_log_debug(log_dump,"getSmeSystemId(%d) not found in idx_registry", smeIndex);
+  }
+  return result;
 }
 
 void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
 {
   smsc_log_debug(log,"addSmppEntity:%s",info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
-  SmppEntity** ptr=registry.GetPtr(info.systemId.c_str());
-  if(ptr)
+  SmppEntity** ptr = registry.GetPtr(info.systemId.c_str());
+  if (ptr)
   {
-    if((**ptr).info.type!=etUnknown)
+    if((**ptr).info.type != etUnknown)
     {
-      throw smsc::util::Exception("Duplicate systemId='%s'",info.systemId.c_str());
+      throw smsc::util::Exception("Duplicate systemId='%s'", info.systemId.c_str());
     }
-    (**ptr).info=info;
-  }else
+    (**ptr).info = info;
+  }
+  else
   {
     addRegistryItem((SmppEntityInfo&)info);
   }
@@ -725,42 +729,51 @@ void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
 
 void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
 {
-  smsc_log_debug(log,"updateSmppEntity:%s",info.systemId.c_str());
+  smsc_log_debug(log,"updateSmppEntity:%s", info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
-  SmppEntity** ptr=registry.GetPtr(info.systemId.c_str());
+  SmppEntity** ptr = registry.GetPtr(info.systemId.c_str());
   if(!ptr)
   {
-    throw smsc::util::Exception("updateSmppEntity:Enitity with systemId='%s' not found",info.systemId.c_str());
+    throw smsc::util::Exception("updateSmppEntity:Enitity with systemId='%s' not found", info.systemId.c_str());
   }
 
-    SmppEntity& ent=**ptr;
-    const bool oldEnabled = ent.updateInfo( info );
+  SmppEntity& ent = **ptr;
+  const char** tmp = idx_registry.GetPtr(ent.info.uniqueId);
+  if (tmp)
+  {
+    strncpy((char*)*tmp, ent.info.systemId.c_str(), smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
+  }
+  else
+  {
+    idx_registry.Insert(ent.info.uniqueId, ent.info.systemId.c_str());
+    smsc_log_debug(log_dump, "updateSmppEntity error: smeIndex(%d) not found in idx_registry, sme=%s", ent.info.uniqueId, ent.info.systemId.c_str());
+  }
+  const bool oldEnabled = ent.updateInfo( info );
 
-    // MutexGuard emg(ent.mtx);
-    // bool oldEnabled=ent.info.enabled;
-    // ent.info=info;
+  // MutexGuard emg(ent.mtx);
+  // bool oldEnabled=ent.info.enabled;
+  // ent.info=info;
 
-    if (info.type==etSmsc) {
+  if (info.type==etSmsc) {
+    SmscConnectInfo ci;
+    ci.regSysId = info.systemId.c_str();
+    ci.sysId = info.bindSystemId.c_str();
+    ci.pass = info.bindPassword.c_str();
+    ci.hosts[0] = info.host.c_str();
+    ci.ports[0] = info.port;
+    ci.hosts[1] = info.altHost.c_str();
+    ci.ports[1] = info.altPort;
+    ci.addressRange = info.addressRange.c_str();
+    ci.systemType = info.systemType.c_str();
 
-        SmscConnectInfo ci;
-        ci.regSysId=info.systemId.c_str();
-        ci.sysId=info.bindSystemId.c_str();
-        ci.pass=info.bindPassword.c_str();
-        ci.hosts[0]=info.host.c_str();
-        ci.ports[0]=info.port;
-        ci.hosts[1]=info.altHost.c_str();
-        ci.ports[1]=info.altPort;
-        ci.addressRange=info.addressRange.c_str();
-        ci.systemType=info.systemType.c_str();
-
-        if (oldEnabled==false && info.enabled==true) {
-            sm.getSmscConnectorAdmin()->addSmscConnect(ci);
-        } else if(oldEnabled==true && info.enabled==false) {
-            sm.getSmscConnectorAdmin()->deleteSmscConnect(info.systemId.c_str());
-        } else if(oldEnabled==true && info.enabled==true) {
-            sm.getSmscConnectorAdmin()->updateSmscConnect(ci);
-        }
+    if (oldEnabled==false && info.enabled==true) {
+      sm.getSmscConnectorAdmin()->addSmscConnect(ci);
+    } else if(oldEnabled==true && info.enabled==false) {
+      sm.getSmscConnectorAdmin()->deleteSmscConnect(info.systemId.c_str());
+    } else if(oldEnabled==true && info.enabled==true) {
+      sm.getSmscConnectorAdmin()->updateSmscConnect(ci);
     }
+  }
 
     /*
   switch(ent.bt)
@@ -782,7 +795,7 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
       break;
   }
      */
-    ent.disconnect();
+  ent.disconnect();
 }
 
 void SmppManagerImpl::disconnectSmppEntity(const char* sysId)
@@ -829,7 +842,7 @@ void SmppManagerImpl::deleteSmppEntity(const char* sysId)
   SmppEntity** ptr=registry.GetPtr(sysId);
   if(!ptr)
   {
-    throw smsc::util::Exception("deleteSmppEntity:Enitity with systemId='%s' not found",sysId);
+    throw smsc::util::Exception("deleteSmppEntity:Enitity with systemId='%s' not found", sysId);
   }
     SmppEntity& ent=**ptr;
     ent.disconnect();

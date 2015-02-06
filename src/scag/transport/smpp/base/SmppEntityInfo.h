@@ -80,7 +80,7 @@ struct SmppEntityInfo
       enabled = info.enabled;
       snmpTracking = info.snmpTracking;
       defaultLatin1 = info.defaultLatin1;
-      uniqueId = info.uniqueId;
+//      uniqueId = info.uniqueId;           // preserve uniqueId
       return *this;
     }
 };
