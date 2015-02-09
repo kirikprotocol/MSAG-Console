@@ -56,6 +56,13 @@ public:
         conn->Init(cfg->getString("smpp.host"));
     }
 
+    virtual ~SmppSocketManager()
+    {
+        acc->stop();
+        conn->shutdown();
+        delete acc;
+        delete conn;
+    }
 
     void init( unsigned socketsPerThread,
                unsigned bindTimeout,

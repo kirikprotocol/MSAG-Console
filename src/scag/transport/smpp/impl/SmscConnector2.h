@@ -26,6 +26,8 @@ public:
     tp.setMaxThreads(16);
   }
 
+  virtual ~SmscConnector(){}
+
   void Init(const char* argBindHost)
   {
     bindHost=argBindHost;
