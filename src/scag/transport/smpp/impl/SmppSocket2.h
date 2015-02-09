@@ -150,7 +150,7 @@ struct SmppSocket : SmppChannel
           MutexGuard mg(mtx);
           if (!connected) return;
           connected=false;
-
+      }
       smsc_log_info(log_, "SmppSocket %p %s sock=%p disconnect() bt=%d", this, getPeer(), sock, bindType);
       sock->Close();
       // peername_ = "";
@@ -169,7 +169,7 @@ struct SmppSocket : SmppChannel
       bindType = btNone;
 
       if (sm) { sm->unregisterSocket(this); }
-      }
+
       fillPeerData();
   }
 

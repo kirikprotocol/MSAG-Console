@@ -567,24 +567,91 @@ public:
         const SmppBindType chbt = ch->getBindType();
 //	    smsc_log_debug(log_, "SmppEntity::unbindChannel %p %s bt=%d/%d", ch, ch->getSystemId(), bt, chbt);
         MutexGuard mg(mtx);
-        if (bt == btRecvAndTrans) {
+        switch(bt)
+        {
+        case btRecvAndTrans:
+        {
             if (chbt == btReceiver) {
+                if(ch!=recvChannel.get())
+                {
+                    smsc_log_warn(log_,"unbindChannel receiver channel do not identical");
+                    return false;
+                }
                 bt = btTransmitter;
+                recvChannel.reset(0);
             } else if (chbt == btTransmitter) {
+                if(ch!=transChannel.get())
+                {
+                    smsc_log_warn(log_,"unbindChannel transmitter channel do not identical");
+                    return false;
+                }
                 bt = btReceiver;
+                transChannel.reset(0);
+            }else if (chbt == btNone) {
+                if(ch!=channel.get())
+                {
+                    smsc_log_warn(log_,"unbindChannel channel do not identical");
+                    return false;
+                }
+                bt = btNone;
+                channel.reset(0);
+            } else {
+                return false;
+            }
+        }break;
+        case btTransceiver:
+        {
+            if(ch!=channel.get())
+            {
+                smsc_log_warn(log_,"unbindChannel channel do not identical");
+                return false;
+            }
+            channel.reset(0);
+            bt = btNone;
+        }
+        }
+        /*if (bt == btRecvAndTrans) {
+            if (chbt == btReceiver) {
+                if(ch!=recvChannel.get())
+                {
+                    smsc_log_warn(log_,"unbindChannel receiver channel do not identical");
+                    return false;
+                }
+                bt = btTransmitter;
+                recvChannel.reset(0);
+            } else if (chbt == btTransmitter) {
+                if(ch!=transChannel.get())
+                {
+                    smsc_log_warn(log_,"unbindChannel transmitter channel do not identical");
+                    return false;
+                }
+                bt = btReceiver;
+                transChannel.reset(0);*/
                 /* bug 13401 (MSAG doesn't disconnect from SMSC)
                  * add possibility of unbindChannel with BindType=btNone
                  * the target is to clear SmppEntity:bt) to allow further connection
                  * avoid of "already connected"
                  */
-            } else if (chbt == btNone) {
+            /*} else if (chbt == btNone) {
+                if(ch!=channel.get())
+                {
+                    smsc_log_warn(log_,"unbindChannel channel do not identical");
+                    return false;
+                }
                 bt = btNone;
+                channel.reset(0);
             } else {
                 return false;
             }
         } else {
+            if(ch!=channel.get())
+            {
+                smsc_log_warn(log_,"unbindChannel channel do not identical");
+                return false;
+            }
+            channel.reset(0);
             bt = btNone;
-        }
+        }*/
         connected = false;
         if (info.type == etService) {
             info.host = "";

@@ -46,7 +46,6 @@ struct SmeSocket:SmppSocket{
     if(strlen(pwd)>8)code=St::INVPASWD;
     if(code==St::OK)
     {
-      MutexGuard mg(mtx);
       int res=chReg->registerSmeChannel(sid,pwd,bt,this);
       switch(res)
       {
