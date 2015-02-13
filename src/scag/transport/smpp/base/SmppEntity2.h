@@ -571,33 +571,39 @@ public:
         bool ret_val=true;
         {
             MutexGuard mg(mtx);
-            switch(chbt){
-            case btReceiver:{
+            if (bt == btRecvAndTrans) {
+                if (chbt == btReceiver) {
+                    if (ch != recvChannel.get()){
+                       snprintf(msg,szmsg,"receiver channel:0x%p",recvChannel.get());
+                       ret_val=false;
+                    } else bt = btTransmitter;
+                } else if (chbt == btTransmitter) {
+                    if (ch != transChannel.get()){
+                       snprintf(msg,szmsg,"transmitter channel:0x%p",transChannel.get());
+                       ret_val=false;
+                    } else bt = btReceiver;
+                } else if (chbt == btNone) {
+                    bt = btNone;
+                } else {
+                    snprintf(msg,szmsg,"unknown channel");
+                    ret_val=false;
+                }
+            } else if(bt == btReceiver) {
                 if (ch != recvChannel.get()){
                    snprintf(msg,szmsg,"receiver channel:0x%p",recvChannel.get());
                    ret_val=false;
-                   break;
-                }
-                if(bt==btRecvAndTrans) bt=btTransmitter;
-            }break;
-            case btTransmitter:{
+                } else bt = btNone;
+            } else if(bt == btTransmitter) {
                 if (ch != transChannel.get()){
                    snprintf(msg,szmsg,"transmitter channel:0x%p",transChannel.get());
                    ret_val=false;
-                   break;
-                }
-                if(bt==btRecvAndTrans) bt=btReceiver;
-            }break;
-            case btTransceiver:{
+                } else bt = btNone;
+            } else {
                 if(ch!=channel.get()){
                     snprintf(msg,szmsg,"transceiver channel:0x%p",channel.get());
                     ret_val=false;
-                    break;
-                }
-                bt = btNone;
-                }break;
+                } else  bt = btNone;
             }
-
             if(ret_val){
                 connected = false;
                 if (info.type == etService) {
