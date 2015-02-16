@@ -97,11 +97,11 @@ int32_t ConfigView::getInt(const char* param, const char* error) const
     }
     catch (HashInvalidKeyException& exc)
     {
-        smsc_log_warn(log, "Config parameter missed: <%s>. %s",
+        smsc_log_warn(log, "Config parameter missed: '%s'. %s",
                  section, (error) ? error:"");
 
         char msg[512];
-        snprintf(msg, sizeof(msg), "Config parameter missed: <%s>.", section);
+        snprintf(msg, sizeof(msg), "Config parameter missed: '%s'.", section);
 
         if (section) delete section;
 
@@ -125,11 +125,11 @@ char* ConfigView::getString(const char* param, const char* error, bool check) co
     catch (HashInvalidKeyException& exc)
     {
         if (check)
-            smsc_log_warn(log, "Config parameter missed: <%s>. %s",
+            smsc_log_warn(log, "Config parameter missed: '%s'. %s",
                      section, (error) ? error:"");
 
         char msg[512];
-        snprintf(msg, sizeof(msg), "Config parameter missed: <%s>.", section);
+        snprintf(msg, sizeof(msg), "Config parameter missed: '%s'.", section);
 
         if (section) delete section;
 
@@ -150,10 +150,10 @@ bool ConfigView::getBool(const char* param, const char* error) const
     }
     catch (HashInvalidKeyException& exc)
     {
-        smsc_log_warn(log, "Config parameter missed: <%s>. %s",
+        smsc_log_warn(log, "Config parameter missed: '%s'. %s",
                   section, (error) ? error:"");
         char msg[512];
-        snprintf(msg, sizeof(msg), "Config parameter missed: <%s>.", section);
+        snprintf(msg, sizeof(msg), "Config parameter missed: '%s'.", section);
 
         if (section) delete section;
 

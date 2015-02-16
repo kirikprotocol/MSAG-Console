@@ -122,7 +122,7 @@ int32_t ConfigView::getInt(const char* param, const char* error) const
         s += section;
         s += "\" not found";
 
-        smsc_log_warn(log, "Config parameter missed: <%s>. %s",
+        smsc_log_warn(log, "Config parameter missed: '%s'. %s",
                  section, (error) ? error:"");
         if (section) delete [] section;
         throw ConfigException(s.c_str());
@@ -147,7 +147,7 @@ char* ConfigView::getString(const char* param, const char* error, bool check) co
         s += section;
         s += "\" not found";
         if (check) {
-            smsc_log_warn(log, "Config parameter missed: <%s>. %s",
+            smsc_log_warn(log, "Config parameter missed: '%s'. %s",
                      section, (error) ? error:"");
         }
         if (section) delete [] section;
@@ -172,7 +172,7 @@ bool ConfigView::getBool(const char* param, const char* error) const
         s += section;
         s += "\" not found";
 
-        smsc_log_warn(log, "Config parameter missed: <%s>. %s",
+        smsc_log_warn(log, "Config parameter missed: '%s'. %s",
                   section, (error) ? error:"");
 
         if (section) delete [] section;

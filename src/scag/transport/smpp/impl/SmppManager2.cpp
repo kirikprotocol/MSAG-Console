@@ -665,9 +665,9 @@ void SmppManagerImpl::ReloadRoutes()
 void SmppManagerImpl::addRegistryItem(SmppEntityInfo& info)
 {
   info.uniqueId = ++smeUniqueId;
+  registry.Insert(info.systemId.c_str(), new SmppEntity(info));
   const char* tmp = new char[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
-  strncpy((char*)tmp, info.systemId.c_str(), 34);
-  registry.Insert(tmp, new SmppEntity(info));
+  strncpy((char*)tmp, info.systemId.c_str(), smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1);
   idx_registry.Insert(info.uniqueId, tmp);
 }
 
