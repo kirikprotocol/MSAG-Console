@@ -709,7 +709,11 @@ void StatisticsManager::flushCounters(int index)
     }
     catch ( std::exception& e ) {
         smsc_log_error(logger,"Statistics flush failed. Cause: %s", e.what());
-        std::terminate();
+//        std::terminate();
+    }
+    catch(...)
+    {
+      smsc_log_error(logger,"Statistics flush failed. Unknown error.");
     }
 
     resetCounters(index);
@@ -837,61 +841,99 @@ bool StatisticsManager::createStorageDir(const std::string loc)
 
 void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM, tm& fileTM, const char *dirNameFmt, File& file)
 {
-    smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
-                   flushTM.tm_hour, flushTM.tm_min);
-    try {
-
+  smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", flushTM.tm_hour, flushTM.tm_min);
+  char* fn = (char*)location.c_str();
+  try
+  {
     char dirName[128]; bool hasDir = false;
 
     if (fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
     {
         snprintf(dirName, sizeof(dirName), dirNameFmt, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        fn = &dirName[0];
         createDir(location + "/" + dirName); hasDir = true;
         smsc_log_info(logger, "New dir '%s' created", dirName);
     }
 
     if (fileTM.tm_mday != flushTM.tm_mday)
     {
-        char fileName[128]; 
-        std::string fullPath = location;
-        if (!hasDir)
-            snprintf(dirName, sizeof(dirName), dirNameFmt, flushTM.tm_year+1900, flushTM.tm_mon+1);
-        snprintf(fileName, sizeof(fileName), SCAG_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
-        fullPath += '/'; fullPath += (const char*)dirName; 
-        fullPath += '/'; fullPath += (const char*)fileName; 
-        const char* fullPathStr = fullPath.c_str();
+      char fileName[128];
+      std::string fullPath = location;
+      if (!hasDir)
+        snprintf(dirName, sizeof(dirName), dirNameFmt, flushTM.tm_year+1900, flushTM.tm_mon+1);
+      snprintf(fileName, sizeof(fileName), SCAG_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
+      fullPath += '/'; fullPath += (const char*)dirName;
+      fullPath += '/'; fullPath += (const char*)fileName;
+      const char* fullPathStr = fullPath.c_str();
+      fn = (char*)fullPathStr;
 
-        if (file.isOpened()) file.Close();
-            
-        if (File::Exists(fullPathStr)) { 
-            file.WOpen(fullPathStr);
-            file.SeekEnd(0);
-            smsc_log_debug(logger, "Existed file '%s' opened", fileName);
-        } else {
-            file.RWCreate(fullPathStr);
-            file.Write(SCAG_STAT_HEADER_TEXT, strlen(SCAG_STAT_HEADER_TEXT));
-            uint16_t version = htons(SCAG_STAT_VERSION_INFO);
-            file.Write(&version, sizeof(version));
-            file.Flush();
-            smsc_log_info(logger, "New file '%s' created", fileName);
-        }
+      if (file.isOpened()) file.Close();
 
-        fileTM = flushTM;
+      if (File::Exists(fullPathStr)) {
+          file.WOpen(fullPathStr);
+          file.SeekEnd(0);
+          smsc_log_debug(logger, "Existed file '%s' opened", fileName);
+      } else {
+          file.RWCreate(fullPathStr);
+          file.Write(SCAG_STAT_HEADER_TEXT, strlen(SCAG_STAT_HEADER_TEXT));
+          uint16_t version = htons(SCAG_STAT_VERSION_INFO);
+          file.Write(&version, sizeof(version));
+          file.Flush();
+          smsc_log_info(logger, "New file '%s' created", fileName);
+      }
+
+      fileTM = flushTM;
     }
+  }
+  catch(std::exception &e)
+  {
+    smsc_log_error(logger, "Statistics file '%s' dump failure: %s", fn, e.what());
+    if (file.isOpened()) file.Close();
+    fileTM.tm_year = 0;
+    throw;
+  }
+  catch(...)
+  {
+    smsc_log_error(logger, "Statistics file '%s' dump unknown error", fn);
+    if (file.isOpened()) file.Close();
+    fileTM.tm_year = 0;
+    throw;
+  }
     
-    smsc_log_debug(logger, "Statistics data dump...");
+  smsc_log_debug(logger, "Statistics data dump...");
+
+  smsc::core::buffers::File::offset_type file_pos = file.Pos();
+  try
+  {
     uint32_t value32 = htonl(buffLen);
     file.Write((const void *)&value32, sizeof(value32));
     file.Write((const void *)buff, buffLen); // write dump to it
     file.Write((const void *)&value32, sizeof(value32));
     file.Flush();
-    smsc_log_debug(logger, "Statistics data dumped.");
-
-    }catch(std::exception & exc){
-        if (file.isOpened()) file.Close();
-        fileTM.tm_year = 0;
-        throw;
+  }
+  catch(smsc::core::buffers::FileException &e)
+  {
+    smsc_log_error(logger, "Statistics data dump failure_1: %s", e.what());
+    if ( file.isOpened() && file_pos && (file_pos!=file.Pos()) )
+      file.Seek(file_pos);
+  }
+  catch(std::exception &e)
+  {
+    smsc_log_error(logger, "Statistics data dump failure_2: %s", e.what());
+    if (file.isOpened())
+    {
+      if ( file_pos && (file_pos!=file.Pos()) ) file.Seek(file_pos);
+      file.Close();
     }
+    fileTM.tm_year = 0;
+    throw;
+  }
+  catch (...)
+  {
+    smsc_log_error(logger, "Statistics data dump failure_3");
+    throw;
+  }
+  smsc_log_debug(logger, "Statistics data dumped.");
 }
 
 void StatisticsManager::dumpTrafficHash(Hash<TrafficRecord>& traff, SerializationBuffer& buf)
