@@ -604,7 +604,36 @@ int StatisticsManager::calculateToSleep() // returns msecs to next hour
     nextTime = mktime(&tmNT);
     return (((nextTime-currTime)*1000)+1);
 }
+/*
+uint32_t StatisticsManager::calcSerializeSize(int index)
+{
+  uint32_t res = sizeof(uint32_t) * 2;  //start and end buf size
+  res += calcSerializeStatSize(statByRouteId[index], true);
+  res += calcSerializeStatSize(srvStatBySmeId[index], true);
+  res += calcSerializeStatSize(statBySmeId[index], true);
 
+  return res;
+}
+
+uint32_t StatisticsManager::calcSerializeStatSize(Hash<CommonStat>& stat, bool add)
+{
+  uint32_t res = sizeof(uint32_t); // stat.GetCount()
+  uint32_t commonRecordSize = sizeof(uint16_t); //strlen
+  commonRecordSize += sizeof(uint32_t) * (add?7:5) * stat.GetCount();  // counters
+  commonRecordSize += sizeof(uint32_t);  // errors.Count()
+
+  char* Id = 0;
+  CommonStat* st = 0;
+  stat.First();
+  while (stat.Next(Id, st))
+  {
+    if (!st || !Id || Id[0] == '\0') continue;
+    res += commonRecordSize + strlen(Id);   // sme_id length
+    res += sizeof(uint32_t) * 2 * st->errors.Count();  // error records
+  }
+  return res;
+}
+*/
 void StatisticsManager::SerializeSmppStat(Hash<CommonStat>& smppStat, SerializationBuffer& buf, bool add)
 {
     buf.WriteNetInt32(smppStat.GetCount());
@@ -694,8 +723,10 @@ void StatisticsManager::flushCounters(int index)
     {
         SerializationBuffer buf(4096);
 
+        buf.WriteInt32(0);
         buf.WriteByte(flushTM.tm_hour);
         buf.WriteByte(flushTM.tm_min);
+        buf.WriteInt32(0);
 
         SerializeSmppStat(statByRouteId[index], buf, true);
         SerializeSmppStat(srvStatBySmeId[index], buf, false);
@@ -731,11 +762,13 @@ void StatisticsManager::flushHttpCounters(int index)
     {
         SerializationBuffer buf(4096);
 
+        buf.WriteInt32(0);
         buf.WriteByte(flushTM.tm_hour);
         buf.WriteByte(flushTM.tm_min);
 
         SerializeHttpStat(httpStatByRouteId[index], buf);
         SerializeHttpStat(httpStatByUrl[index], buf);
+        buf.WriteInt32(0);
 
         dumpCounters((const unsigned char*)buf.getBuffer(), buf.getPos(), flushTM, httpFileTM, SCAG_HTTP_STAT_DIR_NAME_FORMAT, httpFile);
     }
@@ -744,7 +777,11 @@ void StatisticsManager::flushHttpCounters(int index)
         smsc_log_error(logger, "Http Statistics flush failed. Cause: %s", exc.what());
     } catch ( std::exception& e ) {
         smsc_log_error(logger, "Http Statistics flush failed. Cause: %s", e.what());
-        std::terminate();
+//        std::terminate();
+    }
+    catch(...)
+    {
+      smsc_log_error(logger,"Http Statistics flush failed. Unknown error.");
     }
     resetHttpCounters(index);
 }
@@ -839,7 +876,7 @@ bool StatisticsManager::createStorageDir(const std::string loc)
     return true;
 }
 
-void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM, tm& fileTM, const char *dirNameFmt, File& file)
+void StatisticsManager::dumpCounters(const uint8_t* buff, uint32_t buffLen, const tm& flushTM, tm& fileTM, const char *dirNameFmt, File& file)
 {
   smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", flushTM.tm_hour, flushTM.tm_min);
   char* fn = (char*)location.c_str();
@@ -902,20 +939,21 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     
   smsc_log_debug(logger, "Statistics data dump...");
 
-  smsc::core::buffers::File::offset_type file_pos = file.Pos();
+  smsc::core::buffers::File::offset_type file_pos = file.Pos();                       //write position
+  uint32_t value32 = buffLen - sizeof(uint32_t) - sizeof(uint32_t);
+  value32 = htonl(value32);
+  memcpy((void *)buff, (const void *)&value32, sizeof(uint32_t));                     //fill start size mark
+  memcpy((void *)(buff-sizeof(uint32_t)), (const void *)&value32, sizeof(uint32_t));  //fill end size mark
   try
   {
-    uint32_t value32 = htonl(buffLen);
-    file.Write((const void *)&value32, sizeof(value32));
     file.Write((const void *)buff, buffLen); // write dump to it
-    file.Write((const void *)&value32, sizeof(value32));
     file.Flush();
   }
   catch(smsc::core::buffers::FileException &e)
   {
     smsc_log_error(logger, "Statistics data dump failure_1: %s", e.what());
     if ( file.isOpened() && file_pos && (file_pos!=file.Pos()) )
-      file.Seek(file_pos);
+      file.Seek(file_pos);                                                            //restore write position if error
   }
   catch(std::exception &e)
   {
@@ -930,7 +968,13 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
   }
   catch (...)
   {
-    smsc_log_error(logger, "Statistics data dump failure_3");
+    smsc_log_error(logger, "Statistics data dump unknown error");
+    if (file.isOpened())
+    {
+      if ( file_pos && (file_pos!=file.Pos()) ) file.Seek(file_pos);
+      file.Close();
+    }
+    fileTM.tm_year = 0;
     throw;
   }
   smsc_log_debug(logger, "Statistics data dumped.");

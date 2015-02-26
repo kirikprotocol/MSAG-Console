@@ -146,7 +146,7 @@ using namespace scag::stat::sacc;
         int   switchCounters();
         void  resetCounters(int index);
         void  flushCounters(int index);
-        void  dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM, tm& fileTM, const char *dirNameFmt, File& file);
+        void  dumpCounters(const uint8_t* buff, uint32_t buffLen, const tm& flushTM, tm& fileTM, const char *dirNameFmt, File& file);
 
         void  resetHttpCounters(int index);
         void  flushHttpCounters(int index);
@@ -225,6 +225,8 @@ using namespace scag::stat::sacc;
         int indexByCounter(int counter);
         int indexByHttpCounter(int event);
 
+//        uint32_t calcSerializeSize(int index);
+//        uint32_t calcSerializeStatSize(Hash<CommonStat>& stat, bool add);
         void SerializeSmppStat(Hash<CommonStat>& smppStat, SerializationBuffer& buf, bool add);
         void SerializeHttpStat(Hash<HttpStat>& httpStat, SerializationBuffer& buf);
         void incSvcScCounter(const char* systemId, int index, int max_cnt, Hash<CommonPerformanceCounter*>& svcCounters, Mutex& mt, int errcode=-1);
