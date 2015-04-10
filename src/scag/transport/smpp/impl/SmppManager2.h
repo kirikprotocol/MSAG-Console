@@ -405,7 +405,8 @@ protected:
     smsc::logger::Logger* limitsLog;
     smsc::logger::Logger* log_dump;
     smsc::core::buffers::Hash<SmppEntity*> registry;
-    smsc::core::buffers::IntHash<const char*> idx_registry;
+//    smsc::core::buffers::IntHash<const char*> idx_registry;
+    smsc::core::buffers::IntHash<smsc::sms::SmeSystemIdType> idx_registry;
     smsc::core::buffers::Hash<MetaEntity*> metaRegistry;
     mutable smsc::core::synchronization::RecursiveMutex regMtx;
     SmppSocketManager sm;

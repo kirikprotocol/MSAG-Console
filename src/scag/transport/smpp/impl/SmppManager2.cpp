@@ -666,9 +666,8 @@ void SmppManagerImpl::addRegistryItem(SmppEntityInfo& info)
 {
   info.uniqueId = ++smeUniqueId;
   registry.Insert(info.systemId.c_str(), new SmppEntity(info));
-  const char* tmp = new char[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
-  strncpy((char*)tmp, info.systemId.c_str(), smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1);
-  idx_registry.Insert(info.uniqueId, tmp);
+  idx_registry.Insert(info.uniqueId, info.systemId);
+  smsc_log_debug(log,"SME: addRegistryItem %d %s", info.uniqueId, info.systemId);
 }
 
 uint32_t SmppManagerImpl::getSmeIndex(const char* smeSystemId)
@@ -679,30 +678,30 @@ uint32_t SmppManagerImpl::getSmeIndex(const char* smeSystemId)
 
 const char* SmppManagerImpl::getSmeSystemId(uint32_t smeIndex)
 {
-  const char** ptr = 0;
+  smsc::sms::SmeSystemIdType* ptr = 0;
   const char* result = 0;
   try
   {
     ptr = idx_registry.GetPtr(smeIndex);
-    result = ptr ? *ptr : result;
+    result = ptr ? (*ptr).c_str() : result;
   }
   catch (...)
   {
     result = emptySystemId;
-    smsc_log_debug(log_dump,"getSmeSystemId(%d) not found in idx_registry", smeIndex);
+    smsc_log_debug(log,"getSmeSystemId(%d) not found in idx_registry", smeIndex);
   }
   return result;
 }
 
 void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
 {
-  smsc_log_debug(log,"addSmppEntity:%s",info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
   SmppEntity** ptr = registry.GetPtr(info.systemId.c_str());
   if (ptr)
   {
     if((**ptr).info.type != etUnknown)
     {
+      smsc_log_debug(log_dump,"SME: addSmppEntity %d %s, Duplicate systemId", info.uniqueId, info.systemId.c_str());
       throw smsc::util::Exception("Duplicate systemId='%s'", info.systemId.c_str());
     }
     (**ptr).info = info;
@@ -725,11 +724,12 @@ void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
     ci.systemType=info.systemType.c_str();
     sm.getSmscConnectorAdmin()->addSmscConnect(ci);
   }
+  smsc_log_debug(log_dump,"SME: addSmppEntity %d %s", info.uniqueId, info.systemId.c_str());
 }
 
 void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
 {
-  smsc_log_debug(log,"updateSmppEntity:%s", info.systemId.c_str());
+  smsc_log_debug(log, "updateSmppEntity: %d %s", info.uniqueId, info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
   SmppEntity** ptr = registry.GetPtr(info.systemId.c_str());
   if(!ptr)
@@ -738,16 +738,6 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
   }
 
   SmppEntity& ent = **ptr;
-  const char** tmp = idx_registry.GetPtr(ent.info.uniqueId);
-  if (tmp)
-  {
-    strncpy((char*)*tmp, ent.info.systemId.c_str(), smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
-  }
-  else
-  {
-    idx_registry.Insert(ent.info.uniqueId, ent.info.systemId.c_str());
-    smsc_log_debug(log_dump, "updateSmppEntity error: smeIndex(%d) not found in idx_registry, sme=%s", ent.info.uniqueId, ent.info.systemId.c_str());
-  }
   const bool oldEnabled = ent.updateInfo( info );
 
   // MutexGuard emg(ent.mtx);
