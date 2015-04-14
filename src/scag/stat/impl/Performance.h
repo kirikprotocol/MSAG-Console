@@ -71,35 +71,44 @@ struct CommonPerformanceCounter
     uint16_t*               counters;
     TimeSlotCounter<int>**  slots;
 
-    CommonPerformanceCounter(uint32_t cnt) { 
-        count = cnt;
-        counters = new uint16_t[cnt];
-        memset(counters, 0, sizeof(uint16_t) * cnt);
+    CommonPerformanceCounter() :
+      count(0), counters(0), slots(0)
+#ifdef SNMP
+      , cntEvent(0)
+#endif
+    {}
 
-        slots = new TimeSlotCounter<int>*[cnt];
-        memset(slots, 0, sizeof(TimeSlotCounter<int>*) * cnt);
+    CommonPerformanceCounter(uint32_t cnt) {
+      reserve(cnt);
+    }
+    void reserve(uint32_t cnt) {
+      count = cnt;
+      counters = new uint16_t[cnt];
+      memset(counters, 0, sizeof(uint16_t) * cnt);
+
+      slots = new TimeSlotCounter<int>*[cnt];
+      memset(slots, 0, sizeof(TimeSlotCounter<int>*) * cnt);
 
 #ifdef SNMP
-        cntEvent = new uint64_t[cnt];
-        memset(cntEvent, 0, sizeof(uint64_t) * cnt);
+      cntEvent = new uint64_t[cnt];
+      memset(cntEvent, 0, sizeof(uint64_t) * cnt);
 #endif
     };
 
     virtual ~CommonPerformanceCounter() {
-
-        for (uint32_t i = 0; i < count; i++) 
-            if (slots[i]) delete slots[i];
+      for (uint32_t i = 0; i < count; i++)
+         if (slots[i]) delete slots[i];
 
 #ifdef SNMP
-        delete cntEvent;
-        cntErrors.Empty();
+    if (cntEvent) delete cntEvent;
+      cntErrors.Empty();
 #endif
-        delete counters;
-        delete slots;
+      if (counters) delete counters;
+      if (slots) delete slots;
     };
 
     inline void clear() {
-        memset(counters, 0, sizeof(uint16_t) * count);
+      memset(counters, 0, sizeof(uint16_t) * count);
     };
 };
 

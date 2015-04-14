@@ -943,7 +943,7 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, uint32_t buffLen, cons
   uint32_t value32 = buffLen - sizeof(uint32_t) - sizeof(uint32_t);
   value32 = htonl(value32);
   memcpy((void *)buff, (const void *)&value32, sizeof(uint32_t));                     //fill start size mark
-  memcpy((void *)(buff-sizeof(uint32_t)), (const void *)&value32, sizeof(uint32_t));  //fill end size mark
+  memcpy((void *)(buff+buffLen-sizeof(uint32_t)), (const void *)&value32, sizeof(uint32_t));  //fill end size mark
   try
   {
     file.Write((const void *)buff, buffLen); // write dump to it
