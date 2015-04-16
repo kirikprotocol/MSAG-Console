@@ -22,8 +22,8 @@
 
 #include "scag/stat/impl/Performance.h"
 
-#include "scag/config/base/ConfigManager2.h"
 #include "scag/snmp/smestattable/smeStatTable_subagent.hpp"
+#include "scag/snmp/SnmpUtil.h"
 
 
 /** @ingroup interface
@@ -53,18 +53,9 @@ namespace routestattable {
 
 smsc::logger::Logger* log;
 const char* containerName = "routeStatTableContainer";
-const char* noStatData = "No-statistics-data";
-bool fillEmptyData = false;
-
-void uint64_to_U64(uint64_t val1, U64& val2)
-{
-  val2.high = (val1>>32)&0xffffffffUL;
-  val2.low = val1&0xffffffffUL;
-}
 
 bool fillRecord(routeStatTable_rowreq_ctx* rec, const char* routeId, stat::CommonPerformanceCounter* counter)
 {
-//  smsc_log_debug(log, "fillRecord() routeId %s count %d", routeId?routeId:"empty", counter?counter->count:0);
   if (!routeId)
     return false;
   if (!counter)
@@ -96,7 +87,6 @@ bool fillRecord(routeStatTable_rowreq_ctx* rec, const char* routeId, stat::Commo
   uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptOk],     rec->data.routeStatReceiptOk);
   uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptFailed], rec->data.routeStatReceiptFailed);
 
-//  smsc_log_debug(log, "fillRecord() %s OK", routeId);
   return true;
 }
 
@@ -197,22 +187,7 @@ void routeStatTable_container_init(netsnmp_container **container_ptr_ptr, netsnm
      */
 //    cache->timeout = ROUTESTATTABLE_CACHE_TIMEOUT; /* seconds */
 //    config::ConfigManager& cfg = config::ConfigManager::Instance();
-    int cacheTimeout = 60;
-    try {
-      cacheTimeout = config::ConfigManager::Instance().getConfig()->getInt("snmp.cacheTimeout");
-    }
-    catch (...) {
-      __warning2__("Config parameter snmp.cacheTimeout not found, using default=%d", cacheTimeout);
-      snmp_log(LOG_ERR, "Config parameter snmp.cacheTimeout not found, using default=%d\n", cacheTimeout);
-    }
-    cache->timeout = cacheTimeout; /* seconds */
-    try {
-      fillEmptyData = config::ConfigManager::Instance().getConfig()->getBool("snmp.fillEmptyData");
-    }
-    catch (...) {
-      smsc_log_info(log, "Config parameter snmp.fillEmptyData not found, using default=%s", fillEmptyData?"true":"false");
-      snmp_log(LOG_ERR, "Config parameter snmp.fillEmptyData not found, using default=%s\n", fillEmptyData?"true":"false");
-    }
+    initConfigParams(cache->timeout, log);
 } /* routeStatTable_container_init */
 
 void routeStatTable_container_shutdown(netsnmp_container *container_ptr)
@@ -224,35 +199,9 @@ void routeStatTable_container_shutdown(netsnmp_container *container_ptr)
   }
 } /* routeStatTable_container_shutdown */
 
-std::string oid2str(oid* oids, size_t len)
-{
-  std::string result = "";
-  char buf[32];
-  oid* ptr = oids;
-  if ( 0 == len )
-    result = "empty";
-  else
-  {
-    snprintf(buf, 32, "%d", *ptr++);
-    result += buf;
-  }
-  for ( size_t i=1; i<len; ++i )
-  {
-    snprintf(buf, 32, ".%d", *ptr++);
-    result += buf;
-  }
-  return result;
-}
-
-std::string netsnmp_index2str(netsnmp_index oid_idx)
-{
-  return oid2str(oid_idx.oids, oid_idx.len);
-}
-
 int fillNextCounter(netsnmp_container* container, const char* routeId, long routeStatIndex, stat::CommonPerformanceCounter* counter)
 {
   const char* sid = routeId ? routeId : noStatData;
-//  smsc_log_debug(log, "routeStatTable_cache_load: h.Next %s (%d)", sid, routeStatIndex);
 
   routeStatTable_rowreq_ctx *rec = 0;
 
@@ -269,10 +218,8 @@ int fillNextCounter(netsnmp_container* container, const char* routeId, long rout
     routeStatTable_release_rowreq_ctx(rec);
     return -2;
   }
-  std::string idxStr = netsnmp_index2str(rec->oid_idx);
-  std::string oidStr = oid2str(rec->oid_tmp, MAX_routeStatTable_IDX_LEN);
-//  smsc_log_debug(log, "routeStatTable_cache_load: routeStatTable_indexes_set(%d)=%s %s %d",
-//      routeStatIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.routeStatIndex);
+
+  logIndexDebug(log, "routeStatTable", routeStatIndex, rec->tbl_idx.routeStatIndex, rec->oid_idx, rec->oid_tmp, MAX_routeStatTable_IDX_LEN);
 
   if ( !fillRecord(rec, sid, counter) )
   {
@@ -281,6 +228,7 @@ int fillNextCounter(netsnmp_container* container, const char* routeId, long rout
   }
 
   int rc = CONTAINER_INSERT(container, rec);
+
   if ( 0 != rc )
     smsc_log_error(log, "routeStatTable_cache_load CONTAINER_INSERT returns(%d)", rc);
   return rc;
@@ -319,7 +267,6 @@ int routeStatTable_cache_load(netsnmp_container* container)
   {
     if ( !container->container_name )
       container->container_name = (char*)containerName;
-//    smsc_log_debug(log, "routeStatTable_cache_load container %s", container->container_name);
   }
   else
   {
@@ -340,7 +287,7 @@ int routeStatTable_cache_load(netsnmp_container* container)
     fillNextCounter(container, 0, 1, counter);
     ++recCount;
   }
-  smsc_log_debug(log, "routeStatTable_cache_load: inserted %d records, retCode=%d", recCount, retCode);
+//  smsc_log_debug(log, "routeStatTable_cache_load: inserted %d records, retCode=%d", recCount, retCode);
   return retCode;
 }
 

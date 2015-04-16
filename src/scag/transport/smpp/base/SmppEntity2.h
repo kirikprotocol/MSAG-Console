@@ -58,10 +58,11 @@ public:
         connected = false;
         // queueCount->reset();
     }
-    SmppEntity(const SmppEntityInfo& argInfo) {
+    SmppEntity(const SmppEntityInfo& argInfo, bool copyUniqueId=false) {
         log_ = smsc::logger::Logger::getInstance("smpp.ent");
         reset();
         info = argInfo;
+        if (copyUniqueId)  info.uniqueId = argInfo.uniqueId;
         {
             const char* cname = (
                     info.type == etSmsc ?

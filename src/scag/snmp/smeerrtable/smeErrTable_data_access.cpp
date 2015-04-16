@@ -25,10 +25,10 @@
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
 
-#include "scag/config/base/ConfigManager2.h"
 #include "scag/snmp/smestattable/smeStatTable_subagent.hpp"
 
 #include "logger/Logger.h"
+#include "scag/snmp/SnmpUtil.h"
 
 /** @defgroup data_access data_access: Routines to access data
  *
@@ -56,8 +56,6 @@ namespace smeerrtable{
 
 smsc::logger::Logger* log;
 const char* containerName = "smeErrTableContainer";
-const char* noStatData = "No-statistics-data";
-bool fillEmptyData = false;
 
 
 /**
@@ -160,22 +158,7 @@ void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
      * by the MFD helper. To completely disable caching, set
      * cache->enabled to 0.
      */
-    config::ConfigManager& cfg = config::ConfigManager::Instance();
-    int cacheTimeout = 60;
-    try {
-      cacheTimeout = cfg.getConfig()->getInt("snmp.cacheTimeout");
-    }
-    catch (...) {
-      __warning2__("Config parameter snmp.cacheTimeout not found, using default=%d", cacheTimeout);
-    }
-    cache->timeout = cacheTimeout; /* seconds */
-    try {
-      fillEmptyData = config::ConfigManager::Instance().getConfig()->getBool("snmp.fillEmptyData");
-    }
-    catch (...) {
-      smsc_log_info(log, "Config parameter snmp.fillEmptyData not found, using default=%s", fillEmptyData?"true":"false");
-      snmp_log(LOG_ERR, "Config parameter snmp.fillEmptyData not found, using default=%s\n", fillEmptyData?"true":"false");
-    }
+    initConfigParams(cache->timeout, log);
 } /* smeErrTable_container_init */
 
 /**
@@ -209,38 +192,6 @@ void smeErrTable_container_init(netsnmp_container **container_ptr_ptr,
  *
  */
 
-
-void uint64_to_U64(uint64_t val1,U64& val2)
-{
-  val2.high=(val1>>32)&0xffffffffUL;
-  val2.low=val1&0xffffffffUL;
-}
-
-std::string oid2str(oid* oids, size_t len)
-{
-  std::string result = "";
-  char buf[32];
-  oid* ptr = oids;
-  if ( 0 == len )
-    result = "empty";
-  else
-  {
-    snprintf(buf, 32, "%d", *ptr++);
-    result += buf;
-  }
-  for ( size_t i=1; i<len; ++i )
-  {
-    snprintf(buf, 32, ".%d", *ptr++);
-    result += buf;
-  }
-  return result;
-}
-
-std::string netsnmp_index2str(netsnmp_index oid_idx)
-{
-  return oid2str(oid_idx.oids, oid_idx.len);
-}
-
 // returns negatuve error or positive inserted records counter
 int fillNextCounter(netsnmp_container* container, const char* sysId, stat::CommonPerformanceCounter* counter)
 {
@@ -266,8 +217,6 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
 
   for(scag2::stat::IntHash<uint64_t>::Iterator iter = counter->cntErrors.First(); iter.Next(smeErrCode, errCount); )
   {
-//    smsc_log_debug(log, "smeErrTable.fillNextCounter: %s(%d) Next %d %lld", sid, smeErrIndex, smeErrCode, errCount);
-
     if (!errCount) continue;
 
     rec = smeErrTable_allocate_rowreq_ctx(NULL);
@@ -284,10 +233,7 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
       continue;
     }
 
-    std::string idxStr = netsnmp_index2str(rec->oid_idx);
-    std::string oidStr = oid2str(rec->oid_tmp, MAX_smeErrTable_IDX_LEN);
-//    smsc_log_debug(log, "smeErrTable_cache_load: smeErrTable_indexes_set(%d)=%s %s %d",
-//        smeErrIndex, idxStr.c_str(), oidStr.c_str(), rec->tbl_idx.smeErrIndex);
+    logIndexDebug(log, "smeErrTable", smeErrIndex, rec->tbl_idx.smeErrIndex, rec->oid_idx, rec->oid_tmp, MAX_smeErrTable_IDX_LEN);
 
     if ((NULL == rec->data.smeErrSystemId) || strlen(sid) > sizeof(rec->data.smeErrSystemId))
     {
@@ -340,7 +286,6 @@ int smeErrTable_cache_load(netsnmp_container* container)
   {
     if ( !container->container_name )
       container->container_name = (char*)containerName;
-//    smsc_log_debug(log, "smeErrTable_cache_load container %s", container->container_name);
   }
   else
   {
@@ -365,7 +310,7 @@ int smeErrTable_cache_load(netsnmp_container* container)
     fillNextCounter(container, 0, counter);
     ++recCount;
   }
-  smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records, retCode=%d", recCount, retCode);
+//  smsc_log_debug(log, "smeErrTable_cache_load: inserted %d records, retCode=%d", recCount, retCode);
   return retCode;
 } /* smeErrTable_cache_load */
 
