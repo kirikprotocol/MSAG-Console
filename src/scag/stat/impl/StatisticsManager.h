@@ -168,7 +168,8 @@ using namespace scag::stat::sacc;
         Sender sender;
 
         Mutex                            svcCountersLock;
-        Hash<CommonPerformanceCounter*>  svcSmppCounters;
+        Hash<CommonPerformanceCounter*>  svcSmppSmsCounters;
+        Hash<CommonPerformanceCounter*>  svcSmppUssdCounters;
         Hash<CommonPerformanceCounter*>  svcWapCounters;
         Hash<CommonPerformanceCounter*>  svcMmsCounters;
 
@@ -176,7 +177,8 @@ using namespace scag::stat::sacc;
         Mutex svcSocketsMutex;
 
         Mutex                            scCountersLock;
-        Hash<CommonPerformanceCounter*>  scSmppCounters;
+        Hash<CommonPerformanceCounter*>  scSmppSmsCounters;
+        Hash<CommonPerformanceCounter*>  scSmppUssdCounters;
         Hash<CommonPerformanceCounter*>  scWapCounters;
         Hash<CommonPerformanceCounter*>  scMmsCounters;
 
@@ -189,8 +191,10 @@ using namespace scag::stat::sacc;
         GenStatistics genStatSmpp;
         GenStatistics genStatHttp;
 
-        Mutex                            routeCountersLock;
-        Hash<CommonPerformanceCounter*>  routeSmppCounters;
+        Mutex                            routeSmsCountersLock;
+        Mutex                            routeUssdCountersLock;
+        Hash<CommonPerformanceCounter*>  routeSmppSmsCounters;
+        Hash<CommonPerformanceCounter*>  routeSmppUssdCounters;
         //File storage
     private:
 
@@ -210,14 +214,13 @@ using namespace scag::stat::sacc;
         inline TimeSlotCounter<int>* newSlotCounter() {
             return new TimeSlotCounter<int>(3600, 1000);
         }
-        void incSmppCounter(const char* systemId, bool sc, int index, int errcode);
-        void incSmppRouteCounter(const smsc::sms::RouteId& routeId, int index, int errcode=-1);
-//        void incSvcSmppCounter(const char* systemId, int index);
+        void incSmppCounter(const char* systemId, bool sc, int index, int ussd, int errcode);
+        void incSmppRouteCounter(const smsc::sms::RouteId& routeId, int index, int ussd, int errcode=-1);
+
         void incSvcWapCounter(const char*  systemId, int index);
         void incSvcMmsCounter(const char*  systemId, int index);
         void dumpSvcCounters(SerializationBuffer& buf);
 
-//        void incScSmppCounter(const char* systemId, int index);
         void incScWapCounter(const char*  systemId, int index);
         void incScMmsCounter(const char*  systemId, int index);
         void dumpScCounters(SerializationBuffer& buf);
@@ -225,8 +228,6 @@ using namespace scag::stat::sacc;
         int indexByCounter(int counter);
         int indexByHttpCounter(int event);
 
-//        uint32_t calcSerializeSize(int index);
-//        uint32_t calcSerializeStatSize(Hash<CommonStat>& stat, bool add);
         void SerializeSmppStat(Hash<CommonStat>& smppStat, SerializationBuffer& buf, bool add);
         void SerializeHttpStat(Hash<HttpStat>& httpStat, SerializationBuffer& buf);
         void incSvcScCounter(const char* systemId, int index, int max_cnt, Hash<CommonPerformanceCounter*>& svcCounters, Mutex& mt, int errcode=-1);
@@ -240,10 +241,8 @@ using namespace scag::stat::sacc;
 
     public:
 
-//        StatisticsManager* InstanceSM();
-        Hash<CommonPerformanceCounter*>& getCounters(bool smsc=0);
-        Hash<CommonPerformanceCounter*>& getRouteCounters();
-//        Hash<CommonStat>& getErrors(bool smsc=0);
+        Hash<CommonPerformanceCounter*>& getCounters(bool smsc, int ussd);
+        Hash<CommonPerformanceCounter*>& getRouteCounters(int ussd);
 
         void init( const StatManConfig& statManCfg );
 

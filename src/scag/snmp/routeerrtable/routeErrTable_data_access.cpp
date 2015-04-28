@@ -24,8 +24,6 @@
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
 
-#include "scag/snmp/smestattable/smeStatTable_subagent.hpp"
-
 #include "logger/Logger.h"
 #include "scag/snmp/SnmpUtil.h"
 
@@ -53,9 +51,6 @@
 namespace scag2 {
 namespace snmp {
 namespace routeerrtable {
-
-smsc::logger::Logger* log;
-const char* containerName = "routeErrTableContainer";
 
 
 /**
@@ -93,7 +88,6 @@ int routeErrTable_init_data(routeErrTable_registration_ptr routeErrTable_reg)
     ***              END  EXAMPLE CODE              ***
     ***************************************************/
 
-    log = smsc::logger::Logger::getInstance("snmp.rerr");
     return MFD_SUCCESS;
 } /* routeErrTable_init_data */
 
@@ -200,7 +194,7 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, long errInd
   uint64_t  errCount = 0;
   routeErrTable_rowreq_ctx* rec = 0;
 
-  for(scag2::stat::IntHash<uint64_t>::Iterator iter = counter->cntErrors.First(); iter.Next(errCode, errCount); )
+  for(smsc::core::buffers::IntHash<uint64_t>::Iterator iter = counter->cntErrors.First(); iter.Next(errCode, errCount); )
   {
     if (!errCount) continue;
 
@@ -272,6 +266,12 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
   return MFD_SUCCESS;
 }
 
+typedef long (*nextIndexFunction) (const char* key);
+
+long nextIndex(long index, const char* key) { return ++index; }
+//    index = nextIndex(index, key);
+
+
 int routeErrTable_cache_load(netsnmp_container* container)
 {
   int retCode = 0;
@@ -287,17 +287,20 @@ int routeErrTable_cache_load(netsnmp_container* container)
     return MFD_RESOURCE_UNAVAILABLE;
   }
 
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getRouteCounters();
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = scag2::snmp::getStatMan()->getRouteCounters(0);
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h2 = scag2::snmp::getStatMan()->getRouteCounters(1);
+
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*> h0;
+  combineCountersHash(h0, h1, h2);
 
   retCode = loadHashToContainer(container, h0, recCount);
-  if ( 0 == recCount && fillEmptyData )  // fill zero data if counters hash is empty
+  if ( 0 == recCount && fillEmptyData() )  // fill zero data if counters hash is empty
   {
     stat::CommonPerformanceCounter* counter = 0;
     smsc_log_debug(log, "routeErrTable_cache_load: no records, make fake counters");
     counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
-    for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = 0;
     counter->cntErrors.Insert(0, 1);
-    fillNextCounter(container, 0, 1, counter);
+    fillNextCounter(container, 0, 0, counter);
     ++recCount;
   }
 

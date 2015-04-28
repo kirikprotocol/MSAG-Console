@@ -19,6 +19,7 @@ namespace routestattable {
 
 void RouteStatTableSubagent::Register()
 {
+  log = smsc::logger::Logger::getInstance("snmp.rstat");
   se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE6"), 131);
   se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE7"), 132);
   se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE8"), 133);

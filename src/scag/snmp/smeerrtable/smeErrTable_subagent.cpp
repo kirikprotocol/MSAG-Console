@@ -22,6 +22,7 @@ namespace smeerrtable {
 
 void InitSmeErrTable()
 {
+  log = smsc::logger::Logger::getInstance("snmp.serr");
   /* initialize the agent library */
   //init_agent("smeErrTable");
 

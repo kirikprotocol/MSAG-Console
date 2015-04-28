@@ -1,6 +1,10 @@
 ?tests
 ?counters
 ?routeerrtable
-?routestattable
+#routestattable
+?routeussdtable
+?routesmstable
 ?smeerrtable
-?smestattable
+#smestattable
+?smeussdtable
+?smesmstable

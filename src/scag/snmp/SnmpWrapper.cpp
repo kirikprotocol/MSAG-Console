@@ -5,8 +5,8 @@
 #include "SnmpWrapper.h"
 #include "scag/snmp/counters/msagCounterTable_cxxiface.h"
 
-#include "smestattable/smeStatTable_subagent.hpp"
-#include "smeerrtable/smeErrTable_subagent.hpp"
+//#include "smestattable/smeStatTable_subagent.hpp"
+//#include "smeerrtable/smeErrTable_subagent.hpp"
 
 namespace {
 
@@ -48,7 +48,7 @@ namespace scag2 {
 namespace snmp {
 
 SnmpWrapper::SnmpWrapper( unsigned node_number, const std::string& socket ) :
-log_(0), isMsag_(true), node(node_number), status(SnmpAgent::UNKN)
+log_(0), isMsag_(true), node(node_number), status(SnmpAgent::UNKN), snmpAgent(0)
 {
     log_ = smsc::logger::Logger::getInstance( "snmp" );
 

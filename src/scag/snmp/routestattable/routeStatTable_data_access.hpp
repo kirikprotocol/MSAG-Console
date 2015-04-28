@@ -39,12 +39,6 @@ namespace routestattable {
     int routeStatTable_init_data(routeStatTable_registration_ptr routeStatTable_reg);
 
 
-/*
- * TODO:180:o: Review routeStatTable cache timeout.
- * The number of seconds before the cache times out
- */
-//#define ROUTESTATTABLE_CACHE_TIMEOUT   60
-
 void routeStatTable_container_init(netsnmp_container* *container_ptr_ptr, netsnmp_cache* cache);
 void routeStatTable_container_shutdown(netsnmp_container* container_ptr);
 

@@ -17,6 +17,7 @@
 #include "util/signal.hpp"
 #include "util/xml/init.h"
 #include "version.inc"
+#include "logger/Logger.h"
 
 static const int SHUTDOWN_SIGNAL = SIGTERM;
 

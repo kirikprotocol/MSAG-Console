@@ -61,8 +61,6 @@ namespace scag2 {
 namespace snmp {
 namespace routestattable {
 
-smsc::logger::Logger* logitf;
-
 typedef struct routeStatTable_interface_ctx_s {
 
    netsnmp_container              *container;
@@ -92,7 +90,7 @@ static Netsnmp_Node_Handler _mfd_routeStatTable_get_values;
  */
 void _routeStatTable_initialize_interface(routeStatTable_registration_ptr reg_ptr,  u_long flags)
 {
-  logitf = smsc::logger::Logger::getInstance("snmp.sstat");
+  log = smsc::logger::Logger::getInstance("snmp.sstat");
   DEBUGMSGTL(("internal:routeStatTable:_routeStatTable_initialize_interface","called\n"));
 
   netsnmp_baby_steps_access_methods *access_multiplexer = &routeStatTable_if_ctx.access_multiplexer;
@@ -132,7 +130,7 @@ void _routeStatTable_initialize_interface(routeStatTable_registration_ptr reg_pt
    */
   _routeStatTable_container_init(&routeStatTable_if_ctx);
   if (NULL == routeStatTable_if_ctx.container) {
-    smsc_log_error(logitf, "could not initialize container for routeStatTable");
+    smsc_log_error(log, "could not initialize container for routeStatTable");
     snmp_log(LOG_ERR,"could not initialize container for routeStatTable\n");
     return;
   }
@@ -163,11 +161,11 @@ void _routeStatTable_initialize_interface(routeStatTable_registration_ptr reg_pt
                                                 );
   if(NULL == reginfo) {
     snmp_log(LOG_ERR,"error registering table routeStatTable\n");
-    smsc_log_error(logitf, "error registering table routeStatTable");
+    smsc_log_error(log, "error registering table routeStatTable");
     return;
   }
   snmp_log(LOG_INFO,"register table routeStatTable, success\n");
-  smsc_log_debug(logitf, "register table routeStatTable, success");
+  smsc_log_debug(log, "register table routeStatTable, success");
 
   reginfo->my_reg_void = &routeStatTable_if_ctx;
 
@@ -343,7 +341,7 @@ routeStatTable_rowreq_ctx* routeStatTable_allocate_rowreq_ctx(void)
     DEBUGMSGTL(("internal:routeStatTable:routeStatTable_allocate_rowreq_ctx","called\n"));
 
     if(NULL == rowreq_ctx) {
-      smsc_log_debug(logitf, "Couldn't allocate memory for a routeStatTable_rowreq_ctx");
+      smsc_log_debug(log, "Couldn't allocate memory for a routeStatTable_rowreq_ctx");
       snmp_log(LOG_ERR,"Couldn't allocate memory for a ""routeStatTable_rowreq_ctx.\n");
     }
 
@@ -412,9 +410,9 @@ static int _mfd_routeStatTable_post_request(netsnmp_mib_handler *handler,
   int rc = routeStatTable_post_request(routeStatTable_if_ctx.user_ctx);
   if (MFD_SUCCESS != rc) {
       /*
-       * nothing we can do about it but logitf it
+       * nothing we can do about it but log it
        */
-    smsc_log_debug(logitf, "routeStatTable error %d from routeStatTable_post_request", rc);
+    smsc_log_debug(log, "routeStatTable error %d from routeStatTable_post_request", rc);
     DEBUGMSGTL(("internal:routeStatTable","error %d from routeStatTable_post_request\n", rc));
   }
 
@@ -428,12 +426,12 @@ static int _mfd_routeStatTable_post_request(netsnmp_mib_handler *handler,
     if (rowreq_ctx->rowreq_flags & MFD_ROW_CREATED) {
       rowreq_ctx->rowreq_flags &= ~MFD_ROW_CREATED;
       CONTAINER_INSERT(routeStatTable_if_ctx.container, rowreq_ctx);
-      smsc_log_debug(logitf, "_mfd_routeStatTable_post_request CONTAINER_INSERT rc=%d", rc);
+      smsc_log_debug(log, "_mfd_routeStatTable_post_request CONTAINER_INSERT rc=%d", rc);
     }
     else if (rowreq_ctx->rowreq_flags & MFD_ROW_DELETED) {
       CONTAINER_REMOVE(routeStatTable_if_ctx.container, rowreq_ctx);
       routeStatTable_release_rowreq_ctx(rowreq_ctx);
-      smsc_log_debug(logitf, "_mfd_routeStatTable_post_request CONTAINER_REMOVE rc=%d", rc);
+      smsc_log_debug(log, "_mfd_routeStatTable_post_request CONTAINER_REMOVE rc=%d", rc);
     }
   }
   return SNMP_ERR_NOERROR;
@@ -553,7 +551,7 @@ NETSNMP_STATIC_INLINE int _routeStatTable_get_column( routeStatTable_rowreq_ctx 
     break;
 
     default:
-      smsc_log_debug(logitf, "unknown column %d in _routeStatTable_get_column", column);
+      smsc_log_debug(log, "unknown column %d in _routeStatTable_get_column", column);
       snmp_log(LOG_ERR,"unknown column %d in _routeStatTable_get_column\n", column);
       break;
     }

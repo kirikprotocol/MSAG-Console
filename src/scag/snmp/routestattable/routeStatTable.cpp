@@ -24,6 +24,8 @@ namespace scag2 {
 namespace snmp {
 namespace routestattable {
 
+smsc::logger::Logger* log = 0;
+const char* containerName = "routeStatTableContainer";
 
 oid routeStatTable_oid[] = { ROUTESTATTABLE_OID };
 int routeStatTable_oid_size = OID_LENGTH(routeStatTable_oid);

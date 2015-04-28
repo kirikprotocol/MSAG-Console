@@ -16,11 +16,15 @@
 
 /* OID and column number definitions for  */
 #include "routeErrTable_oids.hpp"
+#include "logger/Logger.h"
 
 
 namespace scag2 {
 namespace snmp {
 namespace routeerrtable {
+
+extern smsc::logger::Logger* log;
+extern const char* containerName;
 
 /* *********************************************************************
  * function declarations

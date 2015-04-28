@@ -316,7 +316,7 @@ int StateMachine::Execute()
 void StateMachine::registerEvent( int event, 
                                   SmppEntity* src, 
                                   SmppEntity* dst,
-                                  const char* rid, int errCode )
+                                  const char* rid, int errCode, int ussd)
 {
     char* src_id;
     char* dst_id = NULL;
@@ -336,13 +336,13 @@ void StateMachine::registerEvent( int event,
         dstType = dst->info.type == etSmsc;
     }
 
-    smsc_log_debug(log_, "registerEvent: %d(%s), src='%s', dst='%s', rid='%s', err=%d",
+    smsc_log_debug(log_, "registerEvent: %d(%s), src='%s', dst='%s', rid='%s', err=%d ussd=%d",
                    event, SmppStatEvent::eventTypeToString((events::smpp::EventType)event),
                    src_id, dst_id ? dst_id : "NULL",
-                   rid ? rid : "NULL", errCode );
+                   rid ? rid : "NULL", errCode, ussd );
 
     Statistics::Instance().registerEvent
-        ( SmppStatEvent(src_id, srcType, dst_id, dstType, rid, event, errCode) );
+        ( SmppStatEvent(src_id, srcType, dst_id, dstType, rid, event, errCode, ussd) );
 }
 
     
@@ -422,7 +422,9 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
                     throw smsc::util::Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
                 dst->putCommand(aucmd);
             }
-            registerEvent( stat::events::smpp::ACCEPTED, src, dst, ri.routeId.c_str(), -1 );
+
+            registerEvent( stat::events::smpp::ACCEPTED, src, dst, ri.routeId.c_str(), -1,
+                sms.hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) ? 0:1);
         }
     } catch (std::exception& e) {
         failed = smsc::system::Status::SYSFAILURE;
@@ -680,7 +682,9 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         }
     }
 
-    registerEvent( staterr, src, dst, (char*)sms->getRouteId(), err );
+    //sms.hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) ? 0:1
+    registerEvent( staterr, src, dst, (char*)sms->getRouteId(), err,
+      sms->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) ? 0:1);
 
     try{
         dst->putCommand(aucmd);
@@ -992,7 +996,9 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
         }
 
         if (resp.get()) src->putCommand( resp );
-        registerEvent( statevent, src, dst, routeId.c_str(), st.result );
+        //sms.hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) ? 0:1
+        registerEvent( statevent, src, dst, routeId.c_str(), st.result,
+          sms.hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) ? 0:1);
         if ( session.get() ) session->closeCurrentOperation();
         hrt.stop();
         return;

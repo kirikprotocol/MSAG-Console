@@ -35,7 +35,7 @@
 #include "scag/stat/impl/StatisticsManager.h"
 
 #ifdef SNMP
-#include "scag/snmp/smestattable/smeStatTable_subagent.hpp"
+#include "scag/snmp/SnmpUtil.h"
 #endif
 
 namespace {
@@ -336,7 +336,7 @@ void Scag::init( unsigned mynode )
                 smsc_log_warn(log, "value <snmp.pingTimeout> is missed, using %u",pingTimeout);
             }
 
-            scag2::snmp::smestattable::SmeStatTableSubagent::Init(statMan);
+            scag2::snmp::setStatMan(statMan);
             smsc_log_info(log, "creating snmpwrapper @ '%s'", socket.c_str());
             snmp_.reset( new snmp::SnmpWrapper(mynode, socket) );
             snmp_->initMsag( counterListCtor,

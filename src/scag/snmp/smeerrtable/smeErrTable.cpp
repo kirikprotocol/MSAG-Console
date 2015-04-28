@@ -26,6 +26,9 @@ namespace scag2{
 namespace snmp{
 namespace smeerrtable{
 
+smsc::logger::Logger* log = 0;
+const char* containerName = "smeErrTableContainer";
+
 oid smeErrTable_oid[] = { SMEERRTABLE_OID };
 int smeErrTable_oid_size = OID_LENGTH(smeErrTable_oid);
 

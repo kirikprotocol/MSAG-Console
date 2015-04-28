@@ -12,7 +12,7 @@ namespace snmp {
 namespace routestattable {
 
 /* column number definitions for table routeStatTable */
-#define ROUTESTATTABLE_OID            1,3,6,1,4,1,26757,2,12
+#define ROUTESTATTABLE_OID            1,3,6,1,4,1,26757,2,30
 
 #define COLUMN_ROUTESTATINDEX         1
 #define COLUMN_routeStatRouteId      2

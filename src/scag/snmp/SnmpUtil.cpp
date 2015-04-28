@@ -4,8 +4,27 @@
 namespace scag2 {
 namespace snmp {
 
-//const char* noStatData = "No-statistics-data";
-//bool fillEmptyData = false;
+static bool fillEmptyDataFlag = false;
+static scag2::stat::StatisticsManager* statManPtr = 0;
+const char* noStatData = "No-statistics-data";
+
+scag2::stat::StatisticsManager* getStatMan()
+{
+  return statManPtr;
+}
+void setStatMan(scag2::stat::StatisticsManager* value)
+{
+  statManPtr = value;
+}
+
+bool fillEmptyData()
+{
+  return fillEmptyDataFlag;
+}
+void setEmptyDataFlag(bool value)
+{
+  fillEmptyDataFlag = value;
+}
 
 void uint64_to_U64(uint64_t val1, U64& val2)
 {
@@ -49,7 +68,7 @@ void initConfigParams(int timeout, smsc::logger::Logger* log)
   }
   timeout = cacheTimeout; // seconds
   try {
-    fillEmptyData = config::ConfigManager::Instance().getConfig()->getBool("snmp.fillEmptyData");
+    fillEmptyDataFlag = config::ConfigManager::Instance().getConfig()->getBool("snmp.fillEmptyData");
   }
   catch (...) {
     smsc_log_info(log, "Config parameter snmp.fillEmptyData not found, using default=%s", fillEmptyData?"true":"false");
@@ -64,6 +83,27 @@ void logIndexDebug(smsc::logger::Logger* log, const char* msg, long index1, long
     msg, index1, index2, idxStr.c_str(), oidStr.c_str());
 }
 
+void combineCountersHash(counterHash& h0, counterHash& h1, counterHash& h2)
+{
+  long index = 0;
+  char* key = 0;
+  stat::CommonPerformanceCounter* counter1 = 0;
+  stat::CommonPerformanceCounter* counter2 = 0;
+
+  h1.First();
+  while ( h1.Next(key, counter1) ) {
+    h0.Insert(key, counter1);
+  }
+  h2.First();
+  while ( h2.Next(key, counter2) ) {
+    try {
+      counter1 = h0.Get(key);
+      counter1->add(counter2);
+    }
+    catch (...) {
+    }
+  }
+}
 
 }
 }

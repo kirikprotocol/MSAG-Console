@@ -276,17 +276,18 @@ using scag::util::SerializeBuffer;
 
       int event; // use constants from scag::stat::events::smpp
       int errCode;
+      int ussd;     //0-sms, 1-ussd
 
       SmppStatEvent() :
-      routeProviderId(-1), srcType(false), dstType(false), event(-1), errCode(-1)
+      routeProviderId(-1), srcType(false), dstType(false), event(-1), errCode(-1), ussd(0)
       {
         srcId[0]=0;
         dstId[0]=0;
         routeId[0]=0;
       }
       SmppStatEvent(const char* src, bool _srcType, const char* dst,
-                    bool _dstType, int cnt, int errcode) :
-      routeProviderId(-1), srcType(_srcType), dstType(_dstType), event(cnt), errCode(errcode)
+                    bool _dstType, int cnt, int errcode, int isUssd) :
+      routeProviderId(-1), srcType(_srcType), dstType(_dstType), event(cnt), errCode(errcode), ussd(isUssd)
       {
         srcId[0] = 0;
         if(src != NULL)
@@ -297,8 +298,8 @@ using scag::util::SerializeBuffer;
         routeId[0]=0;
       }
       SmppStatEvent(const char* src, bool _srcType, const char* dst, bool _dstType,
-                    const char* rid, int cnt, int errcode) :
-      routeProviderId(-1), srcType(_srcType), dstType(_dstType), event(cnt), errCode(errcode)
+                    const char* rid, int cnt, int errcode, int isUssd) :
+      routeProviderId(-1), srcType(_srcType), dstType(_dstType), event(cnt), errCode(errcode), ussd(isUssd)
       {
         srcId[0] = 0;
         if(src != NULL)
@@ -320,6 +321,7 @@ using scag::util::SerializeBuffer;
         event = src.event;
         srcType = src.srcType;
         dstType = src.dstType;
+        ussd = src.ussd;
       }
       static const char* eventTypeToString( events::smpp::EventType pt );
     };

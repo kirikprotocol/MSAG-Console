@@ -26,6 +26,9 @@ namespace scag2{
 namespace snmp{
 namespace routeerrtable{
 
+smsc::logger::Logger* log = 0;
+const char* containerName = "routeErrTableContainer";
+
 oid routeErrTable_oid[] = { ROUTEERRTABLE_OID };
 int routeErrTable_oid_size = OID_LENGTH(routeErrTable_oid);
 

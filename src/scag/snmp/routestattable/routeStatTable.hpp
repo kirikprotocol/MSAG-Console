@@ -30,6 +30,7 @@ config_require(EYELINE-MSAG-MIB/routeStatTable/routeStatTable_data_set)
 
 /* OID and column number definitions for routeStatTable */
 #include "routeStatTable_oids.hpp"
+#include "logger/Logger.h"
 
 /* enum definions */
 //#include "routeStatTable_enums.hpp"
@@ -39,6 +40,8 @@ namespace scag2 {
 namespace snmp {
 namespace routestattable {
 
+extern smsc::logger::Logger* log;
+extern const char* containerName;
 
 /* *********************************************************************
  * function declarations

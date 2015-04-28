@@ -10,11 +10,16 @@
 #include "scag/counter/Manager.h"
 
 #include "smestattable/smeStatTable_subagent.hpp"
+#include "smeussdtable/smeStatTable_subagent.hpp"
+#include "smesmstable/smeStatTable_subagent.hpp"
 #include "smeerrtable/smeErrTable_subagent.hpp"
 #include "routestattable/routeStatTable_subagent.hpp"
+#include "routeussdtable/routeStatTable_subagent.hpp"
+#include "routesmstable/routeStatTable_subagent.hpp"
 #include "routeerrtable/routeErrTable_subagent.hpp"
 #include "scag/stat/impl/StatCountersEnum.hpp"
 #include "SnmpAgent.hpp"
+#include "SnmpUtil.h"
 #include <signal.h>
 #include "scag/version.h"
 #include "scag/counter/impl/HashCountManager.h"
@@ -95,18 +100,26 @@ extern "C" {
       smsc_log_error(log, "SNMP handlers init failure");
     }
 
-    smestattable::SmeStatTableSubagent::Register();
+//    smestattable::SmeStatTableSubagent::Register();
+    smeussdtable::SmeStatTableSubagent::Register();
+    smesmstable::SmeStatTableSubagent::Register();
     smeerrtable::InitSmeErrTable();
-    routestattable::RouteStatTableSubagent::Register();
+//    routestattable::RouteStatTableSubagent::Register();
+    routeussdtable::RouteStatTableSubagent::Register();
+    routesmstable::RouteStatTableSubagent::Register();
     routeerrtable::InitRouteErrTable();
   }
 
   void SnmpAgent::shutdown()
   {
     smsc_log_debug(log, "try to shutdown snmp agent");
-    smestattable::SmeStatTableSubagent::Unregister();
+//    smestattable::SmeStatTableSubagent::Unregister();
+    smeussdtable::SmeStatTableSubagent::Unregister();
+    smesmstable::SmeStatTableSubagent::Unregister();
     smeerrtable::ShutdownSmeErrTable();
-    routestattable::RouteStatTableSubagent::Unregister();
+//    routestattable::RouteStatTableSubagent::Unregister();
+    routeussdtable::RouteStatTableSubagent::Unregister();
+    routesmstable::RouteStatTableSubagent::Unregister();
     routeerrtable::ShutdownRouteErrTable();
     smsc_log_debug(log, "snmp agent shutdowned");
   }
@@ -365,7 +378,7 @@ using scag2::snmp::SnmpAgent;
 
     struct counter64 val;
     uint64_t perf[scag2::stat::Counters::cntSmppSize];
-    scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getSmppPerfData(perf);
+    scag2::snmp::getStatMan()->getSmppPerfData(perf);
 
     if ( MODE_GET == reqinfo->mode )
     {

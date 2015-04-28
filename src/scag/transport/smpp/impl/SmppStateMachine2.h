@@ -61,7 +61,7 @@ protected:
     // void DeliveryResp( std::auto_ptr<SmppCommand> cmd,int status);
     // void DataResp( std::auto_ptr<SmppCommand> cmd,int status);
 
-    void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode);
+    void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode, int ussd);
 
     /// in case of success SmppCommand is taken
     uint32_t putCommand(CommandId cmdType, SmppEntity* src, SmppEntity* dst, router::RouteInfo& ri, std::auto_ptr<SmppCommand>& cmd );

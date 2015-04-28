@@ -27,9 +27,9 @@ int PerfSocketServer::Execute()
     if( genSocket.StartServer())
         smsc_log_warn(logger, "General statistics socket can't start");
     if( svcSocket.StartServer())
-        smsc_log_warn(logger, "Services statistics socket can't start");;
+        smsc_log_warn(logger, "Services statistics socket can't start");
     if( scSocket.StartServer())
-        smsc_log_warn(logger, "Service center statistics socket can't start");;
+        smsc_log_warn(logger, "Service center statistics socket can't start");
 
     smsc_log_debug(logger, "Wait for a socket to write...");
 

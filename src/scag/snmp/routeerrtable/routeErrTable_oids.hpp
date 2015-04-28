@@ -9,7 +9,7 @@
 
 
 /* column number definitions for table routeErrTable */
-#define ROUTEERRTABLE_OID         1,3,6,1,4,1,26757,2,13
+#define ROUTEERRTABLE_OID         1,3,6,1,4,1,26757,2,33
 #define COLUMN_ROUTEERRINDEX      1
 #define COLUMN_ROUTEERRCODE       2
 #define COLUMN_ROUTEERRID         3

@@ -60,8 +60,6 @@ namespace scag2 {
 namespace snmp {
 namespace smestattable {
 
-smsc::logger::Logger* logitf;
-
 typedef struct smeStatTable_interface_ctx_s {
 
    netsnmp_container              *container;
@@ -91,7 +89,6 @@ static Netsnmp_Node_Handler _mfd_smeStatTable_get_values;
  */
 void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  u_long flags)
 {
-  logitf = smsc::logger::Logger::getInstance("snmp.sstat");
   DEBUGMSGTL(("internal:smeStatTable:_smeStatTable_initialize_interface","called\n"));
 
   netsnmp_baby_steps_access_methods *access_multiplexer = &smeStatTable_if_ctx.access_multiplexer;
@@ -130,7 +127,7 @@ void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  
    */
   _smeStatTable_container_init(&smeStatTable_if_ctx);
   if (NULL == smeStatTable_if_ctx.container) {
-    smsc_log_error(logitf, "could not initialize container for smeStatTable");
+    smsc_log_error(log, "could not initialize container for smeStatTable");
     snmp_log(LOG_ERR,"could not initialize container for smeStatTable\n");
     return;
   }
@@ -154,6 +151,7 @@ void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  
    */
   DEBUGMSGTL(("smeStatTable:init_smeStatTable", "Registering smeStatTable as a mibs-for-dummies table.\n"));
   handler = netsnmp_baby_steps_access_multiplexer_get(access_multiplexer);
+//1
   reginfo = netsnmp_handler_registration_create("smeStatTable", handler,
                                                 smeStatTable_oid,
                                                 smeStatTable_oid_size,
@@ -161,11 +159,11 @@ void _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  
                                                 );
   if(NULL == reginfo) {
     snmp_log(LOG_ERR,"error registering table smeStatTable\n");
-    smsc_log_error(logitf, "error registering table smeStatTable");
+    smsc_log_error(log, "error registering table smeStatTable");
     return;
   }
   snmp_log(LOG_INFO,"register table smeStatTable, success\n");
-  smsc_log_debug(logitf, "register table smeStatTable, success");
+  smsc_log_debug(log, "register table smeStatTable, success");
 
   reginfo->my_reg_void = &smeStatTable_if_ctx;
 
@@ -341,7 +339,7 @@ smeStatTable_rowreq_ctx* smeStatTable_allocate_rowreq_ctx(void)
     DEBUGMSGTL(("internal:smeStatTable:smeStatTable_allocate_rowreq_ctx","called\n"));
 
     if(NULL == rowreq_ctx) {
-      smsc_log_debug(logitf, "Couldn't allocate memory for a smeStatTable_rowreq_ctx");
+      smsc_log_debug(log, "Couldn't allocate memory for a smeStatTable_rowreq_ctx");
       snmp_log(LOG_ERR,"Couldn't allocate memory for a ""smeStatTable_rowreq_ctx.\n");
     }
 
@@ -412,7 +410,7 @@ static int _mfd_smeStatTable_post_request(netsnmp_mib_handler *handler,
       /*
        * nothing we can do about it but log it
        */
-    smsc_log_debug(logitf, "smeStatTable error %d from smeStatTable_post_request", rc);
+    smsc_log_debug(log, "smeStatTable error %d from smeStatTable_post_request", rc);
     DEBUGMSGTL(("internal:smeStatTable","error %d from smeStatTable_post_request\n", rc));
   }
 
@@ -426,12 +424,12 @@ static int _mfd_smeStatTable_post_request(netsnmp_mib_handler *handler,
     if (rowreq_ctx->rowreq_flags & MFD_ROW_CREATED) {
       rowreq_ctx->rowreq_flags &= ~MFD_ROW_CREATED;
       CONTAINER_INSERT(smeStatTable_if_ctx.container, rowreq_ctx);
-      smsc_log_debug(logitf, "_mfd_smeStatTable_post_request CONTAINER_INSERT rc=%d", rc);
+      smsc_log_debug(log, "_mfd_smeStatTable_post_request CONTAINER_INSERT rc=%d", rc);
     }
     else if (rowreq_ctx->rowreq_flags & MFD_ROW_DELETED) {
       CONTAINER_REMOVE(smeStatTable_if_ctx.container, rowreq_ctx);
       smeStatTable_release_rowreq_ctx(rowreq_ctx);
-      smsc_log_debug(logitf, "_mfd_smeStatTable_post_request CONTAINER_REMOVE rc=%d", rc);
+      smsc_log_debug(log, "_mfd_smeStatTable_post_request CONTAINER_REMOVE rc=%d", rc);
     }
   }
   return SNMP_ERR_NOERROR;
@@ -551,7 +549,7 @@ NETSNMP_STATIC_INLINE int _smeStatTable_get_column( smeStatTable_rowreq_ctx *row
     break;
 
     default:
-      smsc_log_debug(logitf, "unknown column %d in _smeStatTable_get_column", column);
+      smsc_log_debug(log, "unknown column %d in _smeStatTable_get_column", column);
       snmp_log(LOG_ERR,"unknown column %d in _smeStatTable_get_column\n", column);
       break;
     }

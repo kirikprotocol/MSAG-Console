@@ -30,14 +30,15 @@ config_require(EYELINE-MSAG-MIB/smeStatTable/smeStatTable_data_set)
 
 /* OID and column number definitions for smeStatTable */
 #include "smeStatTable_oids.hpp"
-
-/* enum definions */
-//#include "smeStatTable_enums.hpp"
+#include "logger/Logger.h"
 
 
 namespace scag2 {
 namespace snmp {
 namespace smestattable {
+
+extern smsc::logger::Logger* log;
+extern const char* containerName;
 
 
 /* *********************************************************************

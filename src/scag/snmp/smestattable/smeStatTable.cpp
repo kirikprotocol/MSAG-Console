@@ -24,6 +24,8 @@ namespace scag2 {
 namespace snmp {
 namespace smestattable {
 
+smsc::logger::Logger* log = 0;
+const char* containerName = "smeStatTableContainer";
 
 oid smeStatTable_oid[] = { SMESTATTABLE_OID };
 int smeStatTable_oid_size = OID_LENGTH(smeStatTable_oid);
@@ -39,6 +41,7 @@ void initialize_table_smeStatTable(void);
  */
 void init_smeStatTable(void)
 {
+  smsc_log_debug(log, "smeStatTable:init_smeStatTable");
     DEBUGMSGTL(("verbose:smeStatTable:init_smeStatTable","called\n"));
 
     /*
@@ -71,6 +74,7 @@ void shutdown_smeStatTable(void)
  */
 void initialize_table_smeStatTable(void)
 {
+  smsc_log_debug(log, "smeStatTable:initialize_table_smeStatTable");
     smeStatTable_registration_ptr user_context;
     u_long flags;
 
@@ -150,6 +154,7 @@ void smeStatTable_rowreq_ctx_cleanup(smeStatTable_rowreq_ctx* rowreq_ctx)
  */
 int smeStatTable_pre_request(smeStatTable_registration_ptr user_context)
 {
+  smsc_log_debug(log, "smeStatTable:smeStatTable_pre_request");
     DEBUGMSGTL(("verbose:smeStatTable:smeStatTable_pre_request","called\n"));
 
     /*
@@ -175,6 +180,7 @@ int smeStatTable_pre_request(smeStatTable_registration_ptr user_context)
  */
 int smeStatTable_post_request(smeStatTable_registration_ptr user_context)
 {
+  smsc_log_debug(log, "smeStatTable:smeStatTable_post_request");
     DEBUGMSGTL(("verbose:smeStatTable:smeStatTable_post_request","called\n"));
 
     /*

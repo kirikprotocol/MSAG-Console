@@ -9,7 +9,7 @@
 
 
 /* column number definitions for table smeErrTable */
-#define SMEERRTABLE_OID         1,3,6,1,4,1,26757,2,11
+#define SMEERRTABLE_OID         1,3,6,1,4,1,26757,2,23
 #define COLUMN_SMEERRINDEX      1
 #define COLUMN_SMEERRCODE       2
 #define COLUMN_SMEERRSYSTEMID   3

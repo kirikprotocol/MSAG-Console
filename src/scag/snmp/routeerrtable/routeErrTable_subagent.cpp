@@ -22,6 +22,7 @@ namespace routeerrtable{
 
 void InitRouteErrTable()
 {
+  log = smsc::logger::Logger::getInstance("snmp.rerr");
   /* init routeErrTable mib code */
   init_routeErrTable();
 

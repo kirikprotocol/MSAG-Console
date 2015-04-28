@@ -17,20 +17,10 @@ namespace scag2{
 namespace snmp{
 namespace smestattable{
 
-static scag2::stat::StatisticsManager* statManPtr = 0;
-
-scag2::stat::StatisticsManager* SmeStatTableSubagent::getStatMan()
-{
-  return statManPtr;
-}
-
-void SmeStatTableSubagent::Init(scag2::stat::StatisticsManager* statman)
-{
-  statManPtr = statman;
-}
-
 void SmeStatTableSubagent::Register()
 {
+  log = smsc::logger::Logger::getInstance("snmp.sstat");
+  smsc_log_debug(log, "SmeStatTableSubagent::Register");
   se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE1"), 128);
   se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE2"), 129);
   se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE3"), 130);
@@ -42,6 +32,7 @@ void SmeStatTableSubagent::Register()
 
 void SmeStatTableSubagent::Unregister()
 {
+  smsc_log_debug(log, "SmeStatTableSubagent::Unregister");
   snmp_shutdown("smeStatTable");
 }
 

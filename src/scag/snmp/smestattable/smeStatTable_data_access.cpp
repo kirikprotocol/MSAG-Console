@@ -17,7 +17,7 @@
 
 #include "scag/stat/impl/StatisticsManager.h"
 #include "scag/stat/impl/StatCountersEnum.hpp"
-#include "logger/Logger.h"
+//#include "logger/Logger.h"
 #include "core/buffers/Hash.hpp"
 
 #include "scag/stat/impl/Performance.h"
@@ -51,8 +51,8 @@ namespace scag2 {
 namespace snmp {
 namespace smestattable {
 
-smsc::logger::Logger* log;
-const char* containerName = "smeStatTableContainer";
+//smsc::logger::Logger* log;
+//const char* containerName = "smeStatTableContainer";
 
 bool fillRecord(smeStatTable_rowreq_ctx* rec, const char* sysId, stat::CommonPerformanceCounter* counter)
 {
@@ -65,27 +65,17 @@ bool fillRecord(smeStatTable_rowreq_ctx* rec, const char* sysId, stat::CommonPer
   size_t smeStatSystemId_len = (strlen(sysId)<32) ? strlen(sysId) : 32;
   strncpy(&smeStatSystemId[0], sysId, smeStatSystemId_len);
 
-/*
-  if (
-       (NULL == rec->data.smeStatSystemId)
-       || (rec->data.smeStatSystemId_len < (smeStatSystemId_len * sizeof(smeStatSystemId[0])))
-     )
-  {
-    snmp_log(LOG_ERR,"not enough space for value\n");
-    return false;
-  }
-*/
-
   rec->data.smeStatSystemId_len = smeStatSystemId_len * sizeof(smeStatSystemId[0]);
   memcpy( rec->data.smeStatSystemId, smeStatSystemId, smeStatSystemId_len * sizeof(smeStatSystemId[0]) );
 
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntAccepted],      rec->data.smeStatAccepted);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntRejected],      rec->data.smeStatRejected);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntDelivered],     rec->data.smeStatDelivered);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntGw_Rejected],   rec->data.smeStatGwRejected);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntFailed],        rec->data.smeStatFailed);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptOk],     rec->data.smeStatReceiptOk);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptFailed], rec->data.smeStatReceiptFailed);
+  uint64_t* pcnt = &counter->cntEvent[0]; // first 'ussd' counter, second 'sms' counter
+  uint64_to_U64((*pcnt++ + *pcnt++), rec->data.smeStatAccepted);
+  uint64_to_U64((*pcnt++ + *pcnt++), rec->data.smeStatRejected);
+  uint64_to_U64((*pcnt++ + *pcnt++), rec->data.smeStatDelivered);
+  uint64_to_U64((*pcnt++ + *pcnt++), rec->data.smeStatGwRejected);
+  uint64_to_U64((*pcnt++ + *pcnt++), rec->data.smeStatFailed);
+  uint64_to_U64((*pcnt++ + *pcnt++), rec->data.smeStatReceiptOk);
+  uint64_to_U64((*pcnt++ + *pcnt++), rec->data.smeStatReceiptFailed);
 
   return true;
 }
@@ -105,6 +95,7 @@ bool fillRecord(smeStatTable_rowreq_ctx* rec, const char* sysId, stat::CommonPer
  */
 int smeStatTable_init_data(smeStatTable_registration_ptr smeStatTable_reg)
 {
+  smsc_log_debug(log, "smeStatTable_init_data");
     DEBUGMSGTL(("verbose:smeStatTable:smeStatTable_init_data","called\n"));
 
     /*
@@ -126,20 +117,6 @@ int smeStatTable_init_data(smeStatTable_registration_ptr smeStatTable_reg)
     ***              END  EXAMPLE CODE              ***
     ***************************************************/
 
-    log = smsc::logger::Logger::getInstance("snmp.sstat");
-/*
-    try
-    {
-      scag2::stat::StatisticsManager* statMan = SmeStatTableSubagent::getStatMan();
-    }
-    catch(...)
-    {
-      smsc_log_error(log, "smeStatTable_cache_load: getStatisticsManager exception");
-      snmp_log(LOG_ERR, "smeStatTable_cache_load: Statistics Manager exception\n");
-      return MFD_RESOURCE_UNAVAILABLE;
-    }
-    smsc_log_debug(log, "smeStatTable_cache_load: Statistics Manager OK");
-*/
     return MFD_SUCCESS;
 } /* smeStatTable_init_data */
 
@@ -176,6 +153,7 @@ int smeStatTable_init_data(smeStatTable_registration_ptr smeStatTable_reg)
  */
 void smeStatTable_container_init(netsnmp_container **container_ptr_ptr, netsnmp_cache *cache)
 {
+  smsc_log_debug(log, "smeStatTable_container_init");
     DEBUGMSGTL(("verbose:smeStatTable:smeStatTable_container_init","called\n"));
     
     if((NULL == cache) || (NULL == container_ptr_ptr)) {
@@ -206,6 +184,7 @@ void smeStatTable_container_init(netsnmp_container **container_ptr_ptr, netsnmp_
 
 void smeStatTable_container_shutdown(netsnmp_container *container_ptr)
 {
+  smsc_log_debug(log, "smeStatTable_container_shutdown");
   DEBUGMSGTL(("verbose:smeStatTable:smeStatTable_container_shutdown","called\n"));
   if (NULL == container_ptr) {
     snmp_log(LOG_ERR,"bad params to smeStatTable_container_shutdown\n");
@@ -293,6 +272,7 @@ int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<
 
 int smeStatTable_cache_load(netsnmp_container* container)
 {
+  smsc_log_debug(log, "smeStatTable_cache_load");
   int retCode = 0;
   int recCount = 0;
   if (container)
@@ -306,16 +286,16 @@ int smeStatTable_cache_load(netsnmp_container* container)
     smsc_log_error(log, "smeStatTable_cache_load error: container is NULL");
     return MFD_RESOURCE_UNAVAILABLE;
   }
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = SmeStatTableSubagent::getStatMan()->getCounters(0);
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = getStatMan()->getCounters(0);
 //  smsc_log_debug(log, "smeStatTable_cache_load: getCounters(0) ok, %d entries", h0.GetCount());
 
   retCode = loadHashToContainer(container, h0, recCount);
   if ( retCode == MFD_SUCCESS )
   {
-    smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = SmeStatTableSubagent::getStatMan()->getCounters(1);
+    smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = getStatMan()->getCounters(1);
     retCode = loadHashToContainer(container, h1, recCount);
   }
-  if ( 0 == recCount && fillEmptyData )  // fill zero data if counters hash is empty
+  if ( 0 == recCount && fillEmptyData() )  // fill zero data if counters hash is empty
   {
     stat::CommonPerformanceCounter* counter = 0;
     smsc_log_debug(log, "smeStatTable_cache_load: no records, make fake counters");
@@ -344,7 +324,7 @@ int smeStatTable_cache_load(netsnmp_container* container)
  */
 void smeStatTable_cache_free(netsnmp_container *container)
 {
-//  smsc_log_debug(log, "smeStatTable_cache_free called");
+  smsc_log_debug(log, "smeStatTable_cache_free");
 
     /*
      * TODO:380:M: Free smeStatTable cache.
@@ -367,6 +347,7 @@ void smeStatTable_cache_free(netsnmp_container *container)
  */
 int smeStatTable_row_prep( smeStatTable_rowreq_ctx *rowreq_ctx)
 {
+  smsc_log_debug(log, "smeStatTable_row_prep");
 //    DEBUGMSGTL(("verbose:smeStatTable:smeStatTable_row_prep","called\n"));
 
     netsnmp_assert(NULL != rowreq_ctx);

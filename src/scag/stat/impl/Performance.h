@@ -83,15 +83,15 @@ struct CommonPerformanceCounter
     }
     void reserve(uint32_t cnt) {
       count = cnt;
-      counters = new uint16_t[cnt];
-      memset(counters, 0, sizeof(uint16_t) * cnt);
+      counters = new uint16_t[count];
+      memset(counters, 0, sizeof(uint16_t) * count);
 
-      slots = new TimeSlotCounter<int>*[cnt];
-      memset(slots, 0, sizeof(TimeSlotCounter<int>*) * cnt);
+      slots = new TimeSlotCounter<int>*[count];
+      memset(slots, 0, sizeof(TimeSlotCounter<int>*) * count);
 
 #ifdef SNMP
-      cntEvent = new uint64_t[cnt];
-      memset(cntEvent, 0, sizeof(uint64_t) * cnt);
+      cntEvent = new uint64_t[count];
+      memset(cntEvent, 0, sizeof(uint64_t) * count);
 #endif
     };
 
@@ -108,8 +108,34 @@ struct CommonPerformanceCounter
     };
 
     inline void clear() {
+#ifdef SNMP
+      memset(cntEvent, 0, sizeof(uint64_t) * count);
+      cntErrors.Empty();
+#endif
       memset(counters, 0, sizeof(uint16_t) * count);
     };
+
+#ifdef SNMP
+    void add(CommonPerformanceCounter* cnt) {
+      for ( int i = 0; i<count; ++i ) {
+        cntEvent[i] += cnt->cntEvent[i];
+      }
+
+      int       errCode = 0;
+      uint64_t  errCount = 0;
+      uint64_t* ptr = 0;
+
+      smsc::core::buffers::IntHash<uint64_t>::Iterator iter = cnt->cntErrors.First();
+      while ( iter.Next(errCode, errCount) ) {
+        if (!errCount) continue;
+        ptr = cntErrors.GetPtr(errCode);
+        if (ptr)
+          *ptr += errCount;
+        else
+          cntErrors.Insert(errCode, errCount);
+      }
+    }
+#endif
 };
 
 class PerformanceListener{

@@ -22,7 +22,6 @@
 
 #include "scag/stat/impl/Performance.h"
 
-#include "scag/snmp/smestattable/smeStatTable_subagent.hpp"
 #include "scag/snmp/SnmpUtil.h"
 
 
@@ -51,246 +50,183 @@ namespace scag2 {
 namespace snmp {
 namespace routestattable {
 
-smsc::logger::Logger* log;
-const char* containerName = "routeStatTableContainer";
+struct dataAccessCtx;
+typedef int (*fillCounterFunction) (dataAccessCtx& ctx);
+typedef int (*loadHashToContainerFunction) (dataAccessCtx& ctx);
 
-bool fillRecord(routeStatTable_rowreq_ctx* rec, const char* routeId, stat::CommonPerformanceCounter* counter)
+struct dataAccessCtx
 {
-  if (!routeId)
+  std::string moduleName;
+  netsnmp_container* container;
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& hSms;
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& hUssd;
+  int recCount;
+  stat::CommonPerformanceCounter* counterSms;
+  stat::CommonPerformanceCounter* counterUssd;
+  stat::CommonPerformanceCounter counter;
+  char* key;
+  long index;
+  fillCounterFunction fillCounter;
+  loadHashToContainerFunction loadHashToContainer;
+
+  dataAccessCtx() : container(0), recCount(0), key(0), index(0), counterSms(0), counterUssd(0)
+  {
+    counter.reserve(stat::Counters::cntSmppSize);
+    counter.cntErrors.Insert(0,0);
+  }
+};
+
+
+bool fillRecord(routeStatTable_rowreq_ctx* rec, dataAccessCtx& ctx,
+    stat::CommonPerformanceCounter* counter, stat::CommonPerformanceCounter* counter1)
+{
+  if (!ctx.key)
     return false;
   if (!counter)
     return false;
 
   char routeStatId[34];
-  size_t routeStatId_len = (strlen(routeId)<32) ? strlen(routeId) : 32;
-  strncpy(&routeStatId[0], routeId, routeStatId_len);
-
-/*
-  if (
-       (NULL == rec->data.routeStatRouteId)
-       || (rec->data.routeStatRouteId_len < (routeStatId_len * sizeof(routeStatId[0])))
-     )
-  {
-    snmp_log(LOG_ERR,"not enough space for value\n");
-    return false;
-  }
-*/
+  size_t routeStatId_len = (strlen(ctx.key)<32) ? strlen(ctx.key) : 32;
+  strncpy(&routeStatId[0], ctx.key, routeStatId_len);
 
   rec->data.routeStatRouteId_len = routeStatId_len * sizeof(routeStatId[0]);
   memcpy( rec->data.routeStatRouteId, routeStatId, routeStatId_len * sizeof(routeStatId[0]) );
 
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntAccepted],      rec->data.routeStatAccepted);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntRejected],      rec->data.routeStatRejected);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntDelivered],     rec->data.routeStatDelivered);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntGw_Rejected],   rec->data.routeStatGwRejected);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntFailed],        rec->data.routeStatFailed);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptOk],     rec->data.routeStatReceiptOk);
-  uint64_to_U64(counter->cntEvent[stat::Counters::cntRecieptFailed], rec->data.routeStatReceiptFailed);
+  uint64_t* cntSms = &counter->cntEvent[0];
+  uint64_t* cntUssd = counter1 ? &counter1->cntEvent[0] : &ctx.counter.cntEvent[0];
+  uint64_to_U64((*cntSms++ + *cntUssd++), rec->data.routeStatAccepted);
+  uint64_to_U64((*cntSms++ + *cntUssd++), rec->data.routeStatRejected);
+  uint64_to_U64((*cntSms++ + *cntUssd++), rec->data.routeStatDelivered);
+  uint64_to_U64((*cntSms++ + *cntUssd++), rec->data.routeStatGwRejected);
+  uint64_to_U64((*cntSms++ + *cntUssd++), rec->data.routeStatFailed);
+  uint64_to_U64((*cntSms++ + *cntUssd++), rec->data.routeStatReceiptOk);
+  uint64_to_U64((*cntSms   + *cntUssd),   rec->data.routeStatReceiptFailed);
 
   return true;
 }
 
 
-/**
- * initialization for routeStatTable data access
- *
- * This function is called during startup to allow you to
- * allocate any resources you need for the data table.
- *
- * @param routeStatTable_reg
- *        Pointer to routeStatTable_registration
- *
- * @retval MFD_SUCCESS : success.
- * @retval MFD_ERROR   : unrecoverable error.
- */
-int routeStatTable_init_data(routeStatTable_registration_ptr routeStatTable_reg)
+int fillNextCounter(dataAccessCtx& ctx)
+//netsnmp_container* container, const char* routeId, long routeStatIndex,
+//    stat::CommonPerformanceCounter* counter, stat::CommonPerformanceCounter* counter1)
 {
-    DEBUGMSGTL(("verbose:routeStatTable:routeStatTable_init_data","called\n"));
+  const char* sid = ctx.key ? ctx.key : noStatData;
 
-    /*
-     * TODO:303:o: Initialize routeStatTable data.
-     */
-    /*
-    ***************************************************
-    ***             START EXAMPLE CODE              ***
-    ***---------------------------------------------***/
-    /*
-     * if you are the sole writer for the file, you could
-     * open it here. However, as stated earlier, we are assuming
-     * the worst case, which in this case means that the file is
-     * written to by someone else, and might not even exist when
-     * we start up. So we can't do anything here.
-     */
-    /*
-    ***---------------------------------------------***
-    ***              END  EXAMPLE CODE              ***
-    ***************************************************/
-
-    log = smsc::logger::Logger::getInstance("snmp.rstat");
-    return MFD_SUCCESS;
-} /* routeStatTable_init_data */
-
-/**
- * container overview
- *
- */
-
-/**
- * container initialization
- *
- * @param container_ptr_ptr A pointer to a container pointer. If you
- *        create a custom container, use this parameter to return it
- *        to the MFD helper. If set to NULL, the MFD helper will
- *        allocate a container for you.
- * @param  cache A pointer to a cache structure. You can set the timeout
- *         and other cache flags using this pointer.
- *
- *  This function is called at startup to allow you to customize certain
- *  aspects of the access method. For the most part, it is for advanced
- *  users. The default code should suffice for most cases. If no custom
- *  container is allocated, the MFD code will create one for your.
- *
- *  This is also the place to set up cache behavior. The default, to
- *  simply set the cache timeout, will work well with the default
- *  container. If you are using a custom container, you may want to
- *  look at the cache helper documentation to see if there are any
- *  flags you want to set.
- *
- * @remark
- *  This would also be a good place to do any initialization needed
- *  for you data source. For example, opening a connection to another
- *  process that will supply the data, opening a database, etc.
- */
-void routeStatTable_container_init(netsnmp_container **container_ptr_ptr, netsnmp_cache *cache)
-{
-    DEBUGMSGTL(("verbose:routeStatTable:routeStatTable_container_init","called\n"));
-    
-    if((NULL == cache) || (NULL == container_ptr_ptr)) {
-//    if (NULL == container_ptr_ptr) {
-      snmp_log(LOG_ERR, "bad container param to routeStatTable_container_init\n");
-      return;
-    }
-
-    /*
-     * For advanced users, you can use a custom container. If you
-     * do not create one, one will be created for you.
-     */
-    *container_ptr_ptr = NULL;
-
-    /*
-     * TODO:345:A: Set up routeStatTable cache properties.
-     *
-     * Also for advanced users, you can set parameters for the
-     * cache. Do not change the magic pointer, as it is used
-     * by the MFD helper. To completely disable caching, set
-     * cache->enabled to 0.
-     */
-//    cache->timeout = ROUTESTATTABLE_CACHE_TIMEOUT; /* seconds */
-//    config::ConfigManager& cfg = config::ConfigManager::Instance();
-    initConfigParams(cache->timeout, log);
-} /* routeStatTable_container_init */
-
-void routeStatTable_container_shutdown(netsnmp_container *container_ptr)
-{
-  DEBUGMSGTL(("verbose:routeStatTable:routeStatTable_container_shutdown","called\n"));
-  if (NULL == container_ptr) {
-    snmp_log(LOG_ERR,"bad params to routeStatTable_container_shutdown\n");
-    return;
-  }
-} /* routeStatTable_container_shutdown */
-
-int fillNextCounter(netsnmp_container* container, const char* routeId, long routeStatIndex, stat::CommonPerformanceCounter* counter)
-{
-  const char* sid = routeId ? routeId : noStatData;
-
-  routeStatTable_rowreq_ctx *rec = 0;
-
-  rec = routeStatTable_allocate_rowreq_ctx();
+  routeStatTable_rowreq_ctx *rec = routeStatTable_allocate_rowreq_ctx();
   if (NULL == rec)
   {
-    smsc_log_error(log, "routeStatTable_cache_load: memory allocation failed");
+    smsc_log_error(log, "%s_cache_load: memory allocation failed", ctx.moduleName);
     return -1;
   }
 
-  if( MFD_SUCCESS != routeStatTable_indexes_set(rec, routeStatIndex) )
+  if( MFD_SUCCESS != routeStatTable_indexes_set(rec, ctx.index) )
   {
-    smsc_log_error(log, "routeStatTable_cache_load: error setting index while loading routeStatTable data");
+    smsc_log_error(log, "%s_cache_load: error setting index while loading data", ctx.moduleName);
     routeStatTable_release_rowreq_ctx(rec);
     return -2;
   }
 
-  logIndexDebug(log, "routeStatTable", routeStatIndex, rec->tbl_idx.routeStatIndex, rec->oid_idx, rec->oid_tmp, MAX_routeStatTable_IDX_LEN);
+//  logIndexDebug(log, (const char*)ctx.moduleName, ctx.index, rec->tbl_idx.routeStatIndex, rec->oid_idx, rec->oid_tmp, MAX_routeStatTable_IDX_LEN);
 
-  if ( !fillRecord(rec, sid, counter) )
+  if ( !fillRecord(rec, ctx, ctx.counterSms, ctx.counterUssd) )
   {
-    smsc_log_error(log, "routeStatTable_cache_load fillRecord error");
+    smsc_log_error(log, "%s_cache_load fillRecord error", ctx.moduleName);
     return -3;
   }
 
-  int rc = CONTAINER_INSERT(container, rec);
+  int rc = CONTAINER_INSERT(ctx.container, rec);
 
   if ( 0 != rc )
-    smsc_log_error(log, "routeStatTable_cache_load CONTAINER_INSERT returns(%d)", rc);
+    smsc_log_error(log, "%s_cache_load CONTAINER_INSERT returns(%d)", ctx.moduleName, rc);
   return rc;
 }
 
-int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h, int& recCount)
+int loadHashToContainer(dataAccessCtx& ctx)
 {
-  long   routeStatIndex = 0;
-  char* routeId = 0;
-  stat::CommonPerformanceCounter* counter = 0;
+  ctx.index = 0;
 
-  h.First();
-  while ( h.Next(routeId, counter) )
+  ctx.hSms.First();
+  while ( ctx.hSms.Next(ctx.key, ctx.counterSms) )
   {
-    routeStatIndex++;
-    int result = fillNextCounter(container, (const char*)routeId, routeStatIndex, counter);
+    ctx.index++;
+    try {
+      ctx.counterUssd = ctx.hUssd.Get(ctx.key);
+    }
+    catch (...) {
+      ctx.counterUssd = 0;
+    }
+    int result = ctx.fillCounter(ctx);
     if ( 0 == result )
     {
-      ++recCount;
+      ++ctx.recCount;
     }
     else if ( -1 == result )
     {
       return MFD_RESOURCE_UNAVAILABLE;
     }
-    if (routeId) routeId = 0;
-    if (counter) counter->clear();
+    if (ctx.key) ctx.key = 0;
+    if (ctx.counterSms) ctx.counterSms = 0;
   }
   return MFD_SUCCESS;
 }
 
+
 int routeStatTable_cache_load(netsnmp_container* container)
 {
-  int retCode = 0;
-  int recCount = 0;
-  if (container)
-  {
-    if ( !container->container_name )
-      container->container_name = (char*)containerName;
-  }
-  else
+  if ( !container )
   {
     smsc_log_error(log, "routeStatTable_cache_load error: container is NULL");
     return MFD_RESOURCE_UNAVAILABLE;
   }
-  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::smestattable::SmeStatTableSubagent::getStatMan()->getRouteCounters();
-  smsc_log_debug(log, "routeStatTable_cache_load: getCounters(0) ok, %d entries", h0.GetCount());
 
-  retCode = loadHashToContainer(container, h0, recCount);
-  if ( 0 == recCount && fillEmptyData )  // fill zero data if counters hash is empty
+  int retCode = 0;
+  dataAccessCtx ctx;
+  ctx.moduleName = "routeStatTable";
+  ctx.container = container;
+  ctx.container->container_name = (char*)containerName;
+  ctx.fillCounter = fillNextCounter;
+  ctx.loadHashToContainer = loadHashToContainer;
+
+  ctx.hSms = scag2::snmp::getStatMan()->getRouteCounters(0);
+  ctx.hUssd = scag2::snmp::getStatMan()->getRouteCounters(1);
+
+//  smsc_log_debug(log, "%s_cache_load: getCounters(0) ok, %d %d entries", ctx.moduleName, ctx.hSms.GetCount(), ctx.hUssd.GetCount());
+
+  int retCode = ctx.loadHashToContainer(ctx);
+  if ( 0 == ctx.recCount && fillEmptyData() )  // fill zero data if counters hash is empty
   {
-    stat::CommonPerformanceCounter* counter = 0;
     smsc_log_debug(log, "routeStatTable_cache_load: no records, make fake counters");
-    counter = new stat::CommonPerformanceCounter(stat::Counters::cntSmppSize);
+    ctx.counterSms = &ctx.counter;
+    ctx.counterUssd = 0;
+    ctx.fillCounter(ctx);
+    ctx.recCount++;
+    retCode = MFD_SUCCESS;
+  }
+//  smsc_log_debug(log, "%s_cache_load: inserted %d records, retCode=%d", ctx.moduleName, ctx.recCount, retCode);
+  return retCode;
+/*
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h0 = scag2::snmp::getStatMan()->getRouteCounters(0);
+  smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h1 = scag2::snmp::getStatMan()->getRouteCounters(1);
+
+  retCode = loadHashToContainer(container, h0, h1, recCount);
+  if ( 0 == recCount && fillEmptyData() )  // fill zero data if counters hash is empty
+  {
+    smsc_log_debug(log, "routeStatTable_cache_load: no records, make fake counters");
+    stat::CommonPerformanceCounter counter;
+    stat::CommonPerformanceCounter counter1;
+    counter.reserve(stat::Counters::cntSmppSize);
+    counter1.reserve(stat::Counters::cntSmppSize);
     for ( int i=0; i<stat::Counters::cntSmppSize; ++i ) counter->cntEvent[i] = 0;
     counter->cntErrors.Insert(0,0);
-    fillNextCounter(container, 0, 1, counter);
+    fillNextCounter(container, 0, 1, counter, counter1);
     ++recCount;
   }
-//  smsc_log_debug(log, "routeStatTable_cache_load: inserted %d records, retCode=%d", recCount, retCode);
   return retCode;
+*/
 }
+//
 
+//
 /**
  * cache clean up
  *
@@ -341,6 +277,113 @@ int routeStatTable_row_prep( routeStatTable_rowreq_ctx *rowreq_ctx)
 
     return MFD_SUCCESS;
 } /* routeStatTable_row_prep */
+
+/**
+ * initialization for routeStatTable data access
+ *
+ * This function is called during startup to allow you to
+ * allocate any resources you need for the data table.
+ *
+ * @param routeStatTable_reg
+ *        Pointer to routeStatTable_registration
+ *
+ * @retval MFD_SUCCESS : success.
+ * @retval MFD_ERROR   : unrecoverable error.
+ */
+int routeStatTable_init_data(routeStatTable_registration_ptr routeStatTable_reg)
+{
+    DEBUGMSGTL(("verbose:routeStatTable:routeStatTable_init_data","called\n"));
+
+    /*
+     * TODO:303:o: Initialize routeStatTable data.
+     */
+    /*
+    ***************************************************
+    ***             START EXAMPLE CODE              ***
+    ***---------------------------------------------***/
+    /*
+     * if you are the sole writer for the file, you could
+     * open it here. However, as stated earlier, we are assuming
+     * the worst case, which in this case means that the file is
+     * written to by someone else, and might not even exist when
+     * we start up. So we can't do anything here.
+     */
+    /*
+    ***---------------------------------------------***
+    ***              END  EXAMPLE CODE              ***
+    ***************************************************/
+
+    return MFD_SUCCESS;
+} /* routeStatTable_init_data */
+
+/**
+ * container overview
+ *
+ */
+
+/**
+ * container initialization
+ *
+ * @param container_ptr_ptr A pointer to a container pointer. If you
+ *        create a custom container, use this parameter to return it
+ *        to the MFD helper. If set to NULL, the MFD helper will
+ *        allocate a container for you.
+ * @param  cache A pointer to a cache structure. You can set the timeout
+ *         and other cache flags using this pointer.
+ *
+ *  This function is called at startup to allow you to customize certain
+ *  aspects of the access method. For the most part, it is for advanced
+ *  users. The default code should suffice for most cases. If no custom
+ *  container is allocated, the MFD code will create one for your.
+ *
+ *  This is also the place to set up cache behavior. The default, to
+ *  simply set the cache timeout, will work well with the default
+ *  container. If you are using a custom container, you may want to
+ *  look at the cache helper documentation to see if there are any
+ *  flags you want to set.
+ *
+ * @remark
+ *  This would also be a good place to do any initialization needed
+ *  for you data source. For example, opening a connection to another
+ *  process that will supply the data, opening a database, etc.
+ */
+void routeStatTable_container_init(netsnmp_container **container_ptr_ptr, netsnmp_cache *cache)
+{
+    DEBUGMSGTL(("verbose:routeStatTable:routeStatTable_container_init","called\n"));
+
+    if((NULL == cache) || (NULL == container_ptr_ptr)) {
+//    if (NULL == container_ptr_ptr) {
+      snmp_log(LOG_ERR, "bad container param to routeStatTable_container_init\n");
+      return;
+    }
+
+    /*
+     * For advanced users, you can use a custom container. If you
+     * do not create one, one will be created for you.
+     */
+    *container_ptr_ptr = NULL;
+
+    /*
+     * TODO:345:A: Set up routeStatTable cache properties.
+     *
+     * Also for advanced users, you can set parameters for the
+     * cache. Do not change the magic pointer, as it is used
+     * by the MFD helper. To completely disable caching, set
+     * cache->enabled to 0.
+     */
+//    cache->timeout = ROUTESTATTABLE_CACHE_TIMEOUT; /* seconds */
+//    config::ConfigManager& cfg = config::ConfigManager::Instance();
+    initConfigParams(cache->timeout, log);
+} /* routeStatTable_container_init */
+
+void routeStatTable_container_shutdown(netsnmp_container *container_ptr)
+{
+  DEBUGMSGTL(("verbose:routeStatTable:routeStatTable_container_shutdown","called\n"));
+  if (NULL == container_ptr) {
+    snmp_log(LOG_ERR,"bad params to routeStatTable_container_shutdown\n");
+    return;
+  }
+} /* routeStatTable_container_shutdown */
 
 
 }}}
