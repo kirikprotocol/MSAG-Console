@@ -9,3 +9,5 @@ ATTENTION!!! From CVS branch "msag2-branch"
 30.01.2015 | stepanov  |  1.0.1  | File for jedit 'applet' directory resolved relatively
            |           |         | "msag.console.config.dir" environment variable.
 -----------|-----------|---------|--------------------------------------------------------------------------------
+29.04.2015 | stepanov  |  1.0.2  | Correct Content-Type for style content/styles/styles.jsp
+-----------|-----------|---------|--------------------------------------------------------------------------------
