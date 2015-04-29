@@ -45,9 +45,7 @@ scag/msag           gwmain2        \
   \
 switch SNMP
 YES: -lscag-snmp -lscag-snmp-counters \
-#  -lscag-snmp-smestattable \
-	-lscag-snmp-smeussdtable -lscag-snmp-smesmstable -lscag-snmp-smeerrtable \
-#  -lscag-snmp-routestattable \
+  -lscag-snmp-smeussdtable -lscag-snmp-smesmstable -lscag-snmp-smeerrtable \
   -lscag-snmp-routeussdtable -lscag-snmp-routesmstable -lscag-snmp-routeerrtable \
   -lscag-snmp \
 endswitch
