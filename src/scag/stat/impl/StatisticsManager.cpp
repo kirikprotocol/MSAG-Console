@@ -659,11 +659,11 @@ void StatisticsManager::flushCounters(int index)
         buf.WriteInt32(0);
         buf.WriteByte(flushTM.tm_hour);
         buf.WriteByte(flushTM.tm_min);
-        buf.WriteInt32(0);
 
         SerializeSmppStat(statByRouteId[index], buf, true);
         SerializeSmppStat(srvStatBySmeId[index], buf, false);
         SerializeSmppStat(statBySmeId[index], buf, false);
+        buf.WriteInt32(0);
 
         dumpCounters((const unsigned char*)buf.getBuffer(), buf.getPos(), flushTM, smppFileTM, SCAG_SMPP_STAT_DIR_NAME_FORMAT, smppFile);
     }

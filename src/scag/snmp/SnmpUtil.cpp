@@ -42,12 +42,12 @@ std::string oid2str(oid* oids, size_t len)
   else
   {
     snprintf(buf, 32, "%d", *ptr++);
-    result += buf;
-  }
-  for ( size_t i=1; i<len; ++i )
-  {
-    snprintf(buf, 32, ".%d", *ptr++);
-    result += buf;
+    result = buf;
+    for ( size_t i=1; i<len; ++i )
+    {
+      snprintf(buf, 32, ".%d", *ptr++);
+      result += buf;
+    }
   }
   return result;
 }
@@ -71,8 +71,17 @@ void initConfigParams(int timeout, smsc::logger::Logger* log)
     fillEmptyDataFlag = config::ConfigManager::Instance().getConfig()->getBool("snmp.fillEmptyData");
   }
   catch (...) {
-    smsc_log_info(log, "Config parameter snmp.fillEmptyData not found, using default=%s", fillEmptyData?"true":"false");
+    smsc_log_info(log, "Config parameter snmp.fillEmptyData not found, using default=%s", fillEmptyDataFlag?"true":"false");
   }
+}
+
+void logContainerError(container_info& info)
+{
+  smsc_log_error(info.log, "%s: CONTAINER_INSERT(%s) returns(%d)", info.name, info.sys_id, info.rc);
+  std::string idxStr = netsnmp_index2str(info.oid_idx);
+  std::string oidStr = oid2str(info.oid_tmp, info.rec_index_len);
+  smsc_log_error(info.log, "%s: indexes_set(%d) => (%d '%s' '%s')", info.name,
+      info.index, info.rec_index, idxStr.c_str(), oidStr.c_str());
 }
 
 void logIndexDebug(smsc::logger::Logger* log, const char* msg, long index1, long index2, netsnmp_index oid_idx, oid* oid_tmp, size_t max_len)
@@ -85,7 +94,6 @@ void logIndexDebug(smsc::logger::Logger* log, const char* msg, long index1, long
 
 void combineCountersHash(counterHash& h0, counterHash& h1, counterHash& h2)
 {
-  long index = 0;
   char* key = 0;
   stat::CommonPerformanceCounter* counter1 = 0;
   stat::CommonPerformanceCounter* counter2 = 0;

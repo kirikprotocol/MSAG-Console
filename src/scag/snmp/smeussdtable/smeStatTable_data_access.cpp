@@ -53,6 +53,26 @@ namespace smeussdtable {
 
 bool fillRecord(smeStatTable_rowreq_ctx* rec, const char* sysId, stat::CommonPerformanceCounter* counter)
 {
+  if (!sysId) return false;
+  if (!counter) return false;
+  char smeStatSystemId[34];
+  size_t smeStatSystemId_len = (strlen(sysId)<32) ? strlen(sysId) : 32;
+  strncpy(&smeStatSystemId[0], sysId, smeStatSystemId_len);
+  rec->data.smeStatSystemId_len = smeStatSystemId_len * sizeof(smeStatSystemId[0]);
+  memcpy( rec->data.smeStatSystemId, smeStatSystemId, smeStatSystemId_len * sizeof(smeStatSystemId[0]) );
+  uint64_t* pcnt = &counter->cntEvent[0];
+  uint64_to_U64(*pcnt++, rec->data.smeStatAccepted);
+  uint64_to_U64(*pcnt++, rec->data.smeStatRejected);
+  uint64_to_U64(*pcnt++, rec->data.smeStatDelivered);
+  uint64_to_U64(*pcnt++, rec->data.smeStatGwRejected);
+  uint64_to_U64(*pcnt++, rec->data.smeStatFailed);
+  uint64_to_U64(*pcnt++, rec->data.smeStatReceiptOk);
+  uint64_to_U64(*pcnt,   rec->data.smeStatReceiptFailed);
+  return true;
+}
+/*
+bool fillRecord(smeStatTable_rowreq_ctx* rec, const char* sysId, stat::CommonPerformanceCounter* counter)
+{
   if (!sysId)
     return false;
   if (!counter)
@@ -76,7 +96,7 @@ bool fillRecord(smeStatTable_rowreq_ctx* rec, const char* sysId, stat::CommonPer
 
   return true;
 }
-
+*/
 
 /**
  * initialization for smeStatTable data access
@@ -186,6 +206,51 @@ void smeStatTable_container_shutdown(netsnmp_container *container_ptr)
   }
 } /* smeStatTable_container_shutdown */
 
+
+int fillNextCounter(netsnmp_container* container, const char* sysId, stat::CommonPerformanceCounter* counter)
+{
+  const char* sid = sysId ? sysId : noStatData;
+  long smeStatIndex = 0;
+  try {
+    smeStatIndex = sid ? scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sid) : 0;
+  }
+  catch(...) {
+    smsc_log_error(log, "%s: error, SmppManager::getSmeIndex('%s') unavailable", container->container_name, sid);
+    return -4;
+  }
+  int result = 0;
+  smeStatTable_rowreq_ctx *rec = 0;
+  do {
+    rec = smeStatTable_allocate_rowreq_ctx();
+    if (!rec) {
+      smsc_log_error(log, "%s: memory allocation failed", container->container_name);
+      result = -1;
+      break;
+    }
+    if( MFD_SUCCESS != smeStatTable_indexes_set(rec, smeStatIndex) ) {
+      smsc_log_error(log, "%s: error setting index", container->container_name);
+      smeStatTable_release_rowreq_ctx(rec);
+      result = -2;
+      break;
+    }
+    if ( !fillRecord(rec, sid, counter) ) {
+      smsc_log_error(log, "%s: fillRecord error", container->container_name);
+      result = -3;
+      break;
+    }
+    int rc = CONTAINER_INSERT(container, rec);
+    if ( 0 != rc ) {
+      container_info info(log, container->container_name, sid, smeStatIndex,
+          rec->tbl_idx.smeStatIndex, rec->oid_idx, rec->oid_tmp, MAX_smeStatTable_IDX_LEN, rc);
+      logContainerError(info);
+      result = rc;
+      break;
+    }
+  } while (0);
+  return result;
+}
+
+/*
 int fillNextCounter(netsnmp_container* container, const char* sysId, stat::CommonPerformanceCounter* counter)
 {
   const char* sid = sysId ? sysId : noStatData;
@@ -196,7 +261,7 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
       smeStatIndex = sysId ? scag2::transport::smpp::SmppManager::Instance().getSmeIndex(sysId) : 0;
     }
     catch(...) {
-      smsc_log_error(log, "smeUssdTable_cache_load: error, SmppManager::getSmeIndex('%s') unavailable", sysId);
+      smsc_log_error(log, "smeUssdTable_cache_load: error, SmppManager::getSmeIndex('%s') unavailable", sid);
       return -4;
     }
   }
@@ -220,8 +285,6 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
       break;
     }
 
-//    logIndexDebug(log, "smeUssdTable", smeStatIndex, rec->tbl_idx.smeStatIndex, rec->oid_idx, rec->oid_tmp, MAX_smeStatTable_IDX_LEN);
-
     if ( !fillRecord(rec, sid, counter) ) {
       smsc_log_error(log, "smeUssdTable_cache_load: fillRecord error");
       result = -3;
@@ -230,14 +293,15 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
 
     int rc = CONTAINER_INSERT(container, rec);
     if ( 0 != rc ) {
-      smsc_log_error(log, "smeUssdTable_cache_load: CONTAINER_INSERT(%s) returns(%d)", sysId, rc);
+      container_info info(log, container, sid, smeStatIndex, rec->tbl_idx.smeStatIndex, rec->oid_idx, rec->oid_tmp, MAX_smeStatTable_IDX_LEN, rc);
+      logContainerError(info);
       result = rc;
       break;
     }
   } while (0);
   return result;
 }
-
+*/
 int loadHashToContainer(netsnmp_container* container, smsc::core::buffers::Hash<stat::CommonPerformanceCounter*>& h, int& recCount)
 {
   char* sysId = 0;
