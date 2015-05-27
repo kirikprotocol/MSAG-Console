@@ -1,7 +1,7 @@
 rm -rf $WORKSPACE/.distr || true
 mkdir $WORKSPACE/.distr || true
 
-echo "09.02.2015 https://bugzilla.aurorisoft.com/show_bug.cgi?id=15739" > $WORKSPACE/.distr/readme.txt
+echo "27.05.2015 Fixed: smpp dump in log files (bug#16277)" > $WORKSPACE/.distr/readme.txt
 
 mkdir $WORKSPACE/.distr/lib || true
 mkdir $WORKSPACE/.distr/services || true
