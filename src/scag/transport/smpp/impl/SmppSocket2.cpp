@@ -100,7 +100,7 @@ void SmppSocket::processInput()
   lastActivity=time(NULL);
   rdBufUsed+=res;
   if(rdBufUsed<rdToRead)return;
-/*
+
   if(dump->isDebugEnabled())
   {
       util::HexDump::string_type out;
@@ -110,7 +110,7 @@ void SmppSocket::processInput()
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "in from %s(%s): %s",
                 getPeer(), systemId.c_str(), hd.c_str(out));
   }
-*/
+
   SmppStream s;
   assignStreamWith(&s,rdBuffer,rdBufUsed,true);
   rdBufUsed=0;
@@ -294,7 +294,7 @@ void SmppSocket::sendData()
     wrBufUsed=0; wrBufSent=0;
     return;
   }
-/*
+
   if(dump->isDebugEnabled())
   {
       util::HexDump::string_type out;
@@ -304,7 +304,7 @@ void SmppSocket::sendData()
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
                 getPeer(), systemId.c_str(), outQueue.Count(), hd.c_str(out));
   }
-*/
+
   wrBufSent=0;
   wrBufUsed=sz;
 //  smsc_log_debug(log_,"Prepared buffer size %d",wrBufUsed);
