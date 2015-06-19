@@ -405,7 +405,7 @@ void init()
 
         using scag::config::ConfigView;
 
-        std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(), "Personalization"));
+        std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(), "PvssClient"));
 
         auto_ptr <char> host(cv->getString("host", NULL, false));
 

@@ -279,7 +279,7 @@ std::ostream & operator << (std::ostream & out, const XMLCh * const string)
 }
 */
 /**
- * Записывает конфигурацию системы.
+ * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
  */
 void ConfigManagerImpl::save()
 {
@@ -382,8 +382,8 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
         changedConfigs.Push(HTTPMAN_CFG);
     }
     
-    if(  getPersClientConfig_().check(ConfigView(config, "Personalization"))  ){
-        getPersClientConfig_().init(ConfigView(config, "Personalization"));
+    if(  getPersClientConfig_().check(ConfigView(config, "PvssClient"))  ){
+        getPersClientConfig_().init(ConfigView(config, "PvssClient"));
         changedConfigs.Push(PERSCLIENT_CFG);
     }
     
