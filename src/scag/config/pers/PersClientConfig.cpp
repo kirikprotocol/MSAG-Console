@@ -31,7 +31,7 @@ bool PersClientConfig::check(const ConfigView& cv)   throw(ConfigException)
 {   
     try {
         std::auto_ptr<char> h( cv.getString("host") );
-        return timeout != cv.getInt("timeout", NULL) || pingTimeout != cv.getInt("pingTimeout", NULL) ||
+        return timeout != cv.getInt("ioTimeout", NULL) || pingTimeout != cv.getInt("pingTimeout", NULL) ||
             port != cv.getInt("port", NULL) || strcmp(host.c_str(), h.get()) ||
             reconnectTimeout != cv.getInt("reconnectTimeout", NULL) ||
             maxCallsCount != cv.getInt("maxWaitingRequestsCount", NULL) ||
