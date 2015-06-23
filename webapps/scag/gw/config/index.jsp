@@ -184,8 +184,6 @@
             <sm-et:txt title="Inactivity Time Out"   name="inactivityTimeOut"   type="int"    onchanged="configChanged();"/>
             <sm-et:txt title="Read Timeout"          name="readTimeout"         type="int"    onchanged="configChanged();"/>
             <sm-et:txt title="Max Sms PerSecond"     name="maxSmsPerSecond"     type="int"    onchanged="configChanged();"/>
-            <sm-et:txt title="Transit Optional Tags" name="transitOptionalTags" type="string" onchanged="configChanged();"  validation="transitOptionalTags"
-                       comments="config.section.txt.transit_optional_tags.comments"/>
             <tr><td colspan=2>
                 <sm-et:section title="Core" name="core" type="table">
                     <sm-ep:properties id="core" display="none">

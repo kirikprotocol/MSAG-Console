@@ -349,7 +349,6 @@ function validateField(elem)
         case "reschedule": return validateField_reschedule(elem);
 		case "release_cause": return validateField_release_cause(elem);
 		case "language": return validateField_language(elem);
-		case "transitOptionalTags": return validateField_transitOptionalTags(elem);
     }
 	alert('<fmt:message>scripts.unknownValidationTypeErrorMsg</fmt:message>' + ": "+elem.getAttribute("validation"));
 	return false;
