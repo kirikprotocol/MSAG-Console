@@ -222,7 +222,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 		<span id="MENU0_NONE"></span>
         <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
            <tr>
-             <th background="content/images/smsc_6.jpg" nowrap><c:if test="${!empty title}"><fmt:message>${title}<c:if test="${!empty param.editId}"><fmt:param value="${param.editId}"/></c:if></fmt:message></c:if></th>
+             <th background="content/images/smsc_06.jpg" nowrap><c:if test="${!empty title}"><fmt:message>${title}<c:if test="${!empty param.editId}"><fmt:param value="${param.editId}"/></c:if></fmt:message></c:if></th>
              <td align="right">&nbsp;
                 <%if (session != null && session.getAttribute(AuthFilter.USER_LOGIN_DATA) != null) {%>
                     <span id="SCAGStatusSpan"></span>
