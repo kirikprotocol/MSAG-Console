@@ -2,7 +2,7 @@
 <%@ page import="ru.sibinco.scag.beans.gw.logging.Logging" %>
 <%@ include file="/WEB-INF/inc/header.jspf" %>
 <%@taglib prefix="sm-l" tagdir="/WEB-INF/tags/logging"%>
-<% Logger logger = Logger.getLogger("MSAG_JSP"); %>
+<!% static Logger logger = Logger.getLogger("MSAG_JSP"); %>
 
 <sm:page title="logging.title">
 <jsp:attribute name="menu">
