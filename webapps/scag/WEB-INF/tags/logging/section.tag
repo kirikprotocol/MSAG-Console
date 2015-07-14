@@ -1,8 +1,14 @@
+<%@ tag import="ru.sibinco.scag.beans.gw.logging.Logging" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <%@ taglib tagdir="/WEB-INF/tags/logging" prefix="sm-l"%>
 <%@attribute name="fullName" required="true"%>
 <c:set var="catItem" value="${bean.fullNameToCatInfo[fullName]}"/>
+<%
+  if (logger.isDebugEnabled()){
+    logger.debug("tried logger inside tag");
+  }
+%>
 <table cellspacing="0" cellpadding="0" id="sectionValue_${catItem.fullName}" style="display:none">
   <col width='56px'/>
   <tr>
