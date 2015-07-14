@@ -2,7 +2,7 @@
 <%@ page import="ru.sibinco.scag.beans.gw.logging.Logging" %>
 <%@ include file="/WEB-INF/inc/header.jspf" %>
 <%@taglib prefix="sm-l" tagdir="/WEB-INF/tags/logging"%>
-<%! static Logger logger = Logger.getLogger("MSAG_JSP"); %>
+<% Logger logger = Logger.getLogger("MSAG_JSP"); %>
 
 <sm:page title="logging.title">
 <jsp:attribute name="menu">
@@ -71,7 +71,7 @@
                     </td>
                   </tr>
                 </table>
-                <sm-l:section fullName="${catItem.value.fullName}"/>
+                <sm-l:section fullName="${catItem.value.fullName}" logger="${logger}"/>
               </c:if>
             </c:forEach>
           </c:if>
