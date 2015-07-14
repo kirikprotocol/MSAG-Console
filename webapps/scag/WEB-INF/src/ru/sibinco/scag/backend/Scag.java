@@ -400,6 +400,7 @@ public class Scag extends Proxy {
                     final String name = cat.substring(0, delimiterPosition);
                     final String value = cat.substring(delimiterPosition + 1);
                     return_result.put(name, value);
+                    if (logger.isDebugEnabled()) logger.debug("put name --> value: "+name+ " --> " + value);
                 } else
                     logger.error("Error in response: string \"" + cat + "\" has wrong format.");
             }

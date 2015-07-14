@@ -1,5 +1,8 @@
+<%@ page import="org.apache.log4j.Logger" %>
+<%@ page import="ru.sibinco.scag.beans.gw.logging.Logging" %>
 <%@ include file="/WEB-INF/inc/header.jspf" %>
 <%@taglib prefix="sm-l" tagdir="/WEB-INF/tags/logging"%>
+<%! static Logger logger = Logger.getLogger("logging.jsp");%>
 
 <sm:page title="logging.title">
 <jsp:attribute name="menu">
@@ -41,6 +44,7 @@
               </c:if>
             </c:forEach>
             <c:forEach items="${ch}" var="catItem">
+              <c:set var="catItemValue" value="${catItem.value}" />
               <c:if test="${catItem.value.hasChilds}">
                 <table cellspacing=0 border="0">
                   <tr>
@@ -49,6 +53,15 @@
                            onclick="collasping_tree_showhide_section('${catItem.value.fullName}')">
                           ${catItem.value.name}
                       </div>
+                      <%
+                          if (logger.isDebugEnabled()){
+                              Object o = pageContext.findAttribute("catItemValue");
+                              if (o != null){
+                                  Logging.LoggerCategoryInfo lci = (Logging.LoggerCategoryInfo) o;
+                                  logger.debug("Added section header for category with full name '"+ lci.getFullName()+"'.");
+                              }
+                          }
+                      %>
                     </td>
                     <td>
                       <sm-l:select name="_empty_name_" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>

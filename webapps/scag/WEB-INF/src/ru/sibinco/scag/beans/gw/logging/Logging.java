@@ -58,18 +58,22 @@ public class Logging extends EditBean {
         }
 
         public void addChild(String childFullName, String childPriority) {
-            if (logger.isDebugEnabled()) logger.debug("Logging.addChild() Adding child isRoot:'" + isRoot() +
-                    "' : name=\"" + fullName + "\", priority=" + priority + ", childName=\"" + childFullName +
-                    "\", childPriority=" + childPriority);
+            if (logger.isDebugEnabled()) logger.debug("Try to add child with full name '"+childFullName+"' and " +
+                "priority '"+childPriority+"' to logger category info with name '"+name+"', full name '"+fullName+"', "+
+                "priority '"+priority+"'.");
 
             if (isRoot()) {
+                if (logger.isDebugEnabled()) logger.debug("Detected that target logger category info is root category.");
                 final int dotPos = childFullName.indexOf('.');
                 if (dotPos > 0) {
                     final String childName = childFullName.substring(0, dotPos);
+                    if (logger.isDebugEnabled()) logger.debug("Got child name '"+childName+"' from child full name '"+childFullName+"'.");
                     LoggerCategoryInfo child = getOrCreateChild(childName, childName, "NOTSET");
                     child.addChild(childFullName, childPriority);
                 } else {
-                    children.put(childFullName, new LoggerCategoryInfo(childFullName, childFullName, childPriority));
+                    LoggerCategoryInfo child = new LoggerCategoryInfo(childFullName, childFullName, childPriority);
+                    children.put(childFullName, child);
+                    if (logger.isDebugEnabled()) logger.debug("put childFullName --> child: "+childFullName+" --> "+child);
                 }
             } else {
                 if (childFullName.length() > fullName.length() && childFullName.startsWith(fullName) && childFullName.charAt(fullName.length()) == '.')
@@ -77,12 +81,14 @@ public class Logging extends EditBean {
                     final int beginIndex = fullName.length() + 1;
                     final int endIndex = childFullName.indexOf('.', beginIndex);
                     final String childName = endIndex > 0 ? childFullName.substring(beginIndex, endIndex) : childFullName.substring(beginIndex);
+                    if (logger.isDebugEnabled()) logger.debug("Got child name '"+childName+"' from child full name '"+childFullName+"'.");
                     if (endIndex > 0) {
                         LoggerCategoryInfo child = getOrCreateChild(childName, childFullName.substring(0, endIndex), "NONSET");
                         child.addChild(childFullName, childPriority);
                     } else {
                         LoggerCategoryInfo child = getOrCreateChild(childName, childFullName, childPriority);
                         child.priority = childPriority;
+                        if (logger.isDebugEnabled()) logger.debug("Set priority '"+childPriority+" for child "+child+".");
                     }
                 } else {
                     logger.debug("Incorrect LoggerCategoryInfo.addChild algorithm");
@@ -94,7 +100,9 @@ public class Logging extends EditBean {
             LoggerCategoryInfo child = children.get(childName);
             if (child == null) {
                 child = new LoggerCategoryInfo(childName, childFullName, childPriority);
+                if (logger.isDebugEnabled()) logger.debug("Create child "+child);
                 children.put(childName, child);
+                if (logger.isDebugEnabled()) logger.debug("put childName --> child: "+childName+" --> "+child);
             }
             return child;
         }
@@ -132,10 +140,11 @@ public class Logging extends EditBean {
         }
 
         public String toString() {
-            return " # name : "+ name +
-                   " | fullName : " + fullName +
-                   " | priority : " + priority +
-                   " | children : "+ children.values() + "#\n";
+            return "LoggerCategoryInfo{" +
+                "name='"+ name +"', "+
+                "fullName='" + fullName + "', "+
+                "priority='" + priority + "',\n"+
+                "children:\n"+ children.values() + "}\n";
         }
     }
 
@@ -204,7 +213,12 @@ public class Logging extends EditBean {
 
     public void parseMap( Map logCategories ){
         String rootPriority = (String) logCategories.remove("");
-        if (rootPriority == null) rootPriority = "NOTSET";
+        if (rootPriority == null) {
+            rootPriority = "NOTSET";
+            if (logger.isDebugEnabled()) logger.debug("Used default root priority 'NOTSET'.");
+        } else {
+            if (logger.isDebugEnabled()) logger.debug("Found root priority '"+rootPriority+"'.");
+        }
         rootCategory = new LoggerCategoryInfo("", "", rootPriority);
         Collection keys = new SortedList(logCategories.keySet());
         for (Object o : keys) {
@@ -317,12 +331,13 @@ public class Logging extends EditBean {
     }
 
     private void getLoggerCategoryInfo(LoggerCategoryInfo rootCategory, Map<String,LoggerCategoryInfo> map) {
-        map.put(rootCategory.getFullName(),rootCategory);
+        map.put(rootCategory.getFullName(), rootCategory);
         if (rootCategory.isHasChilds()) {
             logger.error( "Logging.getLoggerCategoryInfo() rootCategory=" + rootCategory.getFullName() + "|" + rootCategory.getName() );
             for (Object o : rootCategory.getChilds().values()) {
                 LoggerCategoryInfo child = (LoggerCategoryInfo) o;
                 map.put(child.getFullName(), child);
+                if (logger.isDebugEnabled()) logger.debug("put child full name --> child: "+child.getFullName()+" --> ...");
                 if (child.isHasChilds()) getLoggerCategoryInfo(child, map);
             }
         }
