@@ -58,7 +58,8 @@
                               Object o = pageContext.findAttribute("catItemValue");
                               if (o != null){
                                   Logging.LoggerCategoryInfo lci = (Logging.LoggerCategoryInfo) o;
-                                  logger.debug("Added section header for category with full name '"+ lci.getFullName()+"'.");
+                                  logger.debug("Added section header for category with name '"+ lci.getName()
+                                          +"' and full name '"+lci.getFullName()+"'.");
                               } else {
                                   logger.debug("Couldn't find in page context attribute 'catItemValue'.");
                               }
