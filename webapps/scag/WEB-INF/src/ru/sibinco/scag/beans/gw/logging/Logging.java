@@ -140,11 +140,11 @@ public class Logging extends EditBean {
         }
 
         public String toString() {
-            return "LoggerCategoryInfo{" +
+            return "\nLoggerCategoryInfo{" +
                 "name='"+ name +"', "+
                 "fullName='" + fullName + "', "+
-                "priority='" + priority + "',\n"+
-                "children:\n"+ children.values() + "}\n";
+                "priority='" + priority + "',"+
+                "children: "+ children.values() + "}";
         }
     }
 
