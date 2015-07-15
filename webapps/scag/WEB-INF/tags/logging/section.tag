@@ -4,7 +4,7 @@
 <%@ taglib uri="/scag/log" prefix="logger" %>
 <%@attribute name="fullName" required="true"%>
 <c:set var="catItem" value="${bean.fullNameToCatInfo[fullName]}"/>
-<logger:log level="debug">\nGot category\n'${catItem}'\nfor full name '${fullName}'.</logger:log>
+<logger:log level="debug">\\nGot category'${catItem}'\\nfor full name '${fullName}', try to add section value table ...</logger:log>
 <table cellspacing="0" cellpadding="0" id="sectionValue_${catItem.fullName}" style="display:none">
   <col width='56px'/>
   <tr>
@@ -22,6 +22,7 @@
                       ${catItem.value.name}
                   </div>
                 </td>
+                <logger:log level="debug">Section header element has been added for name '${catItem.value.name}' and full name '${catItem.value.fullName}'.</logger:log>
                 <td>
                   <sm-l:select name="_empty_name_" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
                 </td>
@@ -38,4 +39,5 @@
     </td>
   </tr>
 </table>
+<logger:log level="debug">Section value table for category with full name '${fullName} has been added.</logger:log>
 
