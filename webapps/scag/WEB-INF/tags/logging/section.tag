@@ -4,7 +4,7 @@
 <%@ taglib uri="/scag/log" prefix="logger" %>
 <%@attribute name="fullName" required="true"%>
 <c:set var="catItem" value="${bean.fullNameToCatInfo[fullName]}"/>
-<logger:log level="debug">Got category'${catItem}' for full name '${fullName}', try to add section value table ...</logger:log>
+<logger:log level="debug">Got category '${catItem}' for full name '${fullName}', try to add section value table ...</logger:log>
 <table cellspacing="0" cellpadding="0" id="sectionValue_${catItem.fullName}" style="display:none">
   <col width='56px'/>
   <tr>
@@ -13,7 +13,7 @@
       <c:forEach items="${catItem.childs}" var="catItem">
         <c:choose>
           <c:when test="${catItem.value.hasChilds}">
-            <logger:log level="debug">Detected that category with full name '${fullName}' has children.</logger:log>
+            <logger:log level="debug">Detected that category '${catItem.value.fullName}' has children. </logger:log>
             <table cellspacing=0 border="0">
               <tr>
                 <td width="10%">
@@ -31,7 +31,7 @@
             <sm-l:section fullName="${catItem.value.fullName}"/>
           </c:when>
           <c:otherwise>
-            <logger:log level="debug">Detected that cat item with full name '${fullName}' doesn't has children.</logger:log>
+            <logger:log level="debug">Detected that category '${catItem.value.fullName}' doesn't has children.</logger:log>
             <sm-l:select name="${catItem.value.name}" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
           </c:otherwise>
         </c:choose>
@@ -39,5 +39,5 @@
     </td>
   </tr>
 </table>
-<logger:log level="debug">Section value table for category with full name '${fullName} has been added.</logger:log>
+<logger:log level="debug">Section value table for category with full name '${fullName}' has been added.</logger:log>
 
