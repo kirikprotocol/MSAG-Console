@@ -129,10 +129,17 @@
   </error-page>
 
   <jsp-config>
+
     <taglib>
       <taglib-uri>/scag/func</taglib-uri>
       <taglib-location>/WEB-INF/scag.tld</taglib-location>
     </taglib>
+
+    <taglib>
+      <taglib-uri>/scag/log</taglib-uri>
+      <taglib-location>/WEB-INF/log.tld</taglib-location>
+    </taglib>
+
   </jsp-config>
 
   <!--Constrains-->

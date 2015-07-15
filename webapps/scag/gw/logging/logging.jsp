@@ -71,7 +71,7 @@
                     </td>
                   </tr>
                 </table>
-                <sm-l:section fullName="${catItem.value.fullName}" logger="<%=logger%>"/>
+                <sm-l:section fullName="${catItem.value.fullName}"/>
               </c:if>
             </c:forEach>
           </c:if>

@@ -1,14 +1,9 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <%@ taglib tagdir="/WEB-INF/tags/logging" prefix="sm-l"%>
+<%@ taglib uri="/scag/log" prefix="logger" %>
 <%@attribute name="fullName" required="true"%>
-<%@attribute name="log" required="true" rtexprvalue="true" type="org.apache.log4j.Logger"%>
 <c:set var="catItem" value="${bean.fullNameToCatInfo[fullName]}"/>
-<%
-  if (log.isDebugEnabled()){
-    log.debug("tried logger inside tag");
-  }
-%>
 <table cellspacing="0" cellpadding="0" id="sectionValue_${catItem.fullName}" style="display:none">
   <col width='56px'/>
   <tr>
@@ -16,6 +11,7 @@
     <td>
       <c:forEach items="${catItem.childs}" var="catItem">
         <c:choose>
+          <logger:log level="debug">Debug message from logger tag.</logger:log>
           <c:when test="${catItem.value.hasChilds}">
             <table cellspacing=0 border="0">
               <tr>
@@ -30,7 +26,7 @@
                 </td>
               </tr>
             </table>
-            <sm-l:section fullName="${catItem.value.fullName}" logger="${logger}"/>
+            <sm-l:section fullName="${catItem.value.fullName}"/>
           </c:when>
           <c:otherwise>
             <sm-l:select name="${catItem.value.name}" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
