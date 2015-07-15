@@ -30,7 +30,7 @@
                 </td>
               </tr>
             </table>
-            <sm-l:section fullName="${catItem.value.fullName}"/>
+            <sm-l:section fullName="${catItem.value.fullName}" logger="${logger}"/>
           </c:when>
           <c:otherwise>
             <sm-l:select name="${catItem.value.name}" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
