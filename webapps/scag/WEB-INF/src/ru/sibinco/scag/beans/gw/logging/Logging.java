@@ -337,7 +337,7 @@ public class Logging extends EditBean {
             for (Object o : rootCategory.getChilds().values()) {
                 LoggerCategoryInfo child = (LoggerCategoryInfo) o;
                 map.put(child.getFullName(), child);
-                if (logger.isDebugEnabled()) logger.debug("put child full name --> child: "+child.getFullName()+" --> ...");
+                if (logger.isDebugEnabled()) logger.debug("put child full name --> child: "+child.getFullName()+" --> "+child);
                 if (child.isHasChilds()) getLoggerCategoryInfo(child, map);
             }
         }
