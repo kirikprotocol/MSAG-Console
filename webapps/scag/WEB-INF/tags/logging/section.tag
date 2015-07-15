@@ -11,8 +11,8 @@
     <td>
       <c:forEach items="${catItem.childs}" var="catItem">
         <c:choose>
-          <logger:log level="debug">Debug message from logger tag.</logger:log>
           <c:when test="${catItem.value.hasChilds}">
+            <logger:log level="debug">Debug message from logger tag.</logger:log>
             <table cellspacing=0 border="0">
               <tr>
                 <td width="10%">
