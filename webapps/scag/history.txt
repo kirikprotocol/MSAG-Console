@@ -14,3 +14,6 @@ ATTENTION!!! From CVS branch "msag2-branch"
 23.06.2015 | stepanov  |  1.0.3  | Removed "transitOptionalTags" flag from "MSAG Gateway/Configuration/SMPP" menu
            |           |         | section (bug 16366).
 -----------|-----------|---------|--------------------------------------------------------------------------------
+14.07.2015 | stepanov  |  1.0.4  | Added debug logs for logging.
+           |           |         |
+-----------|-----------|---------|--------------------------------------------------------------------------------
