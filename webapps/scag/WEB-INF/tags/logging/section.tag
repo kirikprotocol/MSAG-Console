@@ -2,11 +2,11 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <%@ taglib tagdir="/WEB-INF/tags/logging" prefix="sm-l"%>
 <%@attribute name="fullName" required="true"%>
-<%@attribute name="logger" required="true" rtexprvalue="true" type="org.apache.log4j.Logger"%>
+<%@attribute name="log" required="true" rtexprvalue="true" type="org.apache.log4j.Logger"%>
 <c:set var="catItem" value="${bean.fullNameToCatInfo[fullName]}"/>
 <%
-  if (logger.isDebugEnabled()){
-    logger.debug("tried logger inside tag");
+  if (log.isDebugEnabled()){
+    log.debug("tried logger inside tag");
   }
 %>
 <table cellspacing="0" cellpadding="0" id="sectionValue_${catItem.fullName}" style="display:none">
