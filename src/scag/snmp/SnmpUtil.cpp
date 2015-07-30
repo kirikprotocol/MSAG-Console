@@ -80,7 +80,7 @@ void logContainerError(container_info& info)
   smsc_log_error(info.log, "%s: CONTAINER_INSERT(%s) returns(%d)", info.name, info.sys_id, info.rc);
   std::string idxStr = (info.oid_idx) ? netsnmp_index2str(*(info.oid_idx)) : "null";
   std::string oidStr = oid2str(info.oid_tmp, info.rec_index_len);
-  smsc_log_error(info.log, "%s: indexes_set(%d) => (%d '%s' '%s')", info.name,
+  smsc_log_error(info.log, "%s: indexes_set(%ld) => (%ld '%s' '%s')", info.name,
       info.index, info.rec_index, idxStr.c_str(), oidStr.c_str());
 }
 
@@ -88,7 +88,7 @@ void logIndexDebug(smsc::logger::Logger* log, const char* msg, long index1, long
 {
   std::string idxStr = netsnmp_index2str(oid_idx);
   std::string oidStr = oid2str(oid_tmp, max_len);
-  smsc_log_debug(log, "%s_indexes_set(%d) => (%d '%s' '%s')",
+  smsc_log_debug(log, "%s_indexes_set(%ld) => (%ld '%s' '%s')",
     msg, index1, index2, idxStr.c_str(), oidStr.c_str());
 }
 
