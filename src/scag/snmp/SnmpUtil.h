@@ -36,7 +36,7 @@ public:
   int rc;
   container_info(smsc::logger::Logger* log_, const char* name_,
       const char* sys_id_, long index_, long rec_index_,
-      netsnmp_index oid_idx_, oid* oid_tmp_, size_t rec_index_len_, int rc_) :
+      netsnmp_index* oid_idx_, oid* oid_tmp_, size_t rec_index_len_, int rc_) :
    log(log_), name(name_), sys_id(sys_id_), index(index_), rec_index(rec_index_),
    oid_idx(oid_idx_), oid_tmp(oid_tmp_), rec_index_len(rec_index_len_), rc(rc_) {}
   ~container_info() {}
