@@ -208,10 +208,9 @@ int fillNextCounter(netsnmp_container* container, const char* routeId, long rout
   }
 
   int rc = CONTAINER_INSERT(container, rec);
-
   if ( 0 != rc ) {
     container_info info(log, container->container_name, sid, routeStatIndex,
-        rec->tbl_idx.routeStatIndex, rec->oid_idx, rec->oid_tmp, MAX_routeStatTable_IDX_LEN, rc);
+        rec->tbl_idx.routeStatIndex, &(rec->oid_idx), rec->oid_tmp, MAX_routeStatTable_IDX_LEN, rc);
     logContainerError(info);
   }
   return rc;

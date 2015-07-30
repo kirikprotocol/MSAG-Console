@@ -211,7 +211,7 @@ int fillNextCounter(netsnmp_container* container, const char* sysId, stat::Commo
     int rc = CONTAINER_INSERT(container, rec);
     if ( 0 != rc ) {
       container_info info(log, container->container_name, sid, smeStatIndex,
-          rec->tbl_idx.smeStatIndex, rec->oid_idx, rec->oid_tmp, MAX_smeStatTable_IDX_LEN, rc);
+          rec->tbl_idx.smeStatIndex, &(rec->oid_idx), rec->oid_tmp, MAX_smeStatTable_IDX_LEN, rc);
       logContainerError(info);
       result = rc;
       break;
