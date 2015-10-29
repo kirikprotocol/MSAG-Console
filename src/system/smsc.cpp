@@ -1901,6 +1901,7 @@ void Smsc::InitLicense()
   "Organization",
   "Hostids",
   "MaxSmsThroughput",
+  "LicenseStartDate",
   "LicenseExpirationDate",
   "LicenseType",
   "Product"
@@ -1914,13 +1915,15 @@ void Smsc::InitLicense()
 
 
   license.maxsms=atoi(lic["MaxSmsThroughput"].c_str());
+
   int y,m,d;
-  sscanf(lic["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
-  struct tm t={0,};
-  t.tm_year=y-1900;
-  t.tm_mon=m-1;
-  t.tm_mday=d;
-  license.expdate=mktime(&t);
+  sscanf(licconfig["LicenseStartDate"].c_str(),"%d-%d-%d",&y,&m,&d);
+  struct tm st={0,}; st.tm_year=y-1900; st.tm_mon=m-1; st.tm_mday=d;
+  license.stdate = mktime(&st);
+  sscanf(licconfig["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
+  struct tm et={0,}; et.tm_year=y-1900; et.tm_mon=m-1; et.tm_mday=d;
+  license.expdate=mktime(&et);
+
   long hostid;
   std::string ids=lic["Hostids"];
   std::string::size_type pos=0;
@@ -1936,7 +1939,8 @@ void Smsc::InitLicense()
   }while(pos!=std::string::npos);
   if(!ok)throw runtime_error("");
   if(smsc::util::crc32(0,lic["Product"].c_str(),lic["Product"].length())!=0x685a3df4)throw runtime_error("");
-  if(license.expdate<time(NULL))
+  time_t now = time(NULL);
+  if(license.stdate > now || license.expdate < now)
   {
     char x[]=
     {

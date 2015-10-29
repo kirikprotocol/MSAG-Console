@@ -3,6 +3,7 @@ Hostids=88888888
 MaxSmsThroughput=500
 MaxHttpThroughput=500
 MaxMmsThroughput=500
+LicenseStartDate=2007-5-16
 LicenseExpirationDate=2008-5-16
 LicenseType=standard
 Product=Scag

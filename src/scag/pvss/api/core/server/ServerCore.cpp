@@ -95,6 +95,7 @@ void ServerCore::checkLicenseFile()
         static const char* keys[] = {
             "Organization",
             "Hostids",
+            "LicenseStartDate",
             "LicenseExpirationDate",
             "LicenseType",
             "Product"

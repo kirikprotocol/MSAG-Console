@@ -451,6 +451,7 @@ void ConfigManagerImpl::checkLicenseFile()
   "MaxSmsThroughput",
   "MaxHttpThroughput",
   "MaxMmsThroughput",
+  "LicenseStartDate",
   "LicenseExpirationDate",
   "LicenseType",
   "Product"
@@ -465,13 +466,15 @@ void ConfigManagerImpl::checkLicenseFile()
   license.maxsms=atoi(licconfig["MaxSmsThroughput"].c_str());
   license.maxhttp=atoi(licconfig["MaxHttpThroughput"].c_str());
   license.maxmms=atoi(licconfig["MaxMmsThroughput"].c_str());
+
   int y,m,d;
+  sscanf(licconfig["LicenseStartDate"].c_str(),"%d-%d-%d",&y,&m,&d);
+  struct tm st={0,}; st.tm_year=y-1900; st.tm_mon=m-1; st.tm_mday=d;
+  license.stdate = mktime(&st);
   sscanf(licconfig["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
-  struct tm t={0,};
-  t.tm_year=y-1900;
-  t.tm_mon=m-1;
-  t.tm_mday=d;
-  license.expdate = mktime(&t);
+  struct tm et={0,}; et.tm_year=y-1900; et.tm_mon=m-1; et.tm_mday=d;
+  license.expdate = mktime(&et);
+
     // long hostid;
 
     if ( !smsc::license::check::checkHostIds(licconfig["Hostids"].c_str()) ) {
@@ -504,7 +507,8 @@ void ConfigManagerImpl::checkLicenseFile()
 
   if (smsc::util::crc32(0,licconfig["Product"].c_str(),licconfig["Product"].length())!=0x1D5DA434) throw runtime_error("code 2");
 
-  if(license.expdate < time(NULL))
+  time_t now = time(NULL);
+  if(license.stdate > now || license.expdate < now)
   {
     char x[]=
     {
