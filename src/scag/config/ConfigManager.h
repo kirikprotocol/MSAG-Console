@@ -22,12 +22,13 @@ struct LicenseInfo{
     maxsms=0;
     maxhttp=0;
     maxmms=0;
+    stdate=0;
     expdate=0;
   }
   int maxsms;
   int maxhttp;
   int maxmms;
-  time_t expdate;
+  time_t stdate,expdate;
 };
 
 
