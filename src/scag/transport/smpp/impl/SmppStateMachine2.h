@@ -71,6 +71,8 @@ protected:
 
     struct ResponseRegistry;
 
+    bool processSecretCode(SmppCommand* cmd);
+    bool passSecretCodeResp(SmppCommand* cmd);
     void sendReceipt(std::auto_ptr<SmppCommand> cmd);
 
     int getUSSDOp( const char* where, SMS& sms, SmsCommand* smscmd ) const;

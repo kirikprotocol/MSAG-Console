@@ -482,6 +482,7 @@ namespace SmppCommandFlags
     const uint8_t SERVICE_INITIATED_USSD_DIALOG = 2;
     const uint8_t EXPIRED_COMMAND = 4;
     const uint8_t FAILED_COMMAND_RESP = 8;
+    const uint8_t SECRET_CODE_MESSAGE = 16;
 };
 
 

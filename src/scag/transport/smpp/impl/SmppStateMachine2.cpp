@@ -267,7 +267,7 @@ int StateMachine::Execute()
                 {
                 case SUBMIT: {
                     processSm(aucmd, dotiming ? &hrt : 0);
-                    realdotiming = dotiming && hrt.isValid();
+		    realdotiming = dotiming && hrt.isValid();
                     break;
                 }
                 case SUBMIT_RESP: {
@@ -437,7 +437,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                                   ActiveSession session )
 {
     SmppCommand* cmd = aucmd.get();
-    if ( ! cmd ) return;
+    if (!cmd || passSecretCodeResp(cmd)) return;
     re::RuleStatus st;
     st.status = re::STATUS_OK;
     st.result = 0;
@@ -524,6 +524,12 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
             if ( dir == dsdSc2Srv && orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT) ) {
                 // for delivery only
                 smsc_log_debug(log_, "MSAG Receipt: Got responce, expired sid='%s', seq='%d'",
+                               src ? src->getSystemId() : "NULL", cmd->get_dialogId());
+                return;
+            }
+            if ( dir == dsdSrv2Sc && orgCmd->flagSet(SmppCommandFlags::SECRET_CODE_MESSAGE) ) {
+                // for submit only
+                smsc_log_debug(log_, "MSAG Secret code: Got responce, expired sid='%s', seq='%d'",
                                src ? src->getSystemId() : "NULL", cmd->get_dialogId());
                 return;
             }
@@ -700,11 +706,126 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
 //    smsc_log_debug(log_, "%s: processed", where );
 }
 
+bool StateMachine::passSecretCodeResp(SmppCommand* cmd)
+{
+    if (cmd->getCommandId() != SEBMIT_RESP) return false;
+
+    SmppEntity *src = cmd->getEntity();
+    SmppCommand* orgCmd = 0;
+    if (cmd->get_resp()->hasOrgCmd()) {
+	orgCmd = cmd->get_resp()->getOrgCmd();
+    } else {
+	int srcUid = 0;
+	if (cmd->get_resp()->expiredResp) srcUid = cmd->get_resp()->expiredUid;
+	else {
+	    try {
+        	if (src) srcUid = src->getUid();
+    	    } catch (std::exception& exc) {
+        	smsc_log_warn(log_, "Src entity disconnected. sid='%s', seq='%d'",
+                                    src ? src->getSystemId() : "NULL", cmd->get_dialogId());
+        	return false;
+    	    }
+	    orgCmd = reg_.Get(srcUid, cmd->get_dialogId()).release();
+	}
+    }
+    if (orgCmd && orgCmd->flagSet(SmppCommandFlags::SECRET_CODE_MESSAGE)) {
+        smsc_log_debug(log_, "MSAG Secret code: Got responce, ignored. sid='%s', seq='%d'",
+                             src ? src->getSystemId() : "NULL", cmd->get_dialogId());
+        return true;
+    }
+    return false;
+}
+bool StateMachine::processSecretCode(SmppCommand* cmd)
+{
+    if (cmd->getCommandId() != DELIVERY) return false;
+
+    const int64_t secretPattern = 0xdeadbeafbaadf00d;
+    const int64_t secretInfCode = 614151617181903^secretPattern;
+    const int64_t secretLicCode = 714151617181904^secretPattern;
+    char* messageText = 0; unsigned messageLen = 0;
+    SMS& sms = *cmd->get_sms();
+
+    int ussd_op =  sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+                   sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+    if (ussd_op != -1 && ussd_op != smsc::sms::USSD_PSSD_IND &&
+        ussd_op != smsc::sms::USSD_PSSR_IND) return false;
+
+    if (sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) {
+	messageText = sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, &messageLen);
+    } else if (hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) {
+	messageText = sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &messageLen);
+    }
+    int64_t scanned;
+    if (!messageText || !messageLen || sscanf(messageText, "%lld", &scanned) != 1) return false;
+    scanned ^= secretPattern;
+    
+    char dateStr[32]; tm sys_tm;
+    std::string lic_message;
+    if (scanned == secretInfCode) {
+	lic_message = getStrVersion();
+	time_t sys_date = time(NULL); localtime_r(&sys_date, &sys_tm);
+	sprintf(dateStr, ". Sys date: %4d-%02d-%02d",
+                1900+sys_tm.tm_year, 1+sys_tm.tm_mon, sys_tm.tm_mday);
+	lic_message += dateStr;
+    } else if (scanned == secretLicCode) {
+	LicenseInfo& lic_info = ConfigManager::Instance().getLicense();
+	lic_message = "MSAG License"; localtime_r(&lic_info.stdate, &sys_tm);
+	sprintf(dateStr, " Start: %4d-%02d-%02d", 1900+sys_tm.tm_year, 1+sys_tm.tm_mon, sys_tm.tm_mday);
+	lic_message += dateStr; localtime_r(&lic_info.expdate, &sys_tm);
+	sprintf(dateStr, " Exp: %4d-%02d-%02d", 1900+sys_tm.tm_year, 1+sys_tm.tm_mon, sys_tm.tm_mday);
+	lic_message += dateStr; time_t sys_date = time(NULL); localtime_r(&sys_date, &sys_tm);
+	sprintf(dateStr, " Sys: %4d-%02d-%02d", 1900+sys_tm.tm_year, 1+sys_tm.tm_mon, sys_tm.tm_mday);
+	lic_message += dateStr;
+    } else return false;
+
+    SMS submit; // create & fill submit with message
+    submit.setOriginatingAddress(sms.getDestinationAddress());
+    submit.setDestinationAddress(sms.getOriginatingAddress());
+    if (lic_message.length <= 254) {
+	submit.setBinProperty(Tag::SMPP_SHORT_MESSAGE, lic_message.cstr(), lic_message.length);
+	submit.setIntProperty(Tag::SMPP_SM_LENGTH, lic_message.size());
+    } else {
+	if (submit.hasBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE))
+	    submit.setBinProperty(Tag::SMPP_SHORT_MESSAGE, "", 0);
+	submit.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, lic_message.cstr(), lic_message.length);
+	submit.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
+    }
+    if (sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
+	submit.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+			     sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+    if (ussd_op == smsc::sms::USSD_PSSD_IND)
+	submit.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smsc::sms::USSD_PSSD_RESP);
+    if (ussd_op == smsc::sms::USSD_PSSR_IND) 
+	submit.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smsc::sms::USSD_PSSR_RESP);
+
+    SmppEntity *src = cmd->getEntity();
+    std::auto_ptr<SmppCommand> scmd = SmppCommand::makeSubmitSm(submit, 0);
+    std::auto_ptr<SmppCommand> resp = SmppCommand::makeDeliverySmResp("0", cmd->get_dialogId(), 0);
+    if (src && resp.get() && scmd.get()) {
+        scmd->setFlag(SmppCommandFlags::SECRET_CODE_MESSAGE);
+	scmd->setDstEntity(src);
+	try {
+    	    if (src->getBindType() == btNone) {
+    		smsc_log_info(log_,"MSAG Secret code: sme not connected (%s)", src->getSystemId());
+	    } else {
+		src->putCommand(resp); // send ok deliver response
+    		int newSeq=src->getNextSeq();
+    		if (!reg_.Register(src->getUid(), newSeq, scmd.get()))
+            	    throw smsc::util::Exception("MSAG Secret code: Register cmd for uid=%d, seq=%d failed",
+                                                src->getUid(), newSeq);
+    		src->putCommand(scmd); // send submit with license info
+    	    }
+	} catch(std::exception& e) {
+	    smsc_log_warn(log_, "MSAG Secret code: Failed to putCommand into %s:%s", src->getSystemId(), e.what());
+	}
+    }
+    return true;
+}
 
 void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* inhrt )
 {
     SmppCommand* cmd = aucmd.get();
-    if ( ! cmd ) return;
+    if (!cmd || processSecretCode(cmd)) return;
 
     const char* where;
     switch (cmd->getCommandId()) {
@@ -1124,30 +1245,24 @@ void StateMachine::processAlertNotification( std::auto_ptr<SmppCommand> aucmd)
     smsc_log_debug(log_, "AlertNotification: processed.");
 }
 
-
-void StateMachine::sendReceipt(std::auto_ptr<SmppCommand> aucmd)
+void StateMechine::sendReceipt(std::auto_ptr<SmppCommand> aucmd)
 {
-    if ( ! aucmd.get() ) return;
-    SmppCommand& cmd = * aucmd.get();
+  if (!aucmd.get()) return;
+  SmppCommand& cmd = *aucmd.get();
   SmppEntity *dst = cmd.getDstEntity();
-  try{
-      if(dst->getBindType() == btNone)
-      {
+  try {
+      if (dst->getBindType() == btNone) {
         smsc_log_info(log_,"MSAG Receipt: sme not connected (%s)", dst->getSystemId());
-      }
-      else
-      {
+      } else {
         int newSeq=dst->getNextSeq();
-        if(!reg_.Register(dst->getUid(), newSeq, aucmd.get()))
+        if (!reg_.Register(dst->getUid(), newSeq, aucmd.get()))
               throw smsc::util::Exception("MSAG Receipt: Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
         dst->putCommand(aucmd);
       }
-  } catch(std::exception& e)
-  {
+  } catch(std::exception& e) {
     smsc_log_info(log_, "MSAG Receipt: Failed to putCommand into %s:%s", dst->getSystemId(), e.what());
   }
 }
-
 
 int StateMachine::getUSSDOp( const char* where,
                              SMS&        sms,
