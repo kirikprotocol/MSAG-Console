@@ -92,6 +92,7 @@ endswitch
 
 
 scag/tests/testRule testRule \
+  -lscag \
   -lscag-counter-impl \
   -lscag-re-impl \
   -lscag-re-actions-impl \

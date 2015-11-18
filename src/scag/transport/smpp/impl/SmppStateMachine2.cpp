@@ -17,6 +17,7 @@
 #include "scag/re/base/EventHandlerType.h"
 #include "scag/counter/Manager.h"
 #include "scag/counter/Accumulator.h"
+#include "scag/version.h"
 
 namespace {
 using namespace scag2::transport::smpp;
@@ -622,9 +623,9 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                 st.result = smsc::system::Status::TRANSACTIONTIMEDOUT;
                 if (ri.statistics) {
                   const Address& address =  isDirFromService(dir) ? sms->getDestinationAddress() : sms->getOriginatingAddress();
-                  const SessionKey key( address );
+                  const SessionKey skey( address );
                   CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, address, static_cast<uint8_t>(cmd->getOperationId())));
-                  SessionPrimaryKey primaryKey(key);
+                  SessionPrimaryKey primaryKey(skey);
                   timeval tv = { time(0), 0 };
                   primaryKey.setBornTime(tv);
                   smsc_log_debug(log_, "%s: register traffic info event for unknown session", where);
@@ -708,7 +709,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
 
 bool StateMachine::passSecretCodeResp(SmppCommand* cmd)
 {
-    if (cmd->getCommandId() != SEBMIT_RESP) return false;
+    if (cmd->getCommandId() != SUBMIT_RESP) return false;
 
     SmppEntity *src = cmd->getEntity();
     SmppCommand* orgCmd = 0;
@@ -742,7 +743,7 @@ bool StateMachine::processSecretCode(SmppCommand* cmd)
     const int64_t secretPattern = 0xdeadbeafbaadf00d;
     const int64_t secretInfCode = 614151617181903^secretPattern;
     const int64_t secretLicCode = 714151617181904^secretPattern;
-    char* messageText = 0; unsigned messageLen = 0;
+    const char* messageText = 0; unsigned messageLen = 0;
     SMS& sms = *cmd->get_sms();
 
     int ussd_op =  sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
@@ -752,7 +753,7 @@ bool StateMachine::processSecretCode(SmppCommand* cmd)
 
     if (sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) {
 	messageText = sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, &messageLen);
-    } else if (hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) {
+    } else if (sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) {
 	messageText = sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &messageLen);
     }
     int64_t scanned;
@@ -781,13 +782,13 @@ bool StateMachine::processSecretCode(SmppCommand* cmd)
     SMS submit; // create & fill submit with message
     submit.setOriginatingAddress(sms.getDestinationAddress());
     submit.setDestinationAddress(sms.getOriginatingAddress());
-    if (lic_message.length <= 254) {
-	submit.setBinProperty(Tag::SMPP_SHORT_MESSAGE, lic_message.cstr(), lic_message.length);
-	submit.setIntProperty(Tag::SMPP_SM_LENGTH, lic_message.size());
+    if (lic_message.length() <= 254) {
+	submit.setBinProperty(Tag::SMPP_SHORT_MESSAGE, lic_message.c_str(), int(lic_message.length()));
+	submit.setIntProperty(Tag::SMPP_SM_LENGTH, int(lic_message.length()));
     } else {
 	if (submit.hasBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE))
 	    submit.setBinProperty(Tag::SMPP_SHORT_MESSAGE, "", 0);
-	submit.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, lic_message.cstr(), lic_message.length);
+	submit.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, lic_message.c_str(), int(lic_message.length()));
 	submit.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
     }
     if (sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
@@ -1245,7 +1246,7 @@ void StateMachine::processAlertNotification( std::auto_ptr<SmppCommand> aucmd)
     smsc_log_debug(log_, "AlertNotification: processed.");
 }
 
-void StateMechine::sendReceipt(std::auto_ptr<SmppCommand> aucmd)
+void StateMachine::sendReceipt(std::auto_ptr<SmppCommand> aucmd)
 {
   if (!aucmd.get()) return;
   SmppCommand& cmd = *aucmd.get();

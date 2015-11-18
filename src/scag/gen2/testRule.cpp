@@ -45,6 +45,7 @@
 #include "scag/transport/smpp/router/route_manager.h"
 #include "scag/util/io/Print.h"
 #include "smpp/smpp.h"
+#include "version.inc"
 
 using namespace scag2;
 using namespace scag2::re;
