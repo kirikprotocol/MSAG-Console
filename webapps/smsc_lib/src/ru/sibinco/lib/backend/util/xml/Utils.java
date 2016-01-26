@@ -5,6 +5,7 @@
  */
 package ru.sibinco.lib.backend.util.xml;
 
+import org.apache.log4j.Logger;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -12,10 +13,14 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.*;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.StringBuilder;
 
 
 public class Utils
 {
+
+  private static Logger logger = Logger.getLogger(Utils.class);
+
   private static DocumentBuilderFactory documentBuilderFactory = null;
   private static DtdsEntityResolver dtdsEntityResolver = null;
 
@@ -31,13 +36,17 @@ public class Utils
 
   public static String getNodeText(final Node node)
   {
-    String result = "";
+    StringBuilder sb = new StringBuilder();
     NodeList list = node.getChildNodes();
+    if (logger.isDebugEnabled()) logger.debug("Node list length is "+list.getLength()+" nodes.");
     for (int i = 0; i < list.getLength(); i++) {
-      if (list.item(i).getNodeType() == Node.TEXT_NODE)
-        result += list.item(i).getNodeValue();
+      if (list.item(i).getNodeType() == Node.TEXT_NODE) {
+        String nodeValue = list.item(i).getNodeValue();
+        if (logger.isDebugEnabled()) logger.debug("Node "+i+" value length is "+nodeValue.length()+" symbols.");
+        sb.append(nodeValue);
+      }
     }
-    return result;
+    return sb.toString();
   }
 
   public static Document parse(Reader input)
