@@ -61,6 +61,7 @@ protected:
     // void DeliveryResp( std::auto_ptr<SmppCommand> cmd,int status);
     // void DataResp( std::auto_ptr<SmppCommand> cmd,int status);
 
+    const std::string& getMessageBody4Stat(bool hidden, SmppCommand* cmd);
     void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode, int ussd);
 
     /// in case of success SmppCommand is taken

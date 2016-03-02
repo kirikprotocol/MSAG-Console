@@ -22,8 +22,6 @@
 namespace {
 using namespace scag2::transport::smpp;
 
-const std::string hiddenMessageBody = "<<hidden>>";
-
 bool isDirFromService( DataSmDirection dir ) {
     return ( dir == dsdSrv2Sc || dir == dsdSrv2Srv );
 }
@@ -45,6 +43,19 @@ using scag2::re::actions::CommandProperty;
 
 const uint32_t MAX_REDIRECT_CNT = 10;
 const unsigned TIMINGFREQ = 10000;
+
+const std::string hiddenMessageBody = "<<hidden>>";
+const std::string parseErrorMessageBody = "<<parse error>>";
+
+const std::string& StateMachine::getMessageBody4Stat(bool hidden, SmppCommand* cmd)
+{
+    try {
+        return (hidden) ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd);
+    } catch (std::exception& e) {
+        smsc_log_warn(log_, "Failed to parse MessageBody: %s", e.what());
+        return parseErrorMessageBody;
+    }
+}
 
 struct StateMachine::ResponseRegistry
 {
@@ -1014,7 +1025,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             timeval tv = { time(0), 0 };
             primaryKey.setBornTime(tv);
             smsc_log_debug(log_, "%s: register traffic info event for transit route", where);
-            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, ri.hideMessage ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
+            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, getMessageBody4Stat(ri.hideMessage, cmd), &hrt);
           }
           hrt.stop();
           break;
@@ -1064,7 +1075,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
 
         if (st.status == re::STATUS_OK && ri.statistics) {
           smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
-          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), ri.hideMessage ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
+          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), getMessageBody4Stat(ri.hideMessage, cmd), &hrt);
         }
 
     } // while redirect
@@ -1099,7 +1110,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             timeval tv = { time(0), 0 };
             primaryKey.setBornTime(tv);
             smsc_log_debug(log_, "%s: register traffic info event for failed route. original frame", where);
-            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, ri.hideMessage ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
+            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, getMessageBody4Stat(ri.hideMessage, cmd), &hrt);
         }
 
         if (1 && resp.get() && ri.statistics) { //log resp on "SME not connected" or so
@@ -1114,7 +1125,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             timeval tv = { time(0), 0 };
             primaryKey.setBornTime(tv);
             smsc_log_debug(log_, "%s: register traffic info event for failed route for RESP", where);
-            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, ri.hideMessage ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
+            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, getMessageBody4Stat(ri.hideMessage, cmd), &hrt);
         }
 
         if (resp.get()) src->putCommand( resp );
