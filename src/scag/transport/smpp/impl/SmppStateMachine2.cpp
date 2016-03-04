@@ -47,7 +47,7 @@ const unsigned TIMINGFREQ = 10000;
 const std::string hiddenMessageBody = "<<hidden>>";
 const std::string parseErrorMessageBody = "<<parse error>>";
 
-const std::string& StateMachine::getMessageBody4Stat(bool hidden, SmppCommand* cmd)
+std::string StateMachine::getMessageBody4Stat(bool hidden, SmppCommand* cmd)
 {
     try {
         return (hidden) ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd);
