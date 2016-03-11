@@ -165,7 +165,7 @@ struct StateMachine::ResponseRegistry
     }
 
 
-    std::auto_ptr<SmppCommand> Get( int uid, int seq )
+    std::auto_ptr<SmppCommand> Get( int uid, int seq, bool secretMode = false )
     {
         sync::MutexGuard mg(mtx);
         if (!log) log = smsc::logger::Logger::getInstance("smpp.reg");
@@ -174,6 +174,9 @@ struct StateMachine::ResponseRegistry
 //        smsc_log_debug(log, "get uid=%d seq=%d - %s", uid, seq, (ptr) ? "ok":"not found");
         std::auto_ptr<SmppCommand> cmd;
         if (ptr) {
+	    if (secretMode && !(ptr->cmd && ptr->cmd->flagSet(SmppCommandFlags::SECRET_CODE_MESSAGE))) {
+		return cmd; // Do not remove cmd in secretMode call if cmd is not secret submit_sm
+	    }
             cmd.reset(ptr->cmd);
             //cmd->set_dialogId(ptr->dlgId);
             toList.erase(ptr->it);
@@ -737,7 +740,7 @@ bool StateMachine::passSecretCodeResp(SmppCommand* cmd)
                                     src ? src->getSystemId() : "NULL", cmd->get_dialogId());
         	return false;
     	    }
-	    orgCmd = reg_.Get(srcUid, cmd->get_dialogId()).release();
+	    orgCmd = reg_.Get(srcUid, cmd->get_dialogId(), true).release();
 	}
     }
     if (orgCmd && orgCmd->flagSet(SmppCommandFlags::SECRET_CODE_MESSAGE)) {
