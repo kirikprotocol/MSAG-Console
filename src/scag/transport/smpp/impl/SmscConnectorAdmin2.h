@@ -16,6 +16,7 @@ struct SmscConnectInfo{
   int ports[2];
   int lastIdx;
   time_t lastFailure;
+  int bindTryTimeout;
   std::string addressRange;
   std::string systemType;
   bool enabled;

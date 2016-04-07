@@ -722,6 +722,7 @@ void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
     ci.ports[1]=info.altPort;
     ci.addressRange=info.addressRange.c_str();
     ci.systemType=info.systemType.c_str();
+    ci.bindTryTimeout = (info.timeOut >= 10) ? info.timeOut:90;
     sm.getSmscConnectorAdmin()->addSmscConnect(ci);
   }
   smsc_log_debug(log_dump,"SME: addSmppEntity %d %s", info.uniqueId, info.systemId.c_str());
@@ -755,6 +756,7 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
     ci.ports[1] = info.altPort;
     ci.addressRange = info.addressRange.c_str();
     ci.systemType = info.systemType.c_str();
+    ci.bindTryTimeout = (info.timeOut >= 10) ? info.timeOut:90;
 
     if (oldEnabled==false && info.enabled==true) {
       sm.getSmscConnectorAdmin()->addSmscConnect(ci);

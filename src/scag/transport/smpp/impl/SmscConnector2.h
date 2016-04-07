@@ -73,14 +73,15 @@ struct SmscConnectTask : ThreadedTask{
     addressRange=info.addressRange;
     systemType=info.systemType;
     lastFailure=info.lastFailure;
+    bindTryTimeout=info.bindTryTimeout;
   }
   const char* taskName(){return "SmscConnectTask";}
   int Execute()
   {
-    if(time(NULL)-lastFailure<10)
+    if(time(NULL)-lastFailure<bindTryTimeout)
     {
       timespec ts;
-      ts.tv_sec=10;
+      ts.tv_sec=bindTryTimeout;
       ts.tv_nsec=0;
       nanosleep(&ts,0);
     }
@@ -111,6 +112,7 @@ protected:
   std::string addressRange;
   std::string systemType;
   time_t lastFailure;
+  int bindTryTimeout;
   smsc::logger::Logger* log;
 };
 
