@@ -201,13 +201,23 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       opt->field_present |= SmppOptionalFields::field; \
       }break
 
-    #define macroFetchCOctetStr(field,maxlen) \
+#define macroFetchCOctetStr(field,maxlen) \
     case SmppOptionalTags::field :{\
-      fetchCOctetStr(stream,opt->field,std::min((uint16_t)maxlen,(uint16_t)length));\
-      opt->field_present |= SmppOptionalFields::field;   \
-      }break
+      unsigned int savedDataOffset = stream->dataOffset; \
+      try { \
+        fetchCOctetStr(stream,opt->field,std::min((uint16_t)maxlen,(uint16_t)length));\
+        opt->field_present |= SmppOptionalFields::field;   \
+      }catch(...) \
+      {\
+        if(tag>=0x1400 && tag<=0x3fff) {\
+          stream->dataOffset = savedDataOffset; \
+          goto unknown; \
+        } \
+        throw; \
+      }\
+    }break
 
-    #define macroFetchOctetStr(field,len) \
+#define macroFetchOctetStr(field,len) \
     case SmppOptionalTags::field :{\
       fetchOctetStr(stream,opt->field,length);\
       opt->field_present |= SmppOptionalFields::field; \
