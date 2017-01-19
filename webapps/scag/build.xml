@@ -71,13 +71,11 @@
         <exclude name="${scmon_path}/applet/**"/>
         <exclude name="**/locales/**"/>          
       </fileset>
-
       <!--fileset dir="${java_out}" excludes="${svcmon_path}/applet/**"/-->
-
     </jar>
+
     <unjar src="${sibinco_lib}" dest="${exploded}/unjar_tmp"/>
-    <mkdir dir="${exploded}/stat/monitor"/>
-    <jar jarfile="${exploded}/stat/monitor/perfmon.jar">
+    <jar jarfile="${exploded}/perfmon.jar">
       <fileset dir="${java_out}">
         <include name="${perfmon_path}/applet/**/*.class"/>
         <include name="${perfmon_path}/applet/*.properties"/>  
@@ -90,8 +88,10 @@
         <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
       </fileset>
     </jar>
-    <mkdir dir="${exploded}/endpoints/services/monitor"/>
-    <jar jarfile="${exploded}/endpoints/services/monitor/svcmon.jar">
+    <copyfile src="${basedir}/stat/monitor/perf_monitor2applet.jnlp"
+              dest="${exploded}/perf_monitor2applet.jnlp"/>
+
+    <jar jarfile="${exploded}/svcmon.jar">
       <fileset dir="${java_out}">
         <include name="${svcmon_path}/applet/**/*.class"/>
         <include name="${svcmon_path}/applet/**/*.properties"/>  
@@ -104,8 +104,10 @@
         <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
       </fileset>
     </jar>
-    <mkdir dir="${exploded}/endpoints/centers/monitor"/>
-    <jar jarfile="${exploded}/endpoints/centers/monitor/scmon.jar">
+    <copyfile src="${basedir}/endpoints/services/monitor/svc_monitor2applet.jnlp"
+              dest="${exploded}/svc_monitor2applet.jnlp"/>
+
+    <jar jarfile="${exploded}/scmon.jar">
       <fileset dir="${java_out}">
         <include name="${scmon_path}/applet/**/*.class"/>
         <include name="${scmon_path}/applet/**/*.properties"/>  
@@ -118,15 +120,20 @@
         <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
       </fileset>
     </jar>
+    <copyfile src="${basedir}/endpoints/centers/monitor/sc_monitor2applet.jnlp"
+              dest="${exploded}/sc_monitor2applet.jnlp"/>
+
     <delete dir="${exploded}/unjar_tmp"/>
-     <mkdir dir="${JEDIT_DIR}/build"/>
-     <copy todir="${exploded}/rules/rules" preservelastmodified="yes">
-       <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
-     </copy>
+    <mkdir dir="${JEDIT_DIR}/build"/>
     <copy todir="${exploded}" preservelastmodified="yes">
-       <fileset dir="." includes="**/*.jsp **/*.js **/*.html **/*.htm **/*.gif **/*.bmp **/*.jpg **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd **/*.png **/*.config"/>
-    </copy>     
-			   
+      <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
+    </copy>
+    <copy todir="${exploded}" preservelastmodified="yes">
+      <fileset dir="." includes="**/*.jsp **/*.js **/*.html **/*.htm **/*.gif **/*.bmp **/*.jpg **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd **/*.png **/*.config"/>
+    </copy>
+    <copyfile src="${basedir}/rules/rules/jedit2applet.jnlp"
+              dest="${exploded}/jedit2applet.jnlp"/>
+
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${basedir}/WEB-INF/lib"  includes="*.jar"/>
       <fileset file="${sibinco_lib}"/>
@@ -142,7 +149,6 @@
     <copy todir="${CATALINA_BASE}/webapps/msag" preservelastmodified="yes">
       <fileset dir="${exploded}"/>
     </copy>
-
   </target>
 
   <target name="update" depends="build" description="update existing installation">

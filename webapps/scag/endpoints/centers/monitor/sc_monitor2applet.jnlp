@@ -1,0 +1,21 @@
+<jnlp href="/msag/sc_monitor2applet.jnlp">
+    <information>
+        <title>Eyeline MSAG SC Monitor</title>
+        <vendor>Eyeline, Inc</vendor>
+        <homepage href="http://www.eyeline.mobi"/>
+        <description>MSAG SC Monitor applet</description>
+        <description kind="short">MSAG SC Monitor</description>
+        <icon href="/msag/content/images/smsc_ico.gif"/>
+        <offline-allowed/>
+    </information>
+    <security>
+        <all-permissions/>
+    </security>
+    <resources>
+        <java version="1.5+"/>
+        <jar href="/msag/scmon.jar" main="true"/>
+    </resources>
+    <applet-desc name="Eyeline MSAG SC Monitor"
+                 main-class="ru.sibinco.scag.scmon.applet.ScMon"
+                 width="100" height="100"/>
+</jnlp>

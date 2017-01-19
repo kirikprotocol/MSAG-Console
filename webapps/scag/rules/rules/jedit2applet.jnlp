@@ -1,0 +1,21 @@
+<jnlp href="/msag/jedit2applet.jnlp">
+    <information>
+        <title>Eyeline MSAG Rule Editor</title>
+        <vendor>Eyeline, Inc</vendor>
+        <homepage href="http://www.eyeline.mobi"/>
+        <description>MSAG SVC Rule Editor applet</description>
+        <description kind="short">MSAG Rule Editor</description>
+        <icon href="/msag/content/images/smsc_ico.gif"/>
+        <offline-allowed/>
+    </information>
+    <security>
+        <all-permissions/>
+    </security>
+    <resources>
+        <java version="1.5+"/>
+        <jar href="/msag/jedit.jar" main="true"/>
+    </resources>
+    <applet-desc name="Eyeline MSAG Rule Editor"
+                 main-class="org.gjt.sp.jedit.jEdit"
+                 width="100" height="100"/>
+</jnlp>
