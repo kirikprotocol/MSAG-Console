@@ -81,14 +81,11 @@
         <exclude name="${scmon_path}/applet/**"/>
         <exclude name="**/locales/**"/>
       </fileset>
-
       <!--fileset dir="${java_out}" excludes="${svcmon_path}/applet/**"/-->
-
     </jar>
 
     <unjar src="${sibinco_lib}" dest="${exploded}/unjar_tmp"/>
-    <mkdir dir="${exploded}/stat/monitor"/>
-    <jar jarfile="${exploded}/stat/monitor/perfmon.jar">
+    <jar jarfile="${exploded}/perfmon.jar">
       <fileset dir="${java_out}">
         <include name="${perfmon_path}/applet/**/*.class"/>
         <include name="${perfmon_path}/applet/*.properties"/>
@@ -101,9 +98,10 @@
         <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
       </fileset>
     </jar>
+    <copyfile src="${basedir}/stat/monitor/perf_monitor2applet.jnlp"
+              dest="${exploded}/perf_monitor2applet.jnlp"/>
 
-    <mkdir dir="${exploded}/endpoints/services/monitor"/>
-    <jar jarfile="${exploded}/endpoints/services/monitor/svcmon.jar">
+    <jar jarfile="${exploded}/svcmon.jar">
       <fileset dir="${java_out}">
         <include name="${svcmon_path}/applet/**/*.class"/>
         <include name="${svcmon_path}/applet/**/*.properties"/>
@@ -116,9 +114,10 @@
         <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
       </fileset>
     </jar>
+    <copyfile src="${basedir}/endpoints/services/monitor/svc_monitor2applet.jnlp"
+              dest="${exploded}/svc_monitor2applet.jnlp"/>
 
-    <mkdir dir="${exploded}/endpoints/centers/monitor"/>
-    <jar jarfile="${exploded}/endpoints/centers/monitor/scmon.jar">
+    <jar jarfile="${exploded}/scmon.jar">
       <fileset dir="${java_out}">
         <include name="${scmon_path}/applet/**/*.class"/>
         <include name="${scmon_path}/applet/**/*.properties"/>
@@ -131,15 +130,19 @@
         <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
       </fileset>
     </jar>
+    <copyfile src="${basedir}/endpoints/centers/monitor/sc_monitor2applet.jnlp"
+              dest="${exploded}/sc_monitor2applet.jnlp"/>
+
     <delete dir="${exploded}/unjar_tmp"/>
 
-    <copy todir="${exploded}/rules/rules" preservelastmodified="yes">
+    <copy todir="${exploded}" preservelastmodified="yes">
       <fileset dir="${build}/libs/jedit" includes="jedit.jar" />
     </copy>
-
     <copy todir="${exploded}" preservelastmodified="yes">
       <fileset dir="." includes="**/*.jsp **/*.js **/*.html **/*.htm **/*.gif **/*.bmp **/*.jpg **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd **/*.png **/*.config"/>
     </copy>
+    <copyfile src="${basedir}/rules/rules/jedit2applet.jnlp"
+              dest="${exploded}/jedit2applet.jnlp"/>
 
     <delete file="${build}/exploded/msag/build.xml"/>
     <delete file="${build}/exploded/msag/build_with_ivy.xml"/>
@@ -162,8 +165,8 @@
       <fileset dir="${java_out}/locales" includes="*.properties"/>
     </copy>
 
-    <mkdir dir="${build}/exploded/msag/rules/rules/xsd"/>
-    <copy todir="${build}/exploded/msag/rules/rules/xsd"
+    <mkdir dir="${build}/exploded/msag/xsd"/>
+    <copy todir="${build}/exploded/msag/xsd"
           preservelastmodified="yes"
           flatten="yes">
       <fileset dir="../../config/templates">
@@ -171,7 +174,7 @@
       </fileset>
     </copy>
 
-    <copy file="${build}/libs/jedit/jedit.jar" todir="${build}/exploded/msag/rules/rules"/>
+    <copy file="${build}/libs/jedit/jedit.jar" todir="${build}/exploded/msag"/>
 
     <copy file="${basedir}/WEB-INF/lib/commons-beanutils-1.9.2-fixed.jar" todir="${build}/exploded/msag/WEB-INF/lib"/>
 
