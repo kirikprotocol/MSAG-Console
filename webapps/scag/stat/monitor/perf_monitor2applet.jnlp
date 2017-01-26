@@ -1,4 +1,4 @@
-<jnlp href="/msag/perf_monitor2applet.jnlp">
+<jnlp href="/msag/content/applets/perf_monitor2applet.jnlp">
     <information>
         <title>Eyeline MSAG Performance Monitor</title>
         <vendor>Eyeline, Inc</vendor>
@@ -13,7 +13,7 @@
     </security>
     <resources>
         <java version="1.5+"/>
-        <jar href="/msag/perfmon.jar" main="true"/>
+        <jar href="/msag/content/applets/perfmon.jar" main="true"/>
     </resources>
     <applet-desc name="Eyeline MSAG Performance Monitor"
                  main-class="ru.sibinco.scag.perfmon.applet.PerfMon"

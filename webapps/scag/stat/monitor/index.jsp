@@ -30,8 +30,8 @@
 	}
   Map monPrefs = prefs.getMonPrefs();
 %>
-	<applet code="ru.sibinco.scag.perfmon.applet.PerfMon.class" width="100%" height="100%" archive="/msag/perfmon.jar">
-		<param name="jnlp_href" value="/msag/perf_monitor2applet.jnlp"/>
+	<applet code="ru.sibinco.scag.perfmon.applet.PerfMon.class" width="100%" height="100%" archive="/msag/content/applets/perfmon.jar">
+		<param name="jnlp_href" value="/msag/content/applets/perf_monitor2applet.jnlp"/>
         <param name="resource_servlet_uri" value="<%=request.getContextPath()+"/resource/?"%>">
 		<param name="http.pixPerSecond" value="<%=monPrefs.get("perfmon.http.pixPerSecond")%>">
 		<param name="http.scale" value="<%=monPrefs.get("perfmon.http.scale")%>">

@@ -32,8 +32,8 @@
 %>
 
 
-<applet code="ru.sibinco.scag.scmon.applet.ScMon.class" width="100%" height="100%" archive="/msag/scmon.jar">
-    <param name="jnlp_href" value="/msag/sc_monitor2applet.jnlp"/>
+<applet code="ru.sibinco.scag.scmon.applet.ScMon.class" width="100%" height="100%" archive="/msag/content/applets/scmon.jar">
+    <param name="jnlp_href" value="/msag/content/applets/sc_monitor2applet.jnlp"/>
     <param name="resource_servlet_uri" value="<%=request.getContextPath()+"/resource/?"%>">
     <param name="graph.scale" value="<%=monPrefs.get("scmon.graph.scale")%>">
     <param name="locales.messages" value="RUSSIA">

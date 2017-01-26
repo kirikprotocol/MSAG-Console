@@ -31,8 +31,8 @@
     Map monPrefs = prefs.getMonPrefs();
 %>
 
-<applet code="ru.sibinco.scag.svcmon.applet.SvcMon.class" width="100%" height="100%" archive="/msag/svcmon.jar">
-    <param name="jnlp_href" value="/msag/svc_monitor2applet.jnlp"/>
+<applet code="ru.sibinco.scag.svcmon.applet.SvcMon.class" width="100%" height="100%" archive="/msag/content/applets/svcmon.jar">
+    <param name="jnlp_href" value="/msag/content/applets/svc_monitor2applet.jnlp"/>
     <param name="resource_servlet_uri" value="<%=request.getContextPath()+"/resource/?"%>">
     <param name="graph.scale" value="<%=monPrefs.get("svcmon.graph.scale")%>">
     <param name="locales.messages" value="RUSSIA">

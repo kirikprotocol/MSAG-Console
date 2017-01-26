@@ -1,4 +1,4 @@
-<jnlp href="/msag/svc_monitor2applet.jnlp">
+<jnlp href="/msag/content/applets/svc_monitor2applet.jnlp">
     <information>
         <title>Eyeline MSAG SVC Monitor</title>
         <vendor>Eyeline, Inc</vendor>
@@ -13,7 +13,7 @@
     </security>
     <resources>
         <java version="1.5+"/>
-        <jar href="/msag/svcmon.jar" main="true"/>
+        <jar href="/msag/content/applets/svcmon.jar" main="true"/>
     </resources>
     <applet-desc name="Eyeline MSAG SVC Monitor"
                  main-class="ru.sibinco.scag.scmon.applet.SvcMon"
