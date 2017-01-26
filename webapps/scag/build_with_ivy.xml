@@ -147,7 +147,7 @@
     <copyfile src="${basedir}/rules/rules/jedit2applet.jnlp"
               dest="${exploded}/content/applets/jedit2applet.jnlp"/>
 
-    <signjar alias="smsc" keystore="${exploded}/signer.store"
+    <signjar alias="smsc" keystore="${basedir}/signer.store"
              storepass="eyeline"
              lazy="true">
       <path><fileset dir="${exploded}/content/applets" includes="*.jar" /></path>
