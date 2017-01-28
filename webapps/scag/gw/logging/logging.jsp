@@ -11,7 +11,6 @@
 
     <script type="text/javascript">
       function collasping_tree_showhide_section(sectionId) {
-
         var headerElem = document.getElementById("sectionHeader_" + sectionId);
 //        var valueElem = opForm.all("sectionValue_" + sectionId);
 //        alert( "sectionValue_" + sectionId );
@@ -53,18 +52,6 @@
                            onclick="collasping_tree_showhide_section('${catItem.value.fullName}')">
                           ${catItem.value.name}
                       </div>
-                      <%
-                          if (logger.isDebugEnabled()){
-                              Object o = pageContext.findAttribute("catItemValue");
-                              if (o != null){
-                                  Logging.LoggerCategoryInfo lci = (Logging.LoggerCategoryInfo) o;
-                                  logger.debug("Added section header for category with name '"+ lci.getName()
-                                          +"' and full name '"+lci.getFullName()+"'.");
-                              } else {
-                                  logger.debug("Couldn't find in page context attribute 'catItemValue'.");
-                              }
-                          }
-                      %>
                     </td>
                     <td>
                       <sm-l:select name="_empty_name_" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
