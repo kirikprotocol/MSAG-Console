@@ -87,7 +87,7 @@
 
   <body style="margin:0px 0px 0px 0px;" onLoad="openjEditWindow()" onunload="toClose()">
     <applet code="org.gjt.sp.jedit.jEdit.class" width="100%" height="100%" archive="/msag/rules/rules/jedit.jar" name=jedit ID=jedit>
-       <param name="jnlp_href" value="/msag/rules/rules/jedit2applet.jnlp"/>
+       <!-- param name="jnlp_href" value="/msag/rules/rules/jedit2applet.jnlp"/-->
        <param name="noplugins" value="-noplugins">
        <param name="homedir" value="applet">
        <param name="username" value="rules">

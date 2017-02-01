@@ -45,7 +45,7 @@
     </init-param>
     <init-param>
       <param-name>pass-by</param-name>
-      <param-value>(/content/applets/.*)|(/content/applets/xsd/.*)|(/content/images/.*)|(/content/scripts/.*)|(/content/styles/.*)|(/content/styles/menu/.*)|(/applet/.*)|(/WHOISD/.*)|(/rules/rules/xsd/.*)|(/resource/.*)|(/rules/rules/ru/sibinco/scag/.*)</param-value>
+      <param-value>(/content/applets/.*)|(/content/images/.*)|(/content/scripts/.*)|(/content/styles/.*)|(/content/styles/menu/.*)|(/applet/.*)|(/WHOISD/.*)|(/rules/rules/xsd/.*)|(/resource/.*)|(/rules/rules/ru/sibinco/scag/.*)</param-value>
     </init-param>
   </filter>
 
