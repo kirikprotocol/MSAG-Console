@@ -1,2 +1,0 @@
-snmp/sctpmon sctpmon  $(XERCES_LIB) -lsnmp-sctp -lsnmp -lcrypto -linman-storage -lutil-config -lutil-xml -L$(SMSC_BUILDDIR)/bin -llogger -lnsl -ldl -lrt -lpthread -lcore-threads -ladm -lutil-mirrorfile -lpicl -L$(SS7_STACK_HOME)/lib $(SNMP_LIBS) -l$(SS7_LIBRARY_NAME) -lsocket
-#snmp/sctpmon sctpmon $(__LIBRARIES) -l$(SS7_LIBRARY_NAME) $(SNMP_LIBS) -lsnmp-sctp -lcrypto -linman-storage -lutil-config -lutil-xml -lutil -L$(SMSC_BUILDDIR)/bin -llogger -lnsl -ldl -lrt -lpthread -lcore-threads

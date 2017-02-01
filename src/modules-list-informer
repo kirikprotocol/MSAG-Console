@@ -1,9 +1,0 @@
-?logger
-?core  "SMSC core implementation"
-?util  "Utility classes"
-?sms   "SMS declaration"
-?license
-?sme
-?informer
-?eyeline
-?scag

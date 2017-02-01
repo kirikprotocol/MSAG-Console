@@ -1,2 +1,0 @@
--router/testUnit testUnit $(__LIBRARIES) -lrouter -lsmeman -lsms -lutil -llogger
- 

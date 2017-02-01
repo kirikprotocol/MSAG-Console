@@ -1,5 +1,0 @@
-/*  please generate this file at build */
-#define VER_MAJOR 2
-#define VER_MINOR 0
-#define VER_BUILD "REL_7"
-#define VER_DATE "2012-11-12 23:23:23"

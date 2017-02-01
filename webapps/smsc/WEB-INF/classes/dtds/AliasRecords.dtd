@@ -1,4 +1,0 @@
-<!ELEMENT aliases (record*)>
-<!ELEMENT record EMPTY>
-<!ATTLIST record addr CDATA #REQUIRED alias CDATA #REQUIRED hide (true|false) #IMPLIED>
-

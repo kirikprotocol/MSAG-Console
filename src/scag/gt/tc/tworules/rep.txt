@@ -1,4 +1,0 @@
-Message: Expected comment or processing instruction																			        <return result="4"/>
-																				    </submit_sm_resp>
-																				    
-																				    </scag:rule>

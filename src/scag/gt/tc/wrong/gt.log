@@ -1,2 +1,0 @@
-E 03-02 18:19:50,039 001    scag.re: Fatal Error at file /export/home/green/install/bin/rules/rule_1.xml, line 33, char 3   Message: Expected comment or processing instruction
-E 03-02 18:19:50,041 001    scag.re: Error parsing Rule: some errors occured

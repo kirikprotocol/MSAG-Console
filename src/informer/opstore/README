@@ -1,4 +1,0 @@
-Contents: operational storage types. Note that Delivery is also here
-(not in data).
-
-Depends: io, data.

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<!ELEMENT regions (region)*>
-<!ELEMENT region EMPTY>
-<!ATTLIST region
-    id CDATA #REQUIRED
-    name CDATA #REQUIRED
-    passwd CDATA #REQUIRED>

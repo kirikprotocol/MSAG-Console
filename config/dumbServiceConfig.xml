@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE config SYSTEM "configuration.dtd">
-
-<config>
-    <section name="dumbtest">
-	<param name="host" type="string">smsc</param>
-	<param name="loggerInitFile" type="string">dumb.logger.init</param>
-    </section>
-</config>

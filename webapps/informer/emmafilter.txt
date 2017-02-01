@@ -1,9 +1,0 @@
-+mobi.eyeline.informer.admin*
-+mobi.eyeline.informer.util*
-+mobi.eyeline.informer.web.config*
--mobi.eyeline.informer.admin.delivery.protogen.protocol*
--mobi.eyeline.informer.admin.infosme.protogen.protocol*
--*Test*
--*Exception*
--*Stub*
--*Mock*

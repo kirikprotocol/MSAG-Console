@@ -1,6 +1,0 @@
-logger
-db
-system
-core  "SMSC core implementation"
-util  "Utility classes"
-mmbox

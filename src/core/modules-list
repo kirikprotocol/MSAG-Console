@@ -1,8 +1,0 @@
-#
-# @(#)$Id$
-#
-buffers
-timers
-threads
-network
-test

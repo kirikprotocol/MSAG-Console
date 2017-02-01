@@ -1,5 +1,0 @@
-license/signlicense signlicense \
-  $(SSL_LIB) -llicense-check \
-  $(SOCKETLIB) $(LIBNSL) \
-  -L$(SMSC_BUILDDIR)/bin -llogger @liblogger$(SHLIBEXT)
-license/gethostid gethostid

@@ -1,5 +1,0 @@
-scag/tests/protobuf/test27  test27 \
-  -lscag-tests-protobuf \
-  -lscag-util-io \
-  -lprotobuf \
-  -lpthread -lrt -ldl

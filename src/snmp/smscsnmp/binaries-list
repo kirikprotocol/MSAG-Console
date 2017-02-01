@@ -1,1 +1,0 @@
-libsnmp-smscsnmp.so SnmpTrap $(SHARED_OPT) -ldl $(__LIBRARIES) -lrt -lpthread

@@ -1,6 +1,0 @@
-scag/tests/testAbntAddr  testAbntAddr \
-  -lscag-pvss-profile \
-  -lscag-util-storage \
-  -lscag-util-io \
-  -lutil
-

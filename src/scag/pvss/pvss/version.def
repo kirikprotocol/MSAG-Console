@@ -1,4 +1,0 @@
-#define VER_MAJOR 3
-#define VER_MINOR 0
-#define VER_BUILD "REL_7"
-#define VER_DATE "20140414"

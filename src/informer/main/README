@@ -1,3 +1,0 @@
-Contents: core part of the informer, which binds all packages together.
-
-Depends: io, data, opstore, sender, newstore.
